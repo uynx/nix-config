@@ -1,0 +1,59 @@
+after-startup-command = "layout tiles"
+default-root-container-layout = "tiles"
+default-root-container-orientation = "auto"
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+# exec-on-workspace-change = ['/bin/bash', '-c'] use this for sketchybar in the future
+on-focus-changed = ["move-mouse window-lazy-center"]
+on-focused-monitor-changed = ["move-mouse monitor-lazy-center"]
+start-at-login = true 
+
+[key-mapping]
+preset = "qwerty"
+
+[mode.main.binding]
+alt-t = "layout tiles"
+
+alt-equal = "resize smart +100"
+alt-minus = "resize smart -100"
+
+alt-f = "fullscreen"
+alt-r = "balance-sizes"
+
+alt-h = "focus left"
+alt-j = "focus down"
+alt-k = "focus up"
+alt-l = "focus right"
+
+alt-u = "workspace 1"
+alt-i = "workspace 2"
+alt-o = "workspace 3"
+alt-shift-u = "move-node-to-workspace 1"
+alt-shift-i = "move-node-to-workspace 2"
+alt-shift-o = "move-node-to-workspace 3"
+
+alt-n = "exec-and-forget /Users/uynx/nix-config/dotfiles/brave-activation.sh Default Personal"
+alt-m = "exec-and-forget /Users/uynx/nix-config/dotfiles/brave-activation.sh \"Profile 1\" School"
+alt-p = "exec-and-forget /Users/uynx/nix-config/dotfiles/ghostty-activation.sh"
+
+alt-shift-h = "move left"
+alt-shift-j = "move down"
+alt-shift-k = "move up"
+alt-shift-l = "move right"
+
+alt-shift-semicolon = "mode service"
+
+[[on-window-detected]]
+if.app-id = "com.brave.Browser"
+if.window-title-regex-substring = "Personal$"
+run = "move-node-to-workspace 1"
+
+[[on-window-detected]]
+if.app-id = "com.brave.Browser"
+if.window-title-regex-substring = "School$"
+run = "move-node-to-workspace 2"
+
+[mode.service.binding]
+esc = ["reload-config", "mode main"]
+shift-down = ["volume set 0", "mode main"]
+
