@@ -2,6 +2,7 @@
 
 {  
   users.users.uynx.home = "/Users/uynx";
+  nix.enable = false;
 
   home-manager = {
     useGlobalPkgs = true;
@@ -23,16 +24,6 @@
     };
 
     startup.chime = false;
-  };
-
-  nix = {
-    enable = true;
-    gc.automatic = true;
-    optimise.automatic = true;
-    settings.sandbox = true;
-    extraOptions = ''
-      experimental-features = flakes nix-command
-    '';
   };
 
   environment = {
