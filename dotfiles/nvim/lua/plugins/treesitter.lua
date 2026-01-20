@@ -26,6 +26,7 @@ return {
         "vue",
         "norg",
         "typst",
+        "html",
       })
     end
   end,
