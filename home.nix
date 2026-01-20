@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
     home.stateVersion = "25.11";
@@ -10,12 +10,17 @@
       source = ./dotfiles/aerospace.toml;
     };
 
+    # Link the nvim configuration out-of-store to allow LazyVim to manage plugins/lockfiles
+    xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
+
     programs = {
       fish = {
         enable = true;
 
     interactiveShellInit = ''
       fish_add_path /opt/homebrew/bin
+      fish_add_path /opt/homebrew/opt/openjdk/bin
+      set -gx EDITOR nvim
       set -g fish_greeting ""
     '';
     
