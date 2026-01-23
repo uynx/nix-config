@@ -101,6 +101,7 @@
       "bluestacks"
       "steam"
       "discord"
+      "streamlabs"
     ];
     caskArgs = {
       no_quarantine = true;
