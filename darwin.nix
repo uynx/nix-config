@@ -61,6 +61,28 @@
       "deno"
       "python@3.14"
       "mongodb-community@8.2"
+      "gemini-cli"
+      "tree-sitter-cli"
+      "ripgrep"
+      "fd"
+      "lazygit"
+      "wget"
+      "go"
+      "rust"
+      "luarocks"
+      "imagemagick"
+      "ast-grep"
+      "wget"
+      "go"
+      "luarocks"
+      "composer"
+      "php"
+      "java"
+      "julia"
+      "ruby"
+      "gs"
+      "tectonic"
+      "mermaid-cli"
     ];
     casks = [ 
       "ghostty" 
@@ -79,6 +101,7 @@
       "bluestacks"
       "steam"
       "discord"
+      "streamlabs"
     ];
     caskArgs = {
       no_quarantine = true;
