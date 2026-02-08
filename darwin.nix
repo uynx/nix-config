@@ -13,7 +13,7 @@
 
   system = {
     primaryUser = "uynx";
-    
+
     configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
 
     stateVersion = 6;
@@ -38,13 +38,13 @@
     enable = true;
     greedyCasks = true;
     onActivation = {
-	upgrade = true;
-	autoUpdate = true;
-	cleanup = "zap";
+      autoUpdate = true;
+      upgrade = true;
+      cleanup = "zap";
     };
     taps = [
       "nikitabobko/tap"
-      "mongodb/brew"
+        "mongodb/brew"
     ];
     brews = [
       "git" 
@@ -102,6 +102,7 @@
       "steam"
       "discord"
       "streamlabs"
+      "skim"
     ];
     caskArgs = {
       no_quarantine = true;
