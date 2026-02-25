@@ -14,11 +14,37 @@
     
     cargo
     rustc
-    (python3.withPackages (ps: with ps; [ pynvim pip ]))
     nodejs
     deno
     
-    tree-sitter
+    # Pinned tree-sitter to v0.26.1 for nvim-treesitter compatibility
+    # TOFU: We put fake hashes here. The build will fail and give us the correct hashes.
+    (tree-sitter.overrideAttrs (oldAttrs: rec {
+      version = "0.26.1";
+      src = pkgs.fetchFromGitHub {
+        owner = "tree-sitter";
+        repo = "tree-sitter";
+        rev = "v0.26.1";
+        hash = "sha256-k8X2qtxUne8C6znYAKeb4zoBf+vffmcJZQHUmBvsilA=";
+      };
+      cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+        inherit src;
+        hash = "sha256-hnFHYQ8xPNFqic1UYygiLBWu3n82IkTJuQvgcXcMdv0=";
+      };
+      patches = []; # Clear patches that don't apply to older versions
+    }))
+    
+    # Provide the latest tree-sitter as a separate command to avoid collision
+    (pkgs.writeShellScriptBin "tree-sitter-latest" ''
+      exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
+    '')
+    
+    # Neovim / LazyVim Compilers & Core Dependencies
+    # (These cannot be installed via Mason)
+    clang
+    pkg-config
+    zlib
+    curl
     ast-grep
     lua5_1
     luajitPackages.luarocks
@@ -47,10 +73,16 @@
     devpod
   ];
 
+  xdg.dataFile."nvim/site/parser/norg.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
+  xdg.dataFile."nvim/site/parser/norg_meta.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg-meta}/parser";
+
   xdg.configFile."aerospace.toml".source = ./dotfiles/aerospace.toml;
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
 
   programs = {
+    zoxide.enable = true;
+    bat.enable = true;
+    eza.enable = true;
     fish = {
       enable = true;
 
@@ -70,6 +102,10 @@
     neovim = {
       enable = true;
       defaultEditor = true;
+      withNodeJs = true;
+      withPython3 = true;
+      withRuby = false;
+      withPerl = true;
     };
     fzf.enable = true;
     ripgrep.enable = true;

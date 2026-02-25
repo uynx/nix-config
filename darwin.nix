@@ -50,13 +50,12 @@
       cleanup = "zap";
     };
     casks = [ 
+      "julia-app"
       "skim"
-      "ungoogled-chromium"
       "microsoft-office" 
       "tor-browser"
+      "mullvad-browser"
       "protonvpn"
-      "bluestacks"
-      "steam"
       "streamlabs"
       "obs"
     ];
@@ -64,6 +63,8 @@
       no_quarantine = true;
     };
   };
+
+  fonts.packages = [ pkgs.nerd-fonts.hack ];
 
   networking = {
     applicationFirewall.enable = true;
@@ -80,6 +81,7 @@
 
   nixpkgs.hostPlatform = "aarch64-darwin";
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.overlays = [ inputs.neorg-overlay.overlays.default ];
 
   programs.fish.enable = true;
   users.users."uynx".shell = pkgs.fish;
