@@ -18,7 +18,6 @@
     deno
     
     # Pinned tree-sitter to v0.26.1 for nvim-treesitter compatibility
-    # TOFU: We put fake hashes here. The build will fail and give us the correct hashes.
     (tree-sitter.overrideAttrs (oldAttrs: rec {
       version = "0.26.1";
       src = pkgs.fetchFromGitHub {
@@ -39,26 +38,22 @@
       exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
     '')
     
-    # Neovim / LazyVim Compilers & Core Dependencies
-    # (These cannot be installed via Mason)
     clang
-    pkg-config
-    zlib
-    curl
     ast-grep
     lua5_1
-    luajitPackages.luarocks
+    luarocks
+    ruby
     
     jdk
     php
-    phpPackages.composer
+    php.packages.composer
     
     imagemagick
     ghostscript
     tectonic
-    mermaid-cli
-    texliveBasic
     biber
+    texliveSmall
+    mermaid-cli
 
     aerospace
     discord
@@ -73,11 +68,11 @@
     devpod
   ];
 
-  xdg.dataFile."nvim/site/parser/norg.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
-  xdg.dataFile."nvim/site/parser/norg_meta.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg-meta}/parser";
 
   xdg.configFile."aerospace.toml".source = ./dotfiles/aerospace.toml;
+
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
+  xdg.dataFile."nvim/site/parser/norg.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
 
   programs = {
     zoxide.enable = true;
@@ -104,7 +99,7 @@
       defaultEditor = true;
       withNodeJs = true;
       withPython3 = true;
-      withRuby = false;
+      withRuby = true;
       withPerl = true;
     };
     fzf.enable = true;

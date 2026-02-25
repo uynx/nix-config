@@ -81,7 +81,6 @@
 
   nixpkgs.hostPlatform = "aarch64-darwin";
   nixpkgs.config.allowUnfree = true;
-  nixpkgs.overlays = [ inputs.neorg-overlay.overlays.default ];
 
   programs.fish.enable = true;
   users.users."uynx".shell = pkgs.fish;
