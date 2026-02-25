@@ -81,7 +81,7 @@
 
   nixpkgs.hostPlatform = "aarch64-darwin";
   nixpkgs.config.allowUnfree = true;
-
+  
   programs.fish.enable = true;
   users.users."uynx".shell = pkgs.fish;
 }
