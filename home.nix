@@ -23,7 +23,6 @@
     lua5_1
     luajitPackages.luarocks
     
-    # Mason LSP and Tooling Dependencies
     jdk
     php
     phpPackages.composer
