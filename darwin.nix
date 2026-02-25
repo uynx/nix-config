@@ -27,6 +27,13 @@
   };
 
   environment = {
+    systemPackages = with pkgs; [
+      docker
+      colima
+      lima
+      postgresql
+      mongodb-tools
+    ];
     shellAliases = {
       update = "nix flake update --flake ~/nix-config";
       reb = "sudo darwin-rebuild switch --flake ~/nix-config#macos";
@@ -42,72 +49,22 @@
       upgrade = true;
       cleanup = "zap";
     };
-    taps = [
-      "nikitabobko/tap"
-        "mongodb/brew"
-    ];
-    brews = [
-      "git" 
-      "gh"
-      "coreutils"	
-      "fzf" 
-      "jq" 
-      "fastfetch" 
-      "neovim" 
-      "lima" 
-      "colima" 
-      "docker"	
-      "postgresql@18"
-      "deno"
-      "python@3.14"
-      "mongodb-community@8.2"
-      "gemini-cli"
-      "tree-sitter-cli"
-      "ripgrep"
-      "fd"
-      "lazygit"
-      "wget"
-      "go"
-      "rust"
-      "luarocks"
-      "imagemagick"
-      "ast-grep"
-      "wget"
-      "go"
-      "luarocks"
-      "composer"
-      "php"
-      "java"
-      "julia"
-      "ruby"
-      "gs"
-      "tectonic"
-      "mermaid-cli"
-    ];
     casks = [ 
-      "ghostty" 
-      "ungoogled-chromium" 
-      "microsoft-office" 
-      "wireshark-app" 
-      "brave-browser"
-      "firefox"
-      "vscodium"
-      "aerospace"
-      "tor-browser"
-      "protonvpn"
-      "devpod"
-      "obs"
-      "qbittorrent"
-      "bluestacks"
-      "steam"
-      "discord"
-      "streamlabs"
+      "julia-app"
       "skim"
+      "microsoft-office" 
+      "tor-browser"
+      "mullvad-browser"
+      "protonvpn"
+      "streamlabs"
+      "obs"
     ];
     caskArgs = {
       no_quarantine = true;
     };
   };
+
+  fonts.packages = [ pkgs.nerd-fonts.hack ];
 
   networking = {
     applicationFirewall.enable = true;
@@ -123,6 +80,7 @@
   };
 
   nixpkgs.hostPlatform = "aarch64-darwin";
+  nixpkgs.config.allowUnfree = true;
 
   programs.fish.enable = true;
   users.users."uynx".shell = pkgs.fish;
