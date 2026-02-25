@@ -6,11 +6,49 @@
     DOCKER_HOST = "unix:///Users/uynx/.colima/default/docker.sock";
   };
 
-  xdg.configFile."aerospace/aerospace.toml" = {
-    source = ./dotfiles/aerospace.toml;
-  };
+  home.packages = with pkgs; [
+    coreutils
+    wget
+    fastfetch
+    fd
+    
+    cargo
+    rustc
+    (python3.withPackages (ps: with ps; [ pynvim pip ]))
+    nodejs
+    deno
+    
+    tree-sitter
+    ast-grep
+    lua5_1
+    luajitPackages.luarocks
+    
+    # Mason LSP and Tooling Dependencies
+    jdk
+    php
+    phpPackages.composer
+    
+    imagemagick
+    ghostscript
+    tectonic
+    mermaid-cli
+    texliveBasic
+    biber
 
-  # Link the nvim configuration out-of-store to allow LazyVim to manage plugins/lockfiles
+    aerospace
+    discord
+    firefox
+    qbittorrent
+    vscodium
+    wireshark
+
+    gemini-cli
+    ghostty-bin
+    brave
+    devpod
+  ];
+
+  xdg.configFile."aerospace.toml".source = ./dotfiles/aerospace.toml;
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
 
   programs = {
@@ -19,7 +57,6 @@
 
       interactiveShellInit = ''
         fish_add_path /opt/homebrew/bin
-        fish_add_path /opt/homebrew/opt/openjdk/bin
         set -gx EDITOR nvim
         set -g fish_greeting ""
       '';
@@ -29,6 +66,21 @@
     starship = {
       enable = true;
       enableFishIntegration = true;
+      settings.command_timeout = 1000;
+    };
+    neovim = {
+      enable = true;
+      defaultEditor = true;
+    };
+    fzf.enable = true;
+    ripgrep.enable = true;
+    lazygit.enable = true;
+    jq.enable = true;
+    gh.enable = true;
+    go.enable = true;
+    direnv = {
+      enable = true;
+      nix-direnv.enable = true;
     };
     git = {
       enable = true;
@@ -41,29 +93,5 @@
       };
     };
   };
-  # programs = {
-  #     direnv = {
-  #       enable = true;
-  #       nix-direnv.enable = true;
-  #     };
-  # 
-  #     bash = {
-  #       enable = true;
-  #       completion.enable = true;
-  #     };
-  #     
-  #     tmux = {
-  #       enable = true;
-  #       enableFzf = true;
-  #       enableSensible = true;
-  #       enableVim = true;
-  #     };
-  # 
-  #     # gnupg.agent = {
-  #     #   enable = true;
-  #     #   enableSSHSupport = true;
-  #     # };
-  # 
-  #   };
 }
 
