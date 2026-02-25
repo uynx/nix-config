@@ -68,7 +68,6 @@
     devpod
   ];
 
-
   xdg.configFile."aerospace.toml".source = ./dotfiles/aerospace.toml;
 
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
