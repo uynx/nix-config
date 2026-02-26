@@ -30,10 +30,10 @@
         inherit src;
         hash = "sha256-hnFHYQ8xPNFqic1UYygiLBWu3n82IkTJuQvgcXcMdv0=";
       };
-      patches = []; # Clear patches that don't apply to older versions
+      patches = []; 
     }))
     
-    # Provide the latest tree-sitter as a separate command to avoid collision
+    # Provide the latest tree-sitter as a separate command
     (pkgs.writeShellScriptBin "tree-sitter-latest" ''
       exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
     '')
