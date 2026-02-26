@@ -68,7 +68,7 @@
     devpod
   ];
 
-  xdg.configFile."aerospace.toml".source = ./dotfiles/aerospace.toml;
+  xdg.configFile."aerospace/aerospace.toml".source = ./dotfiles/aerospace.toml;
 
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
   xdg.dataFile."nvim/site/parser/norg.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
