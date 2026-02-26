@@ -3,7 +3,7 @@
 {  
   users.users.uynx.home = "/Users/uynx";
 
-# Using Determinate Nix
+  # Using Determinate Nix
   nix.enable = false;
 
   launchd.daemons = {
@@ -57,6 +57,8 @@
     };
 
     startup.chime = false;
+
+    defaults.LaunchServices.LSQuarantine = false;
   };
 
   environment = {
@@ -70,6 +72,7 @@
     shellAliases = {
       update = "nix flake update --flake ~/nix-config";
       reb = "sudo darwin-rebuild switch --flake ~/nix-config#macos";
+      unb = "xattr -d com.apple.quarantine";
     };
     shells = [ pkgs.fish ];
   };
