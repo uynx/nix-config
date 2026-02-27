@@ -74,6 +74,11 @@
   xdg.dataFile."nvim/site/parser/norg.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
 
   programs = {
+    man = {
+      enable = true;
+      generateCaches = true;
+      package = pkgs.man;
+    };
     zoxide.enable = true;
     bat.enable = true;
     eza.enable = true;
