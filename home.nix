@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 
 {
-  home.stateVersion = "25.11";
+  home.stateVersion = "26.05";
   home.sessionVariables = {
     DOCKER_HOST = "unix:///Users/uynx/.colima/default/docker.sock";
   };

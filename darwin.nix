@@ -57,12 +57,11 @@
     };
 
     startup.chime = false;
-
-    defaults.LaunchServices.LSQuarantine = false;
   };
 
   environment = {
     systemPackages = with pkgs; [
+      duti
       docker
       colima
       lima
