@@ -57,8 +57,6 @@
     };
 
     startup.chime = false;
-
-    defaults.LaunchServices.LSQuarantine = false;
   };
 
   environment = {
