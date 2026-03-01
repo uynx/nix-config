@@ -70,7 +70,7 @@
     brave
     devpod
   ];
-  xdg.configFile."ghostty/ghostty_config".source = ./dotfiles/ghostty_config;
+  xdg.configFile."ghostty/config".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
 
   xdg.configFile."aerospace/aerospace.toml".source = ./dotfiles/aerospace.toml;
 

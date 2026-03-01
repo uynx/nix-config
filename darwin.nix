@@ -98,7 +98,10 @@
     };
   };
 
-  fonts.packages = [ pkgs.nerd-fonts.hack ];
+  fonts.packages = [ 
+    pkgs.nerd-fonts.hack 
+    pkgs.julia-mono
+  ];
 
   networking = {
     applicationFirewall.enable = true;

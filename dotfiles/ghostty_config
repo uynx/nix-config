@@ -1,1 +1,62 @@
 font-family = "Hack Nerd Font"
+font-size = 16 
+font-thicken = true
+font-thicken-strength = 64
+
+# --- New Ergonomic & Eye-Strain Settings ---
+
+# Solarized Dark is scientifically modeled (CIELAB lightness scale) 
+# to reduce contrast fatigue and eye strain over long coding sessions.
+theme = "Flexoki Dark"
+
+# Window Aesthetics & Padding
+window-padding-x = 10
+window-padding-y = 10
+window-padding-balance = true
+window-decoration = auto
+macos-titlebar-style = transparent
+macos-titlebar-proxy-icon = hidden
+macos-window-shadow = true
+
+# Soft Background Blur (Optional, set opacity to 1.0 to disable)
+background-opacity = 0.95
+background-blur = 20
+
+# Mouse & Cursor Behavior
+cursor-style = bar
+cursor-style-blink = true
+mouse-hide-while-typing = true
+scroll-to-bottom = keystroke
+
+# Session & Security
+window-save-state = always
+clipboard-paste-protection = true
+confirm-close-surface = true
+
+# --- Existing Fallback Fonts ---
+
+# Superscripts, Subscripts, Letterlike, and Number Forms
+font-codepoint-map = U+2070-U+209F="JuliaMono"
+font-codepoint-map = U+2100-U+214F="JuliaMono"
+font-codepoint-map = U+2150-U+218F="JuliaMono"
+
+# Mathematical Operators and Supplemental Math
+font-codepoint-map = U+2200-U+22FF="JuliaMono"
+font-codepoint-map = U+27C0-U+27EF="JuliaMono"
+font-codepoint-map = U+2980-U+29FF="JuliaMono"
+font-codepoint-map = U+2A00-U+2AFF="JuliaMono"
+
+# Alphanumeric Symbols (Script, Fraktur, Double-Struck)
+font-codepoint-map = U+1D400-U+1D7FF="JuliaMono"
+
+# Diacritics and Combining Marks
+font-codepoint-map = U+20D0-U+20FF="JuliaMono"
+
+# Structural Symbols (Arrows, Technical, Geometric, Braille)
+font-codepoint-map = U+2190-U+21FF="JuliaMono"
+font-codepoint-map = U+27F0-U+27FF="JuliaMono"
+font-codepoint-map = U+2900-U+297F="JuliaMono"
+font-codepoint-map = U+2B00-U+2BFF="JuliaMono"
+font-codepoint-map = U+2300-U+23FF="JuliaMono"
+font-codepoint-map = U+25A0-U+25FF="JuliaMono"
+font-codepoint-map = U+2800-U+28FF="JuliaMono"
