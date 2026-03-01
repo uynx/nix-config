@@ -61,7 +61,6 @@
 
   environment = {
     systemPackages = with pkgs; [
-      duti
       docker
       colima
       lima
