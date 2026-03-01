@@ -16,8 +16,9 @@
     rustc
     nodejs
     deno
+    (python3.withPackages (ps: with ps; [ pip setuptools ]))
     
-    # Pinned tree-sitter to v0.26.1 for nvim-treesitter compatibility
+    # Pinned for LazyVim
     (tree-sitter.overrideAttrs (oldAttrs: rec {
       version = "0.26.1";
       src = pkgs.fetchFromGitHub {
@@ -33,7 +34,7 @@
       patches = []; 
     }))
     
-    # Provide the latest tree-sitter as a separate command
+    # Latest tree-sitter in nixpkgs 
     (pkgs.writeShellScriptBin "tree-sitter-latest" ''
       exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
     '')
@@ -50,9 +51,11 @@
     
     imagemagick
     ghostscript
-    tectonic
-    biber
-    texliveSmall
+    (texlive.combine {
+      inherit (texlive) 
+        scheme-full
+        biber;
+    })
     mermaid-cli
 
     aerospace
