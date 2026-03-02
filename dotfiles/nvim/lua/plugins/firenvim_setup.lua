@@ -15,9 +15,6 @@ return {
     end
 
     vim.o.guifont = "Hack Nerd Font:h16"
-    vim.o.laststatus, vim.o.showtabline = 3, 0
-    vim.opt.shortmess:append("AIW")
-    vim.opt.pumheight, vim.opt.winblend, vim.opt.pumblend = 10, 0, 0
 
     local ext_map =
       { python = "py", cpp = "cpp", java = "java", typescript = "ts", rust = "rs", go = "go", text = "txt" }
@@ -40,7 +37,7 @@ return {
       if content:match("public class [%w_]+") or content:match("public [%w%[%]]+ [%w_]+%(") then
         return "java"
       end
-      if content:match("public%:") or content:match("vector< ") then
+      if content:match("public%:") or content:match("vector<") then
         return "cpp"
       end
       return nil
@@ -58,15 +55,16 @@ return {
       math.randomseed(os.time())
       local tmp_name = old_name .. "." .. math.random(1000, 9999) .. "." .. (ext_map[lang] or lang)
 
-      local function wipe(n)
+      local function clean_buffer(n)
         for _, b in ipairs(vim.api.nvim_list_bufs()) do
           if vim.api.nvim_buf_get_name(b) == n and b ~= bufnr then
             vim.cmd("silent! bwipeout! " .. b)
           end
         end
+        os.remove(n)
       end
 
-      wipe(tmp_name)
+      clean_buffer(tmp_name)
       vim.bo.modified = false
       pcall(vim.api.nvim_buf_set_name, bufnr, tmp_name)
       vim.bo.filetype = lang
@@ -78,7 +76,7 @@ return {
             return
           end
           vim.bo.modified = false
-          wipe(old_name)
+          clean_buffer(old_name)
           pcall(vim.api.nvim_buf_set_name, bufnr, old_name)
           vim.bo.filetype, vim.bo.modified = lang, false
           if is_auto then
@@ -87,6 +85,15 @@ return {
         end, 200)
       end)
     end
+
+    vim.api.nvim_create_autocmd("LspAttach", {
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client and client.name == "eslint" then
+          vim.lsp.stop_client(args.data.client_id)
+        end
+      end,
+    })
 
     vim.api.nvim_create_autocmd({ "BufEnter", "BufReadPost" }, {
       pattern = { "*leetcode.com_*.txt", "*neetcode.io_*.txt" },

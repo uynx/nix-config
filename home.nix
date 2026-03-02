@@ -86,10 +86,9 @@
   home.file."Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json".text = 
     let 
       # Wrapper to ensure PATH is set so Brave can find nvim and its dependencies
-      # We use --headless and ensure no intro message to avoid polluting stdout
       firenvim_wrapper = pkgs.writeShellScript "firenvim_nvim" ''
-        export PATH="${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-        exec ${config.programs.neovim.finalPackage}/bin/nvim --headless --cmd "set shortmess+=I" "$@"
+        export PATH="${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+        exec ${config.programs.neovim.finalPackage}/bin/nvim --headless "$@"
       '';
     in
     builtins.toJSON {
