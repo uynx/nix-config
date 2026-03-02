@@ -3,13 +3,8 @@ font-size = 16
 font-thicken = true
 font-thicken-strength = 64
 
-# --- New Ergonomic & Eye-Strain Settings ---
-
-# Solarized Dark is scientifically modeled (CIELAB lightness scale) 
-# to reduce contrast fatigue and eye strain over long coding sessions.
 theme = "Flexoki Dark"
 
-# Window Aesthetics & Padding
 window-padding-x = 10
 window-padding-y = 10
 window-padding-balance = true
@@ -18,22 +13,17 @@ macos-titlebar-style = transparent
 macos-titlebar-proxy-icon = hidden
 macos-window-shadow = true
 
-# Soft Background Blur (Optional, set opacity to 1.0 to disable)
 background-opacity = 0.95
 background-blur = 20
 
-# Mouse & Cursor Behavior
 cursor-style = bar
 cursor-style-blink = true
 mouse-hide-while-typing = true
 scroll-to-bottom = keystroke
 
-# Session & Security
 window-save-state = always
 clipboard-paste-protection = true
 confirm-close-surface = true
-
-# --- Existing Fallback Fonts ---
 
 # Superscripts, Subscripts, Letterlike, and Number Forms
 font-codepoint-map = U+2070-U+209F="JuliaMono"

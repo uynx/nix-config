@@ -56,6 +56,12 @@
       remapCapsLockToEscape = true;
     };
 
+    defaults.NSGlobalDomain = {
+      ApplePressAndHoldEnabled = false;
+      KeyRepeat = 5;
+      InitialKeyRepeat = 15;
+    };
+
     startup.chime = false;
   };
 
