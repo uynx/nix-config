@@ -99,6 +99,9 @@
       "streamlabs"
       "obs"
     ];
+    masApps = {
+      "Cake Wallet" = 1334702542;
+    };
     caskArgs = {
       no_quarantine = true;
     };
