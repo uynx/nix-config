@@ -99,14 +99,17 @@
       "streamlabs"
       "obs"
     ];
+    masApps = {
+      "Cake Wallet" = 1334702542;
+    };
     caskArgs = {
       no_quarantine = true;
     };
   };
 
-  fonts.packages = [ 
-    pkgs.nerd-fonts.hack 
-    pkgs.julia-mono
+  fonts.packages = with pkgs; [ 
+    nerd-fonts.hack 
+    julia-mono
   ];
 
   networking = {
