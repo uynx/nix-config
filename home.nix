@@ -45,7 +45,9 @@
     '')
     
     clang
-    ast-grep
+    (ast-grep.overrideAttrs (oldAttrs: {
+      doCheck = false;
+    }))
     lua5_1
     luarocks
     ruby
