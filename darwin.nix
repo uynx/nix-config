@@ -8,7 +8,7 @@
 
   launchd.daemons = {
     nix-gc = {
-      script = "exec /nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 14d";
+      script = "exec /nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 3d";
       serviceConfig = {
         StartCalendarInterval = [{ Hour = 4; Minute = 0; }];
         StandardErrorPath = "/var/log/nix-gc.log";
@@ -28,7 +28,7 @@
 
   launchd.user.agents = {
     nix-gc-user = {
-      command = "/nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 14d";
+      command = "/nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 3d";
       serviceConfig = {
         StartCalendarInterval = [{ Hour = 4; Minute = 0; }];
         StandardErrorPath = "/Users/uynx/Library/Logs/nix-gc-user.log";
