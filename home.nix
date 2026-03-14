@@ -66,6 +66,7 @@
     aerospace
     discord
     firefox
+    proton-pass
     qbittorrent
     vscodium
     wireshark

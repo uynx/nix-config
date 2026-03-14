@@ -95,7 +95,6 @@
       "microsoft-office" 
       "tor-browser"
       "mullvad-browser"
-      "protonvpn"
       "streamlabs"
       "obs"
     ];
