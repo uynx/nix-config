@@ -96,13 +96,11 @@
       "tor-browser"
       "mullvad-browser"
       "streamlabs"
+      "protonvpn"
       "obs"
     ];
     masApps = {
       "Cake Wallet" = 1334702542;
-    };
-    caskArgs = {
-      no_quarantine = true;
     };
   };
 
