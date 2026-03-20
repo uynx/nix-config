@@ -1,9 +1,12 @@
 { config, pkgs, lib, ... }:
 
 {
+  home.username = "uynx";
+  home.homeDirectory = "/Users/uynx";
   home.stateVersion = "26.05";
   home.sessionVariables = {
     DOCKER_HOST = "unix:///Users/uynx/.colima/default/docker.sock";
+    EDITOR = "nvim";
   };
 
   home.packages = with pkgs; [
@@ -75,21 +78,21 @@
     ghostty-bin
     brave
     devpod
+    neovim
   ];
-  xdg.configFile."ghostty/config".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
 
-  xdg.configFile."aerospace/aerospace.toml".source = ./dotfiles/aerospace.toml;
+  home.file.".config/ghostty/config".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
 
+  home.file.".config/aerospace/aerospace.toml".source = ./dotfiles/aerospace.toml;
 
-  xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
-  xdg.dataFile."nvim/site/parser/norg.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
+  home.file.".config/nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
+  home.file.".local/share/nvim/site/parser/norg.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
 
   home.file."Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json".text = 
     let 
-      # Wrapper to ensure PATH is set so Brave can find nvim and its dependencies
       firenvim_wrapper = pkgs.writeShellScript "firenvim_nvim" ''
         export PATH="${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-        exec ${config.programs.neovim.finalPackage}/bin/nvim --headless "$@"
+        exec ${pkgs.neovim}/bin/nvim --headless "$@"
       '';
     in
     builtins.toJSON {
@@ -144,6 +147,8 @@
         df = "duf";
         ps = "procs";
         cd = "z";
+        vi = "nvim";
+        vim = "nvim";
       };
 
       plugins = [ ];
@@ -152,17 +157,6 @@
       enable = true;
       enableFishIntegration = true;
       settings.command_timeout = 1000;
-    };
-    neovim = {
-      enable = true;
-      defaultEditor = true;
-      withNodeJs = true;
-      withPython3 = true;
-      withRuby = true;
-      withPerl = true;
-      viAlias = true;
-      vimAlias = true;
-      vimdiffAlias = true;
     };
     fzf.enable = true;
     ripgrep.enable = true;
