@@ -98,6 +98,7 @@
       "streamlabs"
       "protonvpn"
       "obs"
+      "melonds"
     ];
     masApps = {
       "Cake Wallet" = 1334702542;

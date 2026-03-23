@@ -1,6 +1,10 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
+  imports = [
+    inputs.nix-index-database.homeModules.nix-index
+  ];
+
   home.username = "uynx";
   home.homeDirectory = "/Users/uynx";
   home.stateVersion = "26.05";
@@ -25,6 +29,9 @@
     nodejs
     deno
     (python3.withPackages (ps: with ps; [ pip setuptools ]))
+    
+    # Required for Go/direnv external linking on Darwin
+    apple-sdk_15
     
     # Pinned for LazyVim
     (tree-sitter.overrideAttrs (oldAttrs: rec {
@@ -164,9 +171,15 @@
     jq.enable = true;
     gh.enable = true;
     go.enable = true;
+    nix-index.enable = true;
+    nix-index-database.comma.enable = true;
     direnv = {
       enable = true;
       nix-direnv.enable = true;
+      package = pkgs.direnv.overrideAttrs (old: {
+        env = (old.env or { }) // { CGO_ENABLED = "1"; };
+        buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.apple-sdk_26 ];
+      });
     };
     git = {
       enable = true;
