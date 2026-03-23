@@ -178,7 +178,6 @@
       nix-direnv.enable = true;
       package = pkgs.direnv.overrideAttrs (old: {
         env = (old.env or { }) // { CGO_ENABLED = "1"; };
-        buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.apple-sdk_26 ];
       });
     };
     git = {
