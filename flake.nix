@@ -13,16 +13,34 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    mac-app-util.url = "github:hraban/mac-app-util";
   };
 
-  outputs = inputs @ { self, nixpkgs, nix-darwin, home-manager, ... }: {
-    darwinConfigurations."macos" = nix-darwin.lib.darwinSystem {
-      system = "aarch64-darwin";
-      specialArgs = { inherit inputs; };
-      modules = [
-        ./darwin.nix
-        home-manager.darwinModules.home-manager
-      ];
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      nix-darwin,
+      home-manager,
+      nix-index-database,
+      mac-app-util,
+      ...
+    }:
+    {
+      darwinConfigurations."macos" = nix-darwin.lib.darwinSystem {
+        system = "aarch64-darwin";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./darwin.nix
+          home-manager.darwinModules.home-manager
+          mac-app-util.darwinModules.default
+        ];
+      };
     };
-  };
 }

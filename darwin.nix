@@ -1,6 +1,6 @@
-{ config, lib, inputs, pkgs, ... }:
+{ inputs, pkgs, ... }:
 
-{  
+{
   users.users.uynx.home = "/Users/uynx";
 
   # Using Determinate Nix
@@ -10,7 +10,12 @@
     nix-gc = {
       script = "exec /nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 3d";
       serviceConfig = {
-        StartCalendarInterval = [{ Hour = 4; Minute = 0; }];
+        StartCalendarInterval = [
+          {
+            Hour = 4;
+            Minute = 0;
+          }
+        ];
         StandardErrorPath = "/var/log/nix-gc.log";
         StandardOutPath = "/var/log/nix-gc.log";
       };
@@ -19,7 +24,12 @@
     nix-optimise = {
       script = "exec /nix/var/nix/profiles/default/bin/nix store optimise";
       serviceConfig = {
-        StartCalendarInterval = [{ Hour = 4; Minute = 0; }];
+        StartCalendarInterval = [
+          {
+            Hour = 4;
+            Minute = 0;
+          }
+        ];
         StandardErrorPath = "/var/log/nix-optimise.log";
         StandardOutPath = "/var/log/nix-optimise.log";
       };
@@ -30,7 +40,12 @@
     nix-gc-user = {
       command = "/nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 3d";
       serviceConfig = {
-        StartCalendarInterval = [{ Hour = 4; Minute = 0; }];
+        StartCalendarInterval = [
+          {
+            Hour = 4;
+            Minute = 0;
+          }
+        ];
         StandardErrorPath = "/Users/uynx/Library/Logs/nix-gc-user.log";
         StandardOutPath = "/Users/uynx/Library/Logs/nix-gc-user.log";
       };
@@ -66,18 +81,6 @@
   };
 
   environment = {
-    systemPackages = with pkgs; [
-      docker
-      colima
-      lima
-      postgresql
-      mongodb-tools
-    ];
-    shellAliases = {
-      update = "nix flake update --flake ~/nix-config";
-      reb = "sudo darwin-rebuild switch --flake ~/nix-config#macos";
-      unb = "xattr -d com.apple.quarantine";
-    };
     shells = [ pkgs.fish ];
   };
 
@@ -89,25 +92,22 @@
       upgrade = true;
       cleanup = "zap";
     };
-    casks = [ 
-      "julia-app"
+    casks = [
+      "libreoffice"
       "skim"
-      "microsoft-office" 
+      "protonvpn"
+      "streamlabs"
       "tor-browser"
       "mullvad-browser"
-      "streamlabs"
       "obs"
     ];
     masApps = {
       "Cake Wallet" = 1334702542;
     };
-    caskArgs = {
-      no_quarantine = true;
-    };
   };
 
-  fonts.packages = with pkgs; [ 
-    nerd-fonts.hack 
+  fonts.packages = with pkgs; [
+    nerd-fonts.hack
     julia-mono
   ];
 
@@ -126,7 +126,7 @@
 
   nixpkgs.hostPlatform = "aarch64-darwin";
   nixpkgs.config.allowUnfree = true;
-  
+
   programs.fish.enable = true;
   users.users."uynx".shell = pkgs.fish;
 }
