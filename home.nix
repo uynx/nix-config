@@ -1,13 +1,24 @@
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
 {
   imports = [
     inputs.nix-index-database.homeModules.nix-index
+    inputs.mac-app-util.homeManagerModules.default
   ];
 
-  home.username = "uynx";
-  home.homeDirectory = "/Users/uynx";
-  home.stateVersion = "26.05";
+  home = {
+    username = "uynx";
+    homeDirectory = "/Users/uynx";
+    stateVersion = "26.05";
+  };
+
+  targets.darwin.copyApps.enable = false;
+
   home.sessionVariables = {
     DOCKER_HOST = "unix:///Users/uynx/.colima/default/docker.sock";
     EDITOR = "nvim";
@@ -23,17 +34,19 @@
     sd
     gping
     doggo
-    
+
     cargo
     rustc
     nodejs
     deno
-    (python3.withPackages (ps: with ps; [ pip setuptools ]))
-    
-    # Required for Go/direnv external linking on Darwin
-    apple-sdk_15
-    
-    # Pinned for LazyVim
+    (python3.withPackages (
+      ps: with ps; [
+        pip
+        setuptools
+      ]
+    ))
+
+    # Pinned for lazy
     (tree-sitter.overrideAttrs (oldAttrs: rec {
       version = "0.26.1";
       src = pkgs.fetchFromGitHub {
@@ -46,36 +59,49 @@
         inherit src;
         hash = "sha256-hnFHYQ8xPNFqic1UYygiLBWu3n82IkTJuQvgcXcMdv0=";
       };
-      patches = []; 
+      patches = [ ];
     }))
-    
+
     # Latest tree-sitter in nixpkgs
     (pkgs.writeShellScriptBin "tree-sitter-latest" ''
       exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
     '')
-    
+
     clang
     ast-grep
     lua5_1
     luarocks
     ruby
-    
+
+    statix
+    nil
+    nixfmt-rfc-style
+
     jdk
     php
     php.packages.composer
-    
+
+    docker
+    colima
+    lima
+    postgresql
+    mongodb-tools
+    julia-bin
+    melonds
+
     imagemagick
     ghostscript
     (texlive.combine {
-      inherit (texlive) 
+      inherit (texlive)
         scheme-full
-        biber;
+        biber
+        ;
     })
     mermaid-cli
 
     aerospace
     discord
-    firefox
+    firefox-bin
     proton-pass
     qbittorrent
     vscodium
@@ -85,30 +111,35 @@
     ghostty-bin
     brave
     devpod
-    neovim
   ];
 
-  home.file.".config/ghostty/config".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
+  programs.neovim = {
+    enable = true;
+  };
 
-  home.file.".config/aerospace/aerospace.toml".source = ./dotfiles/aerospace.toml;
-
-  home.file.".config/nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
-  home.file.".local/share/nvim/site/parser/norg.so".source = "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
-
-  home.file."Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json".text = 
-    let 
-      firenvim_wrapper = pkgs.writeShellScript "firenvim_nvim" ''
-        export PATH="${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-        exec ${pkgs.neovim}/bin/nvim --headless "$@"
-      '';
-    in
-    builtins.toJSON {
-      name = "firenvim";
-      description = "Firenvim connector";
-      path = "${firenvim_wrapper}";
-      type = "stdio";
-      allowed_origins = [ "chrome-extension://otdbuclmgnjkpbdaokeojghpneocnban/" ];
-    };
+  home.file = {
+    ".config/aerospace/aerospace.toml".source = ./dotfiles/aerospace.toml;
+    ".config/ghostty/config".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
+    ".config/nvim".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
+    ".local/share/nvim/site/parser/norg.so".source =
+      "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
+    "Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json".text =
+      let
+        firenvim_wrapper = pkgs.writeShellScript "firenvim_nvim" ''
+          export PATH="${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+          exec ${pkgs.neovim}/bin/nvim --headless "$@"
+        '';
+      in
+      builtins.toJSON {
+        name = "firenvim";
+        description = "Firenvim connector";
+        path = "${firenvim_wrapper}";
+        type = "stdio";
+        allowed_origins = [ "chrome-extension://otdbuclmgnjkpbdaokeojghpneocnban/" ];
+      };
+  };
 
   programs = {
     man = {
@@ -138,6 +169,13 @@
       '';
 
       shellAliases = {
+        update = "nix flake update --flake ~/nix-config";
+        reb = "sudo darwin-rebuild switch --flake ~/nix-config#macos";
+        unb = "xattr -d com.apple.quarantine";
+
+        word = "open -a LibreOffice --args --writer";
+        powerpoint = "open -a LibreOffice --args --impress";
+
         cat = "bat";
         grep = "rg";
         find = "fd";
@@ -177,7 +215,9 @@
       enable = true;
       nix-direnv.enable = true;
       package = pkgs.direnv.overrideAttrs (old: {
-        env = (old.env or { }) // { CGO_ENABLED = "1"; };
+        env = (old.env or { }) // {
+          CGO_ENABLED = "1";
+        };
       });
     };
     git = {
@@ -192,4 +232,3 @@
     };
   };
 }
-
