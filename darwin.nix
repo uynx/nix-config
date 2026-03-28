@@ -97,7 +97,6 @@
       "skim"
       "protonvpn"
       "streamlabs"
-      "tor-browser"
       "mullvad-browser"
       "obs"
     ];

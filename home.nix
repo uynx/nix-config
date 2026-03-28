@@ -8,7 +8,6 @@
 {
   imports = [
     inputs.nix-index-database.homeModules.nix-index
-    inputs.mac-app-util.homeManagerModules.default
   ];
 
   home = {
@@ -35,17 +34,6 @@
     gping
     doggo
 
-    cargo
-    rustc
-    nodejs
-    deno
-    (python3.withPackages (
-      ps: with ps; [
-        pip
-        setuptools
-      ]
-    ))
-
     # Pinned for lazy
     (tree-sitter.overrideAttrs (oldAttrs: rec {
       version = "0.26.1";
@@ -67,26 +55,36 @@
       exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
     '')
 
+    cargo
+    rustc
+    nodejs
+    deno
+    (python3.withPackages (
+      ps: with ps; [
+        pip
+        setuptools
+      ]
+    ))
     clang
     ast-grep
     lua5_1
     luarocks
-    ruby
-
-    statix
-    nil
-    nixfmt-rfc-style
-
     jdk
+    julia-bin
     php
     php.packages.composer
+    ruby
 
+    nil
+    nixfmt
+    statix
+
+    postgresql
+    mongodb-tools
     docker
     colima
     lima
-    postgresql
-    mongodb-tools
-    julia-bin
+
     melonds
 
     imagemagick
@@ -115,6 +113,10 @@
 
   programs.neovim = {
     enable = true;
+    withNodeJs = true;
+    withRuby = true;
+    withPython3 = true;
+    withPerl = true;
   };
 
   home.file = {
