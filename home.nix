@@ -36,16 +36,16 @@
 
     # Pinned for lazy
     (tree-sitter.overrideAttrs (oldAttrs: rec {
-      version = "0.26.1";
+      version = "0.26.7";
       src = pkgs.fetchFromGitHub {
         owner = "tree-sitter";
         repo = "tree-sitter";
-        rev = "v0.26.1";
-        hash = "sha256-k8X2qtxUne8C6znYAKeb4zoBf+vffmcJZQHUmBvsilA=";
+        rev = "v0.26.7";
+        hash = "sha256-O3c2djKhM+vIYunthDApi9sw/gFH/FBME1uR4N+9MFM="; # 43
       };
       cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
         inherit src;
-        hash = "sha256-hnFHYQ8xPNFqic1UYygiLBWu3n82IkTJuQvgcXcMdv0=";
+        hash = "sha256-zh6KsnZ7s6VXGCggoYbLGeGnEZ7g7anjkz8C5/L4yXQ=";
       };
       patches = [ ];
     }))
