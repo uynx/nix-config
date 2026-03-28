@@ -94,12 +94,9 @@
     };
     casks = [
       "libreoffice"
-      "skim"
       "protonvpn"
       "streamlabs"
-      "tor-browser"
       "mullvad-browser"
-      "obs"
     ];
     masApps = {
       "Cake Wallet" = 1334702542;

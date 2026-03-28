@@ -18,8 +18,6 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    mac-app-util.url = "github:hraban/mac-app-util";
   };
 
   outputs =
@@ -29,7 +27,6 @@
       nix-darwin,
       home-manager,
       nix-index-database,
-      mac-app-util,
       ...
     }:
     {
@@ -39,7 +36,6 @@
         modules = [
           ./darwin.nix
           home-manager.darwinModules.home-manager
-          mac-app-util.darwinModules.default
         ];
       };
     };

@@ -8,7 +8,6 @@
 {
   imports = [
     inputs.nix-index-database.homeModules.nix-index
-    inputs.mac-app-util.homeManagerModules.default
   ];
 
   home = {
@@ -35,6 +34,27 @@
     gping
     doggo
 
+    # Pinned for lazy
+    (tree-sitter.overrideAttrs (oldAttrs: rec {
+      version = "0.26.7";
+      src = pkgs.fetchFromGitHub {
+        owner = "tree-sitter";
+        repo = "tree-sitter";
+        rev = "v0.26.7";
+        hash = "sha256-O3c2djKhM+vIYunthDApi9sw/gFH/FBME1uR4N+9MFM="; # 43
+      };
+      cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+        inherit src;
+        hash = "sha256-zh6KsnZ7s6VXGCggoYbLGeGnEZ7g7anjkz8C5/L4yXQ=";
+      };
+      patches = [ ];
+    }))
+
+    # Latest tree-sitter in nixpkgs
+    (pkgs.writeShellScriptBin "tree-sitter-latest" ''
+      exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
+    '')
+
     cargo
     rustc
     nodejs
@@ -45,48 +65,26 @@
         setuptools
       ]
     ))
-
-    # Pinned for lazy
-    (tree-sitter.overrideAttrs (oldAttrs: rec {
-      version = "0.26.1";
-      src = pkgs.fetchFromGitHub {
-        owner = "tree-sitter";
-        repo = "tree-sitter";
-        rev = "v0.26.1";
-        hash = "sha256-k8X2qtxUne8C6znYAKeb4zoBf+vffmcJZQHUmBvsilA=";
-      };
-      cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
-        inherit src;
-        hash = "sha256-hnFHYQ8xPNFqic1UYygiLBWu3n82IkTJuQvgcXcMdv0=";
-      };
-      patches = [ ];
-    }))
-
-    # Latest tree-sitter in nixpkgs
-    (pkgs.writeShellScriptBin "tree-sitter-latest" ''
-      exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
-    '')
-
     clang
     ast-grep
     lua5_1
     luarocks
-    ruby
-
-    statix
-    nil
-    nixfmt-rfc-style
-
     jdk
+    julia-bin
     php
     php.packages.composer
+    ruby
 
+    nil
+    nixfmt
+    statix
+
+    postgresql
+    mongodb-tools
     docker
     colima
     lima
-    postgresql
-    mongodb-tools
-    julia-bin
+
     melonds
 
     imagemagick
@@ -115,6 +113,10 @@
 
   programs.neovim = {
     enable = true;
+    withNodeJs = true;
+    withRuby = true;
+    withPython3 = true;
+    withPerl = true;
   };
 
   home.file = {
@@ -209,6 +211,7 @@
     jq.enable = true;
     gh.enable = true;
     go.enable = true;
+    sioyek.enable = true;
     nix-index.enable = true;
     nix-index-database.comma.enable = true;
     direnv = {

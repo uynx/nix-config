@@ -3,7 +3,7 @@ return {
   opts = {
     servers = {
       nil_ls = {
-        mason = false, -- Tell LazyVim NOT to use Mason to install this
+        mason = false,
         settings = {
           ["nil"] = {
             nix = {
@@ -14,6 +14,11 @@ return {
           },
         },
       },
+      lua_ls = {},
+      pyright = {},
+      ruff = {},
+      jsonls = {},
+      texlab = {},
     },
   },
 }
