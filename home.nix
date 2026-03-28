@@ -211,6 +211,7 @@
     jq.enable = true;
     gh.enable = true;
     go.enable = true;
+    sioyek.enable = true;
     nix-index.enable = true;
     nix-index-database.comma.enable = true;
     direnv = {
