@@ -90,59 +90,61 @@
       remapCapsLockToEscape = true;
     };
 
-    defaults.NSGlobalDomain = {
-      KeyRepeat = 5;
-      ApplePressAndHoldEnabled = false;
-      InitialKeyRepeat = 15;
-      "com.apple.mouse.tapBehavior" = 1;
-      AppleShowAllExtensions = true;
-      AppleInterfaceStyle = "Dark";
-      AppleICUForce24HourTime = false;
+    defaults = {
+      NSGlobalDomain = {
+        KeyRepeat = 5;
+        ApplePressAndHoldEnabled = false;
+        InitialKeyRepeat = 15;
+        "com.apple.mouse.tapBehavior" = 1;
+        AppleShowAllExtensions = true;
+        AppleInterfaceStyle = "Dark";
+        AppleICUForce24HourTime = false;
 
-      NSAutomaticCapitalizationEnabled = false;
-      NSAutomaticDashSubstitutionEnabled = false;
-      NSAutomaticPeriodSubstitutionEnabled = false;
-      NSAutomaticQuoteSubstitutionEnabled = false;
-      NSAutomaticSpellingCorrectionEnabled = false;
-      NSAutomaticInlinePredictionEnabled = false;
+        NSAutomaticCapitalizationEnabled = false;
+        NSAutomaticDashSubstitutionEnabled = false;
+        NSAutomaticPeriodSubstitutionEnabled = false;
+        NSAutomaticQuoteSubstitutionEnabled = false;
+        NSAutomaticSpellingCorrectionEnabled = false;
+        NSAutomaticInlinePredictionEnabled = false;
 
-      NSWindowShouldDragOnGesture = true; # Cmd + Ctrl + Click anywhere to drag windows
+        NSWindowShouldDragOnGesture = true; # Cmd + Ctrl + Click anywhere to drag windows
 
-      NSNavPanelExpandedStateForSaveMode = true;
-      NSNavPanelExpandedStateForSaveMode2 = true;
-      PMPrintingExpandedStateForPrint = true;
-      PMPrintingExpandedStateForPrint2 = true;
-      AppleScrollerPagingBehavior = true; # Jump to the spot clicked on the scroll bar
-    };
+        NSNavPanelExpandedStateForSaveMode = true;
+        NSNavPanelExpandedStateForSaveMode2 = true;
+        PMPrintingExpandedStateForPrint = true;
+        PMPrintingExpandedStateForPrint2 = true;
+        AppleScrollerPagingBehavior = true; # Jump to the spot clicked on the scroll bar
+      };
 
-    defaults.WindowManager = {
-      EnableStandardClickToShowDesktop = false; # Stop hiding windows when clicking wallpaper
-      StandardHideDesktopIcons = true;
-    };
+      WindowManager = {
+        EnableStandardClickToShowDesktop = false; # Stop hiding windows when clicking wallpaper
+        StandardHideDesktopIcons = true;
+      };
 
-    defaults.dock = {
-      autohide = true;
-      show-recents = false;
-      launchanim = false;
-      mouse-over-hilite-stack = true;
-      orientation = "bottom";
-      tilesize = 48;
-      showhidden = true; # Translucent icons for hidden apps
-    };
+      dock = {
+        autohide = true;
+        show-recents = false;
+        launchanim = false;
+        mouse-over-hilite-stack = true;
+        orientation = "bottom";
+        tilesize = 48;
+        showhidden = true; # Translucent icons for hidden apps
+      };
 
-    defaults.finder = {
-      _FXSortFoldersFirst = true;
-      AppleShowAllExtensions = true;
-      FXDefaultSearchScope = "SCcf"; # Search current folder by default
-      ShowPathbar = true;
-      ShowStatusBar = true;
-      _FXShowPosixPathInTitle = true;
-      FXEnableExtensionChangeWarning = false;
-    };
+      finder = {
+        _FXSortFoldersFirst = true;
+        AppleShowAllExtensions = true;
+        FXDefaultSearchScope = "SCcf"; # Search current folder by default
+        ShowPathbar = true;
+        ShowStatusBar = true;
+        _FXShowPosixPathInTitle = true;
+        FXEnableExtensionChangeWarning = false;
+      };
 
-    defaults.screencapture = {
-      location = "~/Pictures/Screenshots";
-      type = "png";
+      screencapture = {
+        location = "~/Pictures/Screenshots";
+        type = "png";
+      };
     };
 
     startup.chime = false;
