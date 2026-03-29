@@ -149,6 +149,7 @@
         editor = "nvim";
       };
     };
+
     ghostty = {
       enable = true;
       package = pkgs.ghostty-bin;
@@ -183,10 +184,12 @@
       generateCaches = true;
       package = pkgs-stable.man;
     };
+
     zoxide = {
       enable = true;
       enableFishIntegration = true;
     };
+
     yazi = {
       enable = true;
       enableFishIntegration = true;
@@ -199,9 +202,11 @@
         };
       };
     };
+
     bat = {
       enable = true;
     };
+
     eza = {
       enable = true;
       enableFishIntegration = true;
@@ -212,19 +217,24 @@
         "--header"
       ];
     };
+
     btop.enable = true;
+
     fd = {
       enable = true;
       hidden = true;
     };
+
     tealdeer = {
       enable = true;
       settings.updates.auto_update = true;
     };
+
     atuin = {
       enable = true;
       enableFishIntegration = true;
     };
+
     fish = {
       enable = true;
 
@@ -273,6 +283,7 @@
         }
       ];
     };
+
     starship = {
       enable = true;
       enableFishIntegration = true;
@@ -281,11 +292,13 @@
         command_timeout = 1000;
       };
     };
+
     fzf = {
       enable = true;
       enableFishIntegration = true;
       changeDirWidgetCommand = "fd --type d --hidden --strip-cwd-prefix --exclude .git";
     };
+
     ripgrep = {
       enable = true;
       arguments = [
@@ -296,6 +309,7 @@
         "--smart-case"
       ];
     };
+
     lazygit = {
       enable = true;
       settings = {
@@ -306,16 +320,19 @@
         };
       };
     };
+
     jq.enable = true;
     go.enable = true;
     sioyek.enable = true;
     nix-index.enable = true;
     nix-index-database.comma.enable = true;
+
     direnv = {
       enable = true;
       nix-direnv.enable = true;
       enableFishIntegration = true;
     };
+
     git = {
       enable = true;
       settings = {
