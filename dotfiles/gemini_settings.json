@@ -1,0 +1,76 @@
+{
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    },
+    "enablePermanentToolApproval": true,
+    "environmentVariableRedaction": {
+      "enabled": true
+    },
+    "folderTrust": {
+      "enabled": false
+    }
+  },
+  "general": {
+    "previewFeatures": true,
+    "vimMode": true,
+    "enableAutoUpdate": false,
+    "enablePromptCompletion": false,
+    "sessionRetention": {
+      "warningAcknowledged": true,
+      "enabled": true,
+      "maxAge": "30d"
+    }
+  },
+  "ui": {
+    "footer": {
+      "hideContextPercentage": false
+    },
+    "showMemoryUsage": true,
+    "showCitations": true,
+    "useAlternateBuffer": true,
+    "showModelInfoInChat": true,
+    "hideTips": false,
+    "showStatusInTitle": true,
+    "inlineThinkingMode": "off",
+    "autoThemeSwitching": false,
+    "dynamicWindowTitle": false,
+    "accessibility": {
+      "enableLoadingPhrases": false
+    },
+    "loadingPhrases": "off"
+  },
+  "context": {
+    "loadMemoryFromIncludeDirectories": false,
+    "fileFiltering": {
+      "respectGitIgnore": false
+    }
+  },
+  "tools": {
+    "shell": {
+      "showColor": true
+    },
+    "autoAccept": true,
+    "useRipgrep": true,
+    "disableLLMCorrection": false
+  },
+  "experimental": {
+    "useOSC52Paste": true,
+    "skills": true,
+    "introspectionAgentSettings": {
+      "enabled": true
+    },
+    "plan": true
+  },
+  "mcpServers": {
+    "nixos": {
+      "command": "nix",
+      "args": [
+        "run",
+        "github:utensils/mcp-nixos"
+      ],
+      "trust": true,
+      "description": "Nix packages, options, and documentation"
+    }
+  }
+}

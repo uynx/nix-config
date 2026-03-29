@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 export PATH="/Users/uynx/.nix-profile/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
