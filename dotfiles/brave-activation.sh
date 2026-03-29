@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
-if [[ -z "$1" || -z "$2" ]]; then
+if [ -z "$1" ] || [ -z "$2" ]; then
   exit 1
 fi
 

@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  pkgs-stable,
   inputs,
   ...
 }:
@@ -13,20 +14,14 @@
   home = {
     username = "uynx";
     homeDirectory = "/Users/uynx";
-    stateVersion = "26.05";
+    stateVersion = "25.11";
   };
 
   targets.darwin.copyApps.enable = false;
 
-  home.sessionVariables = {
-    DOCKER_HOST = "unix:///Users/uynx/.colima/default/docker.sock";
-    EDITOR = "nvim";
-  };
-
   home.packages = with pkgs; [
     coreutils
     wget
-    fastfetch
     dust
     duf
     procs
@@ -50,12 +45,11 @@
       patches = [ ];
     }))
 
-    # Latest tree-sitter in nixpkgs
+    # Latest tree-sitter in nixpkgs (potentially more reliable)
     (pkgs.writeShellScriptBin "tree-sitter-latest" ''
       exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
     '')
 
-    cargo
     rustc
     nodejs
     deno
@@ -69,50 +63,41 @@
     ast-grep
     lua5_1
     luarocks
-    jdk
     julia-bin
     php
     php.packages.composer
     ruby
 
+    imagemagick
+    ghostscript
+    mermaid-cli
+
     nil
     nixfmt
     statix
 
-    postgresql
-    mongodb-tools
-    docker
-    colima
-    lima
-
-    melonds
-
-    imagemagick
-    ghostscript
-    (texlive.combine {
-      inherit (texlive)
+    (pkgs-stable.texlive.combine {
+      inherit (pkgs-stable.texlive)
         scheme-full
         biber
         ;
     })
-    mermaid-cli
 
-    aerospace
-    discord
-    firefox-bin
+    melonds
+    gemini-cli
+    brave
     proton-pass
     qbittorrent
-    vscodium
     wireshark
 
-    gemini-cli
-    ghostty-bin
-    brave
+    lima
     devpod
+    dive
   ];
 
   programs.neovim = {
     enable = true;
+    defaultEditor = true;
     withNodeJs = true;
     withRuby = true;
     withPython3 = true;
@@ -120,13 +105,20 @@
   };
 
   home.file = {
-    ".config/aerospace/aerospace.toml".source = ./dotfiles/aerospace.toml;
-    ".config/ghostty/config".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
     ".config/nvim".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
     ".local/share/nvim/site/parser/norg.so".source =
       "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
+
+    ".config/ghostty/config".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
+
+    ".aerospace.toml".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/aerospace.toml";
+
+    ".gemini/settings.json".source =
+      config.lib.file.mkOutOfStoreSymlink "/Users/uynx/nix-config/dotfiles/gemini_settings.json";
+
     "Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json".text =
       let
         firenvim_wrapper = pkgs.writeShellScript "firenvim_nvim" ''
@@ -143,17 +135,81 @@
       };
   };
 
+  services.colima = {
+    enable = true;
+    bashPackage = pkgs.bash;
+    dockerPackage = pkgs.docker;
+  };
+
   programs = {
+    ghostty = {
+      enable = true;
+      package = pkgs.ghostty-bin;
+    };
+
+    gemini-cli.enable = true;
+
+    fastfetch.enable = true;
+    bun.enable = true;
+    lazydocker.enable = true;
+    java.enable = true;
+    cargo.enable = true;
+
+    aerospace = {
+      enable = true;
+      launchd.enable = true;
+    };
+
+    vscode = {
+      enable = true;
+      package = pkgs.vscodium;
+    };
+
+    discord = {
+      enable = true;
+    };
+
+    firefox.enable = true;
+
     man = {
       enable = true;
       generateCaches = true;
-      package = pkgs.man;
+      package = pkgs-stable.man;
     };
-    zoxide.enable = true;
-    bat.enable = true;
-    eza.enable = true;
+    zoxide = {
+      enable = true;
+      enableFishIntegration = true;
+    };
+    yazi = {
+      enable = true;
+      enableFishIntegration = true;
+      shellWrapperName = "y";
+      settings = {
+        manager = {
+          show_hidden = true;
+          sort_by = "modified";
+          sort_dir_first = true;
+        };
+      };
+    };
+    bat = {
+      enable = true;
+    };
+    eza = {
+      enable = true;
+      enableFishIntegration = true;
+      icons = "auto";
+      git = true;
+      extraOptions = [
+        "--group-directories-first"
+        "--header"
+      ];
+    };
     btop.enable = true;
-    fd.enable = true;
+    fd = {
+      enable = true;
+      hidden = true;
+    };
     tealdeer = {
       enable = true;
       settings.updates.auto_update = true;
@@ -168,6 +224,7 @@
       interactiveShellInit = ''
         fish_add_path /opt/homebrew/bin
         set -g fish_greeting ""
+        fish_vi_key_bindings
       '';
 
       shellAliases = {
@@ -178,6 +235,12 @@
         word = "open -a LibreOffice --args --writer";
         powerpoint = "open -a LibreOffice --args --impress";
 
+        gen = "nix-env --list-generations";
+
+        wt = "git worktree list";
+        wta = "git worktree add";
+        wtr = "git worktree remove";
+
         cat = "bat";
         grep = "rg";
         find = "fd";
@@ -186,30 +249,57 @@
         top = "btop";
         htop = "btop";
         dig = "doggo";
-        ls = "eza --icons";
-        ll = "eza -lh --icons";
-        la = "eza -lah --icons";
-        tree = "eza --tree --icons";
         du = "dust";
         df = "duf";
         ps = "procs";
         cd = "z";
+        zi = "z -i";
         vi = "nvim";
         vim = "nvim";
+        ll = "eza -la --icons --group-directories-first --header --git-ignore";
       };
 
-      plugins = [ ];
+      plugins = [
+        {
+          name = "sudope";
+          src = pkgs.fishPlugins.plugin-sudope;
+        }
+      ];
     };
     starship = {
       enable = true;
       enableFishIntegration = true;
-      settings.command_timeout = 1000;
+      settings = {
+        add_newline = false;
+        command_timeout = 1000;
+      };
     };
-    fzf.enable = true;
-    ripgrep.enable = true;
-    lazygit.enable = true;
+    fzf = {
+      enable = true;
+      enableFishIntegration = true;
+      changeDirWidgetCommand = "fd --type d --hidden --strip-cwd-prefix --exclude .git";
+    };
+    ripgrep = {
+      enable = true;
+      arguments = [
+        "--max-columns=150"
+        "--max-columns-preview"
+        "--hidden"
+        "--glob=!.git/*"
+        "--smart-case"
+      ];
+    };
+    lazygit = {
+      enable = true;
+      settings = {
+        gui.showIcons = true;
+        git.paging = {
+          colorArg = "always";
+          pager = "bat --style=plain";
+        };
+      };
+    };
     jq.enable = true;
-    gh.enable = true;
     go.enable = true;
     sioyek.enable = true;
     nix-index.enable = true;
@@ -217,11 +307,7 @@
     direnv = {
       enable = true;
       nix-direnv.enable = true;
-      package = pkgs.direnv.overrideAttrs (old: {
-        env = (old.env or { }) // {
-          CGO_ENABLED = "1";
-        };
-      });
+      enableFishIntegration = true;
     };
     git = {
       enable = true;
@@ -231,6 +317,9 @@
           email = "brandonwalex@pm.me";
         };
         init.defaultBranch = "main";
+        pull.rebase = true;
+        push.autoSetupRemote = true;
+        core.editor = "nvim";
       };
     };
   };
