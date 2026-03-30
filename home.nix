@@ -30,7 +30,7 @@
     doggo
 
     # Pinned for lazy
-    (tree-sitter.overrideAttrs (oldAttrs: rec {
+    (tree-sitter.overrideAttrs (_: rec {
       version = "0.26.7";
       src = pkgs.fetchFromGitHub {
         owner = "tree-sitter";
@@ -85,7 +85,6 @@
 
     melonds
     gemini-cli
-    brave
     proton-pass
     qbittorrent
     wireshark
@@ -117,7 +116,7 @@
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/aerospace.toml";
 
     ".gemini/settings.json".source =
-      config.lib.file.mkOutOfStoreSymlink "/Users/uynx/nix-config/dotfiles/gemini_settings.json";
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/gemini_settings.json";
 
     "Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json".text =
       let
@@ -176,8 +175,6 @@
     discord = {
       enable = true;
     };
-
-    firefox.enable = true;
 
     man = {
       enable = true;
@@ -319,6 +316,16 @@
           pager = "bat --style=plain";
         };
       };
+    };
+
+    chromium = {
+      enable = true;
+      package = pkgs.brave;
+    };
+
+    firefox = {
+      enable = true;
+      package = pkgs.firefox-bin;
     };
 
     jq.enable = true;

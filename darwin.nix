@@ -1,4 +1,9 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  pkgs,
+  config,
+  ...
+}:
 
 {
   users.users.uynx.home = "/Users/uynx";
@@ -79,6 +84,27 @@
   };
 
   system = {
+    activationScripts.applications.text =
+      let
+        userHome = config.users.users.uynx.home;
+      in
+      pkgs.lib.mkForce ''
+        echo "setting up ${userHome}/Applications/Nix Apps..." >&2
+        rm -rf "${userHome}/Applications/Nix Apps"
+        mkdir -p "${userHome}/Applications/Nix Apps"
+        for app in /run/current-system/sw/Applications/*.app "${userHome}/.nix-profile/Applications/"*.app; do
+          [ -e "$app" ] || continue
+          app_name=$(basename "$app")
+          executable=$(basename "$app" .app)
+          target_dir="${userHome}/Applications/Nix Apps/$app_name"
+          mkdir -p "$target_dir/Contents/MacOS"
+          ln -sfn "$app/Contents/Info.plist" "$target_dir/Contents/Info.plist"
+          ln -sfn "$app/Contents/Resources" "$target_dir/Contents/Resources"
+          printf "#!/bin/bash\nexec \"%s/Contents/MacOS/%s\" \"\$@\"" "$app" "$executable" > "$target_dir/Contents/MacOS/$executable"
+          chmod +x "$target_dir/Contents/MacOS/$executable"
+        done
+        /usr/bin/mdimport "${userHome}/Applications/Nix Apps"
+      '';
     primaryUser = "uynx";
 
     configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
@@ -126,7 +152,7 @@
         show-recents = false;
         launchanim = false;
         mouse-over-hilite-stack = true;
-        orientation = "bottom";
+        orientation = "right";
         tilesize = 48;
         showhidden = true; # Translucent icons for hidden apps
       };
@@ -142,7 +168,7 @@
       };
 
       screencapture = {
-        location = "~/Pictures/Screenshots";
+        location = "${config.users.users.uynx.home}/Pictures/Screenshots";
         type = "png";
       };
     };
