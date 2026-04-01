@@ -84,7 +84,6 @@
     })
 
     melonds
-    gemini-cli
     proton-pass
     qbittorrent
     wireshark
