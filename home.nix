@@ -18,6 +18,7 @@
   };
 
   targets.darwin.copyApps.enable = false;
+  targets.darwin.linkApps.enable = true;
 
   home.packages = with pkgs; [
     coreutils
@@ -28,9 +29,10 @@
     sd
     gping
     doggo
+    obsidian
 
     # Pinned for lazy
-    (tree-sitter.overrideAttrs (oldAttrs: rec {
+    (tree-sitter.overrideAttrs (_: rec {
       version = "0.26.7";
       src = pkgs.fetchFromGitHub {
         owner = "tree-sitter";
@@ -84,8 +86,6 @@
     })
 
     melonds
-    gemini-cli
-    brave
     proton-pass
     qbittorrent
     wireshark
@@ -117,7 +117,7 @@
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/aerospace.toml";
 
     ".gemini/settings.json".source =
-      config.lib.file.mkOutOfStoreSymlink "/Users/uynx/nix-config/dotfiles/gemini_settings.json";
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/gemini_settings.json";
 
     "Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json".text =
       let
@@ -149,6 +149,7 @@
         editor = "nvim";
       };
     };
+
     ghostty = {
       enable = true;
       package = pkgs.ghostty-bin;
@@ -164,7 +165,11 @@
 
     aerospace = {
       enable = true;
-      launchd.enable = true;
+      package = pkgs.aerospace;
+      launchd = {
+        enable = true;
+        keepAlive = true;
+      };
     };
 
     vscode = {
@@ -176,17 +181,17 @@
       enable = true;
     };
 
-    firefox.enable = true;
-
     man = {
       enable = true;
       generateCaches = true;
       package = pkgs-stable.man;
     };
+
     zoxide = {
       enable = true;
       enableFishIntegration = true;
     };
+
     yazi = {
       enable = true;
       enableFishIntegration = true;
@@ -199,9 +204,11 @@
         };
       };
     };
+
     bat = {
       enable = true;
     };
+
     eza = {
       enable = true;
       enableFishIntegration = true;
@@ -212,19 +219,24 @@
         "--header"
       ];
     };
+
     btop.enable = true;
+
     fd = {
       enable = true;
       hidden = true;
     };
+
     tealdeer = {
       enable = true;
       settings.updates.auto_update = true;
     };
+
     atuin = {
       enable = true;
       enableFishIntegration = true;
     };
+
     fish = {
       enable = true;
 
@@ -273,6 +285,7 @@
         }
       ];
     };
+
     starship = {
       enable = true;
       enableFishIntegration = true;
@@ -281,11 +294,13 @@
         command_timeout = 1000;
       };
     };
+
     fzf = {
       enable = true;
       enableFishIntegration = true;
       changeDirWidgetCommand = "fd --type d --hidden --strip-cwd-prefix --exclude .git";
     };
+
     ripgrep = {
       enable = true;
       arguments = [
@@ -296,6 +311,7 @@
         "--smart-case"
       ];
     };
+
     lazygit = {
       enable = true;
       settings = {
@@ -306,16 +322,29 @@
         };
       };
     };
+
+    chromium = {
+      enable = true;
+      package = pkgs.brave;
+    };
+
+    firefox = {
+      enable = true;
+      package = pkgs.firefox-bin;
+    };
+
     jq.enable = true;
     go.enable = true;
     sioyek.enable = true;
     nix-index.enable = true;
     nix-index-database.comma.enable = true;
+
     direnv = {
       enable = true;
       nix-direnv.enable = true;
       enableFishIntegration = true;
     };
+
     git = {
       enable = true;
       settings = {

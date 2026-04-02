@@ -6,7 +6,7 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 # exec-on-workspace-change = ['/bin/bash', '-c'] use this for sketchybar in the future
 on-focus-changed = ["move-mouse window-lazy-center"]
 on-focused-monitor-changed = ["move-mouse monitor-lazy-center"]
-start-at-login = true 
+start-at-login = false
 
 [key-mapping]
 preset = "qwerty"

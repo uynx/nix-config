@@ -3,10 +3,9 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixpkgs-25.11-darwin";
 
     nix-darwin = {
-      url = "github:nix-darwin/nix-darwin/master";
+      url = "github:nix-darwin/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -19,6 +18,12 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixpkgs-25.11-darwin";
+
+    determinate.url = "github:DeterminateSystems/determinate";
+
+    mac-app-util.url = "github:hraban/mac-app-util";
   };
 
   outputs =
@@ -29,6 +34,8 @@
       nix-darwin,
       home-manager,
       nix-index-database,
+      determinate,
+      mac-app-util,
       ...
     }:
     {
@@ -37,7 +44,9 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./darwin.nix
+          mac-app-util.darwinModules.default
           home-manager.darwinModules.home-manager
+          determinate.darwinModules.default
         ];
       };
     };

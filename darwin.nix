@@ -1,67 +1,21 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  pkgs,
+  pkgs-stable,
+  config,
+  ...
+}:
 
 {
   users.users.uynx.home = "/Users/uynx";
 
-  # Using Determinate Nix
-  nix.enable = false;
-
-  nix.settings = {
-    substituters = [
-      "https://cache.nixos.org"
-      "https://nix-community.cachix.org"
-      "https://devenv.cachix.org"
-    ];
-    trusted-public-keys = [
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
-    ];
-  };
-
-  launchd.daemons = {
-    nix-gc = {
-      script = "exec /nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 3d";
-      serviceConfig = {
-        StartCalendarInterval = [
-          {
-            Hour = 4;
-            Minute = 0;
-          }
-        ];
-        StandardErrorPath = "/var/log/nix-gc.log";
-        StandardOutPath = "/var/log/nix-gc.log";
-      };
+  determinateNix = {
+    enable = true;
+    determinateNixd = {
+      garbageCollector.strategy = "automatic";
     };
-  };
-
-  launchd.user.agents = {
-    nix-gc-user = {
-      command = "/nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-older-than 3d";
-      serviceConfig = {
-        StartCalendarInterval = [
-          {
-            Hour = 4;
-            Minute = 0;
-          }
-        ];
-        StandardErrorPath = "/Users/uynx/Library/Logs/nix-gc-user.log";
-        StandardOutPath = "/Users/uynx/Library/Logs/nix-gc-user.log";
-      };
-    };
-
-    nix-optimise = {
-      script = "exec /nix/var/nix/profiles/default/bin/nix store optimise";
-      serviceConfig = {
-        StartCalendarInterval = [
-          {
-            Hour = 4;
-            Minute = 0;
-          }
-        ];
-        StandardErrorPath = "/var/log/nix-optimise.log";
-        StandardOutPath = "/var/log/nix-optimise.log";
-      };
+    customSettings = {
+      auto-optimise-store = true;
     };
   };
 
@@ -69,6 +23,10 @@
     useGlobalPkgs = true;
     backupFileExtension = "bak";
     users.uynx = import ./home.nix;
+    sharedModules = [
+      inputs.mac-app-util.homeManagerModules.default
+      inputs.nix-index-database.homeModules.nix-index
+    ];
     extraSpecialArgs = {
       inherit inputs;
       pkgs-stable = import inputs.nixpkgs-stable {
@@ -90,59 +48,167 @@
       remapCapsLockToEscape = true;
     };
 
-    defaults.NSGlobalDomain = {
-      KeyRepeat = 5;
-      ApplePressAndHoldEnabled = false;
-      InitialKeyRepeat = 15;
-      "com.apple.mouse.tapBehavior" = 1;
-      AppleShowAllExtensions = true;
-      AppleInterfaceStyle = "Dark";
-      AppleICUForce24HourTime = false;
+    defaults = {
+      CustomUserPreferences = {
+        "com.apple.CrashReporter" = {
+          DialogType = "none";
+        };
+        "com.apple.assistant.support" = {
+          "Assistant Enabled" = false;
+          "Dictation Enabled" = false;
+        };
+        "com.apple.Siri" = {
+          "Siri Data Sharing Opt-Out" = true;
+          "StatusMenuVisible" = false;
+          "UserHasDeclinedEnable" = true;
+        };
+        "com.apple.SubmitDiagnostics" = {
+          iCloudAnalytics = false;
+        };
+        "com.apple.AdLib" = {
+          allowApplePersonalizedAdvertising = false;
+          allowIdentifierForAdvertising = false;
+          AD_ID_OPT_OUT = true;
+        };
+        "com.apple.Safari" = {
+          UniversalSearchEnabled = false;
+          PreloadTopHit = false;
+          SendDoNotTrackHTTPHeader = true;
+          BlockStoragePolicy = 2;
+          IncludeInternalDebugMenu = true;
+          IncludeDevelopMenu = true;
+          WebKitDeveloperExtrasEnabledPreferenceKey = true;
+          "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" = true;
+          ShowFullURLInSmartSearchField = true;
+        };
+        "com.apple.spotlight" = {
+          SuggestionsEnabled = false;
+          LookupEnabled = false;
+        };
+        "com.apple.LaunchServices" = {
+          LSQuarantine = false;
+        };
+        "com.apple.desktopservices" = {
+          DSDontWriteNetworkStores = true;
+          DSDontWriteUSBStores = true;
+        };
+        "com.apple.TimeMachine" = {
+          DoNotOfferNewDisksForBackup = true;
+        };
+        "com.apple.mail" = {
+          DisableDataDetectors = true;
+        };
+        "com.apple.TextEdit" = {
+          RichText = 0;
+          PlainTextEncoding = 4;
+          PlainTextEncodingForWrite = 4;
+        };
+        "com.apple.Safari".AutoOpenSafeDownloads = false;
+        "com.apple.finder" = {
+          WarnOnEmptyTrash = false;
+          DisableAllAnimations = true;
+        };
+        "com.apple.frameworks.diskimages" = {
+          skip-verify = true;
+          skip-verify-locked = true;
+          skip-verify-remote = true;
+        };
+        "com.apple.QuickTimePlayerX" = {
+          NSRecentDocumentsLimit = 0;
+          NSQuitAlwaysKeepsWindows = false;
+        };
+      };
 
-      NSAutomaticCapitalizationEnabled = false;
-      NSAutomaticDashSubstitutionEnabled = false;
-      NSAutomaticPeriodSubstitutionEnabled = false;
-      NSAutomaticQuoteSubstitutionEnabled = false;
-      NSAutomaticSpellingCorrectionEnabled = false;
-      NSAutomaticInlinePredictionEnabled = false;
+      screensaver = {
+        askForPassword = true;
+        askForPasswordDelay = 0;
+      };
 
-      NSWindowShouldDragOnGesture = true; # Cmd + Ctrl + Click anywhere to drag windows
+      loginwindow = {
+        GuestEnabled = false;
+        DisableConsoleAccess = true;
+      };
 
-      NSNavPanelExpandedStateForSaveMode = true;
-      NSNavPanelExpandedStateForSaveMode2 = true;
-      PMPrintingExpandedStateForPrint = true;
-      PMPrintingExpandedStateForPrint2 = true;
-      AppleScrollerPagingBehavior = true; # Jump to the spot clicked on the scroll bar
-    };
+      smb = {
+        NetBIOSName = "Mac";
+        ServerDescription = "Mac";
+      };
 
-    defaults.WindowManager = {
-      EnableStandardClickToShowDesktop = false; # Stop hiding windows when clicking wallpaper
-      StandardHideDesktopIcons = true;
-    };
+      NSGlobalDomain = {
+        KeyRepeat = 5;
+        ApplePressAndHoldEnabled = false;
+        InitialKeyRepeat = 15;
+        "com.apple.mouse.tapBehavior" = 1;
+        AppleShowAllExtensions = true;
+        AppleInterfaceStyle = "Dark";
+        AppleICUForce24HourTime = false;
 
-    defaults.dock = {
-      autohide = true;
-      show-recents = false;
-      launchanim = false;
-      mouse-over-hilite-stack = true;
-      orientation = "bottom";
-      tilesize = 48;
-      showhidden = true; # Translucent icons for hidden apps
-    };
+        NSAutomaticWindowAnimationsEnabled = false;
 
-    defaults.finder = {
-      _FXSortFoldersFirst = true;
-      AppleShowAllExtensions = true;
-      FXDefaultSearchScope = "SCcf"; # Search current folder by default
-      ShowPathbar = true;
-      ShowStatusBar = true;
-      _FXShowPosixPathInTitle = true;
-      FXEnableExtensionChangeWarning = false;
-    };
+        NSAutomaticCapitalizationEnabled = false;
+        NSAutomaticDashSubstitutionEnabled = false;
+        NSAutomaticPeriodSubstitutionEnabled = false;
+        NSAutomaticQuoteSubstitutionEnabled = false;
+        NSAutomaticSpellingCorrectionEnabled = false;
+        NSAutomaticInlinePredictionEnabled = false;
 
-    defaults.screencapture = {
-      location = "~/Pictures/Screenshots";
-      type = "png";
+        NSWindowShouldDragOnGesture = true; # Cmd + Ctrl + Click anywhere to drag windows
+
+        NSNavPanelExpandedStateForSaveMode = true;
+        NSNavPanelExpandedStateForSaveMode2 = true;
+        PMPrintingExpandedStateForPrint = true;
+        PMPrintingExpandedStateForPrint2 = true;
+        AppleScrollerPagingBehavior = true; # Jump to the spot clicked on the scroll bar
+        NSDocumentSaveNewDocumentsToCloud = false;
+        NSWindowResizeTime = 0.001;
+      };
+
+      WindowManager = {
+        EnableStandardClickToShowDesktop = false;
+        StandardHideDesktopIcons = true;
+      };
+
+      dock = {
+        autohide = true;
+        autohide-delay = 0.0;
+        autohide-time-modifier = 0.0;
+        show-recents = false;
+        launchanim = false;
+        mouse-over-hilite-stack = true;
+        orientation = "right";
+        tilesize = 48;
+        showhidden = true;
+        static-only = true;
+        mineffect = "scale";
+        minimize-to-application = true;
+        show-process-indicators = true;
+        mru-spaces = false;
+        wvous-br-corner = 13; # Lock Screen
+        expose-animation-duration = 0.0;
+      };
+
+      finder = {
+        _FXSortFoldersFirst = true;
+        AppleShowAllExtensions = true;
+        FXDefaultSearchScope = "SCcf";
+        ShowPathbar = true;
+        ShowStatusBar = true;
+        _FXShowPosixPathInTitle = true;
+        FXEnableExtensionChangeWarning = false;
+        FXPreferredViewStyle = "Nlsv";
+        QuitMenuItem = true;
+        CreateDesktop = false;
+      };
+
+      trackpad = {
+        Clicking = true;
+        TrackpadThreeFingerDrag = true;
+      };
+
+      screencapture = {
+        location = "${config.users.users.uynx.home}/Pictures/Screenshots";
+        type = "png";
+      };
     };
 
     startup.chime = false;

@@ -21,7 +21,8 @@ cursor-style-blink = true
 mouse-hide-while-typing = true
 scroll-to-bottom = keystroke
 
-window-save-state = always
+window-save-state = never
+working-directory = home
 clipboard-paste-protection = true
 confirm-close-surface = true
 
