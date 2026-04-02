@@ -18,6 +18,7 @@
   };
 
   targets.darwin.copyApps.enable = false;
+  targets.darwin.linkApps.enable = true;
 
   home.packages = with pkgs; [
     coreutils
@@ -28,6 +29,7 @@
     sd
     gping
     doggo
+    obsidian
 
     # Pinned for lazy
     (tree-sitter.overrideAttrs (_: rec {
@@ -163,7 +165,11 @@
 
     aerospace = {
       enable = true;
-      launchd.enable = true;
+      package = pkgs.aerospace;
+      launchd = {
+        enable = true;
+        keepAlive = true;
+      };
     };
 
     vscode = {

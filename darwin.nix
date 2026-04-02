@@ -1,6 +1,7 @@
 {
   inputs,
   pkgs,
+  pkgs-stable,
   config,
   ...
 }:
@@ -22,6 +23,10 @@
     useGlobalPkgs = true;
     backupFileExtension = "bak";
     users.uynx = import ./home.nix;
+    sharedModules = [
+      inputs.mac-app-util.homeManagerModules.default
+      inputs.nix-index-database.homeModules.nix-index
+    ];
     extraSpecialArgs = {
       inherit inputs;
       pkgs-stable = import inputs.nixpkgs-stable {
@@ -32,28 +37,6 @@
   };
 
   system = {
-    activationScripts.applications.text =
-      let
-        userHome = config.users.users.uynx.home;
-      in
-      pkgs.lib.mkForce ''
-        echo "setting up ${userHome}/Applications/Nix Apps..." >&2
-        rm -rf "${userHome}/Applications/Nix Apps"
-        mkdir -p "${userHome}/Applications/Nix Apps"
-        for app in /run/current-system/sw/Applications/*.app "${userHome}/.nix-profile/Applications/"*.app; do
-          [ -e "$app" ] || continue
-          app_name=$(basename "$app")
-          executable=$(basename "$app" .app)
-          target_dir="${userHome}/Applications/Nix Apps/$app_name"
-          mkdir -p "$target_dir/Contents/MacOS"
-          ln -sfn "$app/Contents/Info.plist" "$target_dir/Contents/Info.plist"
-          ln -sfn "$app/Contents/Resources" "$target_dir/Contents/Resources"
-          printf "#!/bin/bash\nexec \"%s/Contents/MacOS/%s\" \"\$@\"" "$app" "$executable" > "$target_dir/Contents/MacOS/$executable"
-          chmod +x "$target_dir/Contents/MacOS/$executable"
-        done
-        /usr/bin/mdimport "${userHome}/Applications/Nix Apps"
-      '';
-
     primaryUser = "uynx";
 
     configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
@@ -114,9 +97,6 @@
         };
         "com.apple.mail" = {
           DisableDataDetectors = true;
-        };
-        "com.apple.Terminal" = {
-          SecureKeyboardEntry = true;
         };
         "com.apple.TextEdit" = {
           RichText = 0;

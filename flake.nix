@@ -22,6 +22,8 @@
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixpkgs-25.11-darwin";
 
     determinate.url = "github:DeterminateSystems/determinate";
+
+    mac-app-util.url = "github:hraban/mac-app-util";
   };
 
   outputs =
@@ -33,6 +35,7 @@
       home-manager,
       nix-index-database,
       determinate,
+      mac-app-util,
       ...
     }:
     {
@@ -41,6 +44,7 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./darwin.nix
+          mac-app-util.darwinModules.default
           home-manager.darwinModules.home-manager
           determinate.darwinModules.default
         ];
