@@ -1,13 +1,14 @@
 {
   inputs,
   pkgs,
-  pkgs-stable,
   config,
   ...
 }:
 
 {
   users.users.uynx.home = "/Users/uynx";
+
+  nix.enable = false;
 
   determinateNix = {
     enable = true;
@@ -103,7 +104,9 @@
           PlainTextEncoding = 4;
           PlainTextEncodingForWrite = 4;
         };
+
         "com.apple.Safari".AutoOpenSafeDownloads = false;
+
         "com.apple.finder" = {
           WarnOnEmptyTrash = false;
           DisableAllAnimations = true;
