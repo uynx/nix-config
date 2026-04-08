@@ -31,8 +31,8 @@ alt-shift-u = "move-node-to-workspace 1"
 alt-shift-i = "move-node-to-workspace 2"
 alt-shift-o = "move-node-to-workspace 3"
 
-alt-n = "exec-and-forget /Users/uynx/nix-config/dotfiles/brave-activation.sh Default Personal"
-alt-m = "exec-and-forget /Users/uynx/nix-config/dotfiles/brave-activation.sh \"Profile 1\" School"
+alt-n = "exec-and-forget /Users/uynx/nix-config/dotfiles/librewolf-activation.sh Personal"
+alt-m = "exec-and-forget /Users/uynx/nix-config/dotfiles/librewolf-activation.sh School"
 alt-p = "exec-and-forget /Users/uynx/nix-config/dotfiles/ghostty-activation.sh"
 
 alt-shift-h = "move left"
@@ -49,13 +49,13 @@ alt-shift-r = "move-node-to-monitor right"
 alt-shift-semicolon = "mode service"
 
 [[on-window-detected]]
-if.app-id = "com.brave.Browser"
-if.window-title-regex-substring = "Personal$"
+if.app-id = "org.nixos.librewolf"
+if.window-title-regex-substring = '\[Personal\]'
 run = "move-node-to-workspace 1"
 
 [[on-window-detected]]
-if.app-id = "com.brave.Browser"
-if.window-title-regex-substring = "School$"
+if.app-id = "org.nixos.librewolf"
+if.window-title-regex-substring = '\[School\]'
 run = "move-node-to-workspace 2"
 
 [mode.service.binding]

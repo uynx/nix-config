@@ -224,7 +224,7 @@
       };
 
       screencapture = {
-        location = "${config.users.users.uynx.home}/Pictures/Screenshots";
+        location = "${config.users.users.uynx.home}/Pictures";
         type = "png";
       };
     };

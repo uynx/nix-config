@@ -308,15 +308,12 @@
       };
     };
 
-    chromium = {
-      enable = true;
-      package = pkgs.brave;
-    };
+    # chromium = {
+    #   enable = true;
+    #   package = pkgs.ungoogled-chromium;
+    # };
 
-    firefox = {
-      enable = true;
-      package = pkgs.firefox-bin;
-    };
+    librewolf.enable = true;
 
     jq.enable = true;
     go.enable = true;
