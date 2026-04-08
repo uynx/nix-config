@@ -13,9 +13,9 @@ WINDOW_ID=$(aerospace list-windows --all | tac | awk -v suffix="Brave - $PROFILE
 
 if [ -n "$WINDOW_ID" ]; then
   aerospace focus --window-id "$WINDOW_ID"
-  osascript -e 'tell application "Brave Browser" to make new window'
+  brave --new-window --profile-directory="$TARGET_PROFILE_DIR"
 else
-  open -na "Brave Browser" --args \
+  brave \
     --no-first-run \
     --no-default-browser-check \
     --disable-prompt-on-repost \

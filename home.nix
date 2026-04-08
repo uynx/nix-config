@@ -118,21 +118,6 @@
 
     ".gemini/settings.json".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/gemini_settings.json";
-
-    "Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/firenvim.json".text =
-      let
-        firenvim_wrapper = pkgs.writeShellScript "firenvim_nvim" ''
-          export PATH="${config.home.homeDirectory}/.nix-profile/bin:/run/current-system/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-          exec ${pkgs.neovim}/bin/nvim --headless "$@"
-        '';
-      in
-      builtins.toJSON {
-        name = "firenvim";
-        description = "Firenvim connector";
-        path = "${firenvim_wrapper}";
-        type = "stdio";
-        allowed_origins = [ "chrome-extension://otdbuclmgnjkpbdaokeojghpneocnban/" ];
-      };
   };
 
   services.colima = {

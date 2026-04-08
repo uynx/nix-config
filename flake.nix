@@ -44,9 +44,9 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./darwin.nix
-          mac-app-util.darwinModules.default
-          home-manager.darwinModules.home-manager
           determinate.darwinModules.default
+          home-manager.darwinModules.home-manager
+          mac-app-util.darwinModules.default
         ];
       };
     };
