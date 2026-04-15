@@ -4,73 +4,47 @@
       "selectedType": "oauth-personal"
     },
     "enablePermanentToolApproval": true,
+    "autoAddToPolicyByDefault": true,
     "environmentVariableRedaction": {
       "enabled": true
-    },
-    "folderTrust": {
-      "enabled": false
     }
   },
   "general": {
-    "previewFeatures": true,
     "vimMode": true,
-    "enableAutoUpdate": false,
-    "enablePromptCompletion": false,
-    "sessionRetention": {
-      "warningAcknowledged": true,
-      "enabled": true,
-      "maxAge": "30d"
-    }
+    "defaultApprovalMode": "plan",
+    "enableNotifications": true
   },
   "ui": {
+    "showStatusInTitle": true,
+    "dynamicWindowTitle": false,
+    "hideTips": true,
+    "compactToolOutput": true,
     "footer": {
       "hideContextPercentage": false
     },
     "showMemoryUsage": true,
+    "showLineNumbers": false,
     "showCitations": true,
-    "useAlternateBuffer": true,
     "showModelInfoInChat": true,
-    "hideTips": false,
-    "showStatusInTitle": true,
-    "inlineThinkingMode": "off",
-    "autoThemeSwitching": false,
-    "dynamicWindowTitle": false,
-    "accessibility": {
-      "enableLoadingPhrases": false
-    },
-    "loadingPhrases": "off"
+    "useAlternateBuffer": true
   },
-  "context": {
-    "loadMemoryFromIncludeDirectories": false,
-    "fileFiltering": {
-      "respectGitIgnore": false
-    }
-  },
+  "model": {},
   "tools": {
     "shell": {
       "showColor": true
     },
-    "autoAccept": true,
-    "useRipgrep": true,
     "disableLLMCorrection": false
   },
   "experimental": {
+    "worktrees": true,
     "useOSC52Paste": true,
-    "skills": true,
-    "introspectionAgentSettings": {
-      "enabled": true
-    },
-    "plan": true
+    "useOSC52Copy": true,
+    "directWebFetch": true,
+    "memoryManager": true,
+    "contextManagement": true,
+    "topicUpdateNarration": true,
+    "modelSteering": true
   },
-  "mcpServers": {
-    "nixos": {
-      "command": "nix",
-      "args": [
-        "run",
-        "github:utensils/mcp-nixos"
-      ],
-      "trust": true,
-      "description": "Nix packages, options, and documentation"
-    }
-  }
+  "skills": {},
+  "hooksConfig": {}
 }
