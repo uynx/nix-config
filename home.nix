@@ -93,6 +93,8 @@
     lima
     devpod
     dive
+
+    swi-prolog
   ];
 
   programs.neovim = {
@@ -113,11 +115,11 @@
     ".config/ghostty/config".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
 
-    ".aerospace.toml".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/aerospace.toml";
-
     ".gemini/settings.json".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/gemini_settings.json";
+
+    ".aerospace.toml".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/aerospace.toml";
   };
 
   services.colima = {
@@ -260,6 +262,7 @@
         zi = "z -i";
         vi = "nvim";
         vim = "nvim";
+        tree = "eza --tree --icons --always-grid";
         ll = "eza -la --icons --group-directories-first --header --git-ignore";
       };
 
@@ -308,12 +311,10 @@
       };
     };
 
-    # chromium = {
-    #   enable = true;
-    #   package = pkgs.ungoogled-chromium;
-    # };
-
-    librewolf.enable = true;
+    chromium = {
+      enable = true;
+      package = pkgs.brave;
+    };
 
     jq.enable = true;
     go.enable = true;
