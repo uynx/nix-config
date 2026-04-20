@@ -15,12 +15,22 @@
     username = "uynx";
     homeDirectory = "/Users/uynx";
     stateVersion = "25.11";
+    sessionVariables = {
+      EDITOR = "nvim";
+      VISUAL = "nvim";
+    };
   };
 
   targets.darwin.copyApps.enable = false;
   targets.darwin.linkApps.enable = true;
 
   home.packages = with pkgs; [
+    (neovim.override {
+      withNodeJs = true;
+      withRuby = true;
+      withPython3 = true;
+      withPerl = true;
+    })
     coreutils
     wget
     dust
@@ -96,15 +106,6 @@
 
     swi-prolog
   ];
-
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    withNodeJs = true;
-    withRuby = true;
-    withPython3 = true;
-    withPerl = true;
-  };
 
   home.file = {
     ".config/nvim".source =
