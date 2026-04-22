@@ -43,16 +43,16 @@
 
     # Pinned for lazy
     (tree-sitter.overrideAttrs (_: rec {
-      version = "0.26.7";
+      version = "0.26.8";
       src = pkgs.fetchFromGitHub {
         owner = "tree-sitter";
         repo = "tree-sitter";
-        rev = "v0.26.7";
-        hash = "sha256-O3c2djKhM+vIYunthDApi9sw/gFH/FBME1uR4N+9MFM="; # 43
+        rev = "v0.26.8";
+        hash = "sha256-fcFEfoALrbpBD6rWogxJ7FNVlvDQgswoX9ylRgko+8Q="; # 43
       };
       cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
         inherit src;
-        hash = "sha256-zh6KsnZ7s6VXGCggoYbLGeGnEZ7g7anjkz8C5/L4yXQ=";
+        hash = "sha256-9FeWnWWPUWmMF15Psmul8GxGv2JceHWc2WZPmOr81gw=";
       };
       patches = [ ];
     }))
@@ -263,7 +263,7 @@
         zi = "z -i";
         vi = "nvim";
         vim = "nvim";
-        tree = "eza --tree --icons --always-grid";
+        tree = "eza --tree --icons";
         ll = "eza -la --icons --group-directories-first --header --git-ignore";
       };
 
