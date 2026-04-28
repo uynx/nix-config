@@ -25,12 +25,6 @@
   targets.darwin.linkApps.enable = true;
 
   home.packages = with pkgs; [
-    (neovim.override {
-      withNodeJs = true;
-      withRuby = true;
-      withPython3 = true;
-      withPerl = true;
-    })
     coreutils
     wget
     dust
@@ -40,8 +34,15 @@
     gping
     doggo
     obsidian
+    antigravity
 
-    # Pinned for lazy
+    (neovim.override {
+      withPerl = true;
+      withNodeJs = true;
+      withPython3 = true;
+      withRuby = true;
+    })
+
     (tree-sitter.overrideAttrs (_: rec {
       version = "0.26.8";
       src = pkgs.fetchFromGitHub {
@@ -56,11 +57,6 @@
       };
       patches = [ ];
     }))
-
-    # Latest tree-sitter in nixpkgs (potentially more reliable)
-    (pkgs.writeShellScriptBin "tree-sitter-latest" ''
-      exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
-    '')
 
     rustc
     nodejs
@@ -325,6 +321,9 @@
 
     direnv = {
       enable = true;
+      package = pkgs.direnv.overrideAttrs (_: {
+        doCheck = false;
+      });
       nix-direnv.enable = true;
       enableFishIntegration = true;
     };
