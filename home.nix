@@ -15,6 +15,10 @@
     username = "uynx";
     homeDirectory = "/Users/uynx";
     stateVersion = "25.11";
+    sessionVariables = {
+      EDITOR = "nvim";
+      VISUAL = "nvim";
+    };
   };
 
   targets.darwin.copyApps.enable = false;
@@ -30,27 +34,29 @@
     gping
     doggo
     obsidian
+    antigravity
 
-    # Pinned for lazy
+    (neovim.override {
+      withPerl = true;
+      withNodeJs = true;
+      withPython3 = true;
+      withRuby = true;
+    })
+
     (tree-sitter.overrideAttrs (_: rec {
-      version = "0.26.7";
+      version = "0.26.8";
       src = pkgs.fetchFromGitHub {
         owner = "tree-sitter";
         repo = "tree-sitter";
-        rev = "v0.26.7";
-        hash = "sha256-O3c2djKhM+vIYunthDApi9sw/gFH/FBME1uR4N+9MFM="; # 43
+        rev = "v0.26.8";
+        hash = "sha256-fcFEfoALrbpBD6rWogxJ7FNVlvDQgswoX9ylRgko+8Q="; # 43
       };
       cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
         inherit src;
-        hash = "sha256-zh6KsnZ7s6VXGCggoYbLGeGnEZ7g7anjkz8C5/L4yXQ=";
+        hash = "sha256-9FeWnWWPUWmMF15Psmul8GxGv2JceHWc2WZPmOr81gw=";
       };
       patches = [ ];
     }))
-
-    # Latest tree-sitter in nixpkgs (potentially more reliable)
-    (pkgs.writeShellScriptBin "tree-sitter-latest" ''
-      exec ${pkgs.tree-sitter}/bin/tree-sitter "$@"
-    '')
 
     rustc
     nodejs
@@ -96,15 +102,6 @@
 
     swi-prolog
   ];
-
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    withNodeJs = true;
-    withRuby = true;
-    withPython3 = true;
-    withPerl = true;
-  };
 
   home.file = {
     ".config/nvim".source =
@@ -262,7 +259,7 @@
         zi = "z -i";
         vi = "nvim";
         vim = "nvim";
-        tree = "eza --tree --icons --always-grid";
+        tree = "eza --tree --icons";
         ll = "eza -la --icons --group-directories-first --header --git-ignore";
       };
 
@@ -324,6 +321,9 @@
 
     direnv = {
       enable = true;
+      package = pkgs.direnv.overrideAttrs (_: {
+        doCheck = false;
+      });
       nix-direnv.enable = true;
       enableFishIntegration = true;
     };
