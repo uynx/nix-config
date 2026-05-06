@@ -60,9 +60,6 @@
 
     rustc
     nodejs
-    (deno.overrideAttrs (_: {
-      doCheck = false;
-    }))
     (python3.withPackages (
       ps: with ps; [
         pip
