@@ -60,7 +60,6 @@
 
     rustc
     nodejs
-    deno
     (python3.withPackages (
       ps: with ps; [
         pip
@@ -156,7 +155,7 @@
       };
     };
 
-    vscode = {
+    vscodium = {
       enable = true;
       package = pkgs.vscodium;
     };
