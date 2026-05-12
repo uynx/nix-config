@@ -90,7 +90,16 @@
         ;
     })
 
-    melonds
+    (melonds.override {
+      kdePackages = pkgs.kdePackages // {
+        extra-cmake-modules = pkgs.kdePackages.extra-cmake-modules.overrideAttrs (old: {
+          meta = (old.meta or { }) // {
+            platforms = (old.meta.platforms or [ ]) ++ [ "aarch64-darwin" ];
+            broken = false;
+          };
+        });
+      };
+    })
     proton-pass
     qbittorrent
     wireshark
