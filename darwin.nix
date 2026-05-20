@@ -201,7 +201,6 @@
         minimize-to-application = true;
         show-process-indicators = true;
         mru-spaces = false;
-        wvous-bl-corner = 13; # Lock Screen
         expose-animation-duration = 0.0;
       };
 
