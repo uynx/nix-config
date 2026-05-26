@@ -19,7 +19,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixpkgs-25.11-darwin";
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
 
     determinate.url = "github:DeterminateSystems/determinate";
 

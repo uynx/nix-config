@@ -14,7 +14,8 @@
   home = {
     username = "uynx";
     homeDirectory = "/Users/uynx";
-    stateVersion = "25.11";
+    stateVersion = "26.05";
+    enableNixpkgsReleaseCheck = false;
     sessionVariables = {
       EDITOR = "nvim";
       VISUAL = "nvim";
