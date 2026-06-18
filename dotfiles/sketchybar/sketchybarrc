@@ -1,0 +1,177 @@
+#!/bin/bash
+
+CONFIG_DIR="$HOME/.config/sketchybar"
+
+# Register custom events
+sketchybar --add event aerospace_workspace_change \
+           --add event aerospace_focus_change \
+           --add event aerospace_monitor_change \
+           --add event clock_tick
+
+# Default settings (Scaled up for better readability and visual presence)
+sketchybar --default \
+  icon.font="Hack Nerd Font:Regular:15.0" \
+  label.font="Hack Nerd Font:Regular:13.5" \
+  icon.color=0xffcecdc3 \
+  label.color=0xffcecdc3 \
+  icon.y_offset=1 \
+  label.y_offset=1 \
+  background.padding_left=6 \
+  background.padding_right=6 \
+  label.padding_left=4 \
+  label.padding_right=4 \
+  icon.padding_left=4 \
+  icon.padding_right=4
+
+# Global Bar Properties (Sitting high but thicker for visibility)
+sketchybar --bar \
+  height=32 \
+  position=top \
+  color=0x00000000 \
+  shadow=off \
+  border_width=0 \
+  y_offset=4 \
+  margin=16
+
+# Configure items per display (Monitor 1 and Monitor 2)
+for m in 1 2
+do
+  # Workspaces (Left)
+  for i in 1 2 3
+  do
+    sketchybar --add item space.$i.$m left \
+               --set space.$i.$m display=$m \
+                                 icon="$i" \
+                                 label.drawing=off \
+                                 background.height=22 \
+                                 background.corner_radius=4 \
+                                 script="$CONFIG_DIR/plugins/aerospace.sh" \
+               --subscribe space.$i.$m aerospace_workspace_change aerospace_focus_change aerospace_monitor_change
+  done
+
+  # Add bracket for workspaces pill explicitly (no regex to avoid parsing failures)
+  sketchybar --add bracket spaces.$m space.1.$m space.2.$m space.3.$m \
+             --set spaces.$m background.color=0xbf100f0f \
+                             background.corner_radius=8 \
+                             background.drawing=on \
+                             background.border_width=1 \
+                             background.border_color=0x40cecdc3 \
+                             background.height=28 \
+                             background.shadow.drawing=on \
+                             background.shadow.color=0x40000000 \
+                             background.shadow.angle=90 \
+                             background.shadow.distance=1 \
+                             blur_radius=20
+
+  # Active Application (Left, adjacent to workspaces to avoid notch blockage)
+  sketchybar --add item front_app.$m left \
+             --set front_app.$m display=$m \
+                                background.padding_left=12 \
+                                script="$CONFIG_DIR/plugins/front_app.sh" \
+             --subscribe front_app.$m aerospace_focus_change aerospace_monitor_change
+
+  sketchybar --add bracket front_app_bracket.$m front_app.$m \
+             --set front_app_bracket.$m background.color=0xbf100f0f \
+                                         background.corner_radius=8 \
+                                         background.drawing=on \
+                                         background.border_width=1 \
+                                         background.border_color=0x40cecdc3 \
+                                         background.height=28 \
+                                         background.shadow.drawing=on \
+                                         background.shadow.color=0x40000000 \
+                                         background.shadow.angle=90 \
+                                         background.shadow.distance=1 \
+                                         blur_radius=20
+
+  # Volume (Left)
+  sketchybar --add item volume.$m left \
+             --set volume.$m display=$m \
+                             update_freq=10 \
+                             background.padding_left=12 \
+                             script="$CONFIG_DIR/plugins/volume.sh" \
+             --subscribe volume.$m volume_change
+
+  sketchybar --add bracket volume_bracket.$m volume.$m \
+             --set volume_bracket.$m background.color=0xbf100f0f \
+                                     background.corner_radius=8 \
+                                     background.drawing=on \
+                                     background.border_width=1 \
+                                     background.border_color=0x40cecdc3 \
+                                     background.height=28 \
+                                     background.shadow.drawing=on \
+                                     background.shadow.color=0x40000000 \
+                                     background.shadow.angle=90 \
+                                     background.shadow.distance=1 \
+                                     blur_radius=20
+
+  # Brightness (Left)
+  sketchybar --add item brightness.$m left \
+             --set brightness.$m display=$m \
+                                 update_freq=60 \
+                                 background.padding_left=12 \
+                                 script="$CONFIG_DIR/plugins/brightness.sh" \
+             --subscribe brightness.$m brightness_change
+
+  sketchybar --add bracket brightness_bracket.$m brightness.$m \
+             --set brightness_bracket.$m background.color=0xbf100f0f \
+                                         background.corner_radius=8 \
+                                         background.drawing=on \
+                                         background.border_width=1 \
+                                         background.border_color=0x40cecdc3 \
+                                         background.height=28 \
+                                         background.shadow.drawing=on \
+                                         background.shadow.color=0x40000000 \
+                                         background.shadow.angle=90 \
+                                         background.shadow.distance=1 \
+                                         blur_radius=20
+
+  # Status Monitor (Right)
+  sketchybar --add item battery.$m right \
+             --set battery.$m display=$m \
+                              update_freq=30 \
+                              script="$CONFIG_DIR/plugins/battery.sh"
+
+  sketchybar --add item clock.$m right \
+             --set clock.$m display=$m \
+                            icon.drawing=off \
+                            script="$CONFIG_DIR/plugins/clock.sh" \
+             --subscribe clock.$m clock_tick
+
+  sketchybar --add item disk.$m right \
+             --set disk.$m display=$m \
+                           update_freq=60 \
+                           script="$CONFIG_DIR/plugins/disk.sh"
+
+  sketchybar --add item cpu.$m right \
+             --set cpu.$m display=$m \
+                          update_freq=5 \
+                          script="$CONFIG_DIR/plugins/cpu.sh"
+
+  sketchybar --add bracket status_bracket.$m battery.$m clock.$m disk.$m cpu.$m \
+             --set status_bracket.$m background.color=0xbf100f0f \
+                                     background.corner_radius=8 \
+                                     background.drawing=on \
+                                     background.border_width=1 \
+                                     background.border_color=0x40cecdc3 \
+                                     background.height=28 \
+                                     background.shadow.drawing=on \
+                                     background.shadow.color=0x40000000 \
+                                     background.shadow.angle=90 \
+                                     background.shadow.distance=1 \
+                                     blur_radius=20
+done
+
+# Initialize states (Optimized: query AeroSpace once at startup and trigger with pre-filled variables)
+START_WORKSPACE=$(/Users/uynx/.nix-profile/bin/aerospace list-workspaces --focused)
+START_MONITOR=$(/Users/uynx/.nix-profile/bin/aerospace list-monitors --focused | cut -d'|' -f1 | xargs)
+START_APP=$(/Users/uynx/.nix-profile/bin/aerospace list-windows --focused --format '%{app-name}')
+
+sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE="$START_WORKSPACE" FOCUSED_MONITOR="$START_MONITOR"
+sketchybar --trigger aerospace_focus_change FOCUSED_APP="$START_APP" FOCUSED_MONITOR="$START_MONITOR"
+
+# Start background clock synchronization daemon aligning to second boundaries
+pkill -f "plugins/clock_sync.py"
+"$CONFIG_DIR/plugins/clock_sync.py" &
+
+# Force immediate execution of all item scripts to show clock and battery on start
+sketchybar --update

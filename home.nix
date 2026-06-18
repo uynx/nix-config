@@ -2,15 +2,12 @@
   config,
   pkgs,
   pkgs-stable,
-  inputs,
   lib,
   ...
 }:
 
 {
-  imports = [
-    inputs.nix-index-database.homeModules.nix-index
-  ];
+  imports = [ ];
 
   home = {
     username = "uynx";
@@ -90,6 +87,14 @@
     dive
 
     swi-prolog
+    sketchybar
+    sketchybar-app-font
+
+    tmux
+    tmuxPlugins.sensible
+    tmuxPlugins.vim-tmux-navigator
+    tmuxPlugins.resurrect
+    tmuxPlugins.continuum
   ];
 
   home.file = {
@@ -103,6 +108,12 @@
 
     ".aerospace.toml".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/aerospace.toml";
+
+    ".config/sketchybar".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/sketchybar";
+
+    ".config/tmux".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/tmux";
   };
 
   services.colima = {
@@ -262,7 +273,7 @@
       enableFishIntegration = true;
       settings = {
         add_newline = false;
-        command_timeout = 1000;
+        command_timeout = 3000;
       };
     };
 
@@ -314,60 +325,6 @@
       enableFishIntegration = true;
     };
 
-    tmux = {
-      enable = true;
-      clock24 = true;
-      keyMode = "vi";
-      prefix = "C-a";
-      mouse = true;
-      plugins = with pkgs; [
-        tmuxPlugins.sensible
-        tmuxPlugins.vim-tmux-navigator
-        {
-          plugin = tmuxPlugins.resurrect;
-          extraConfig = "set -g @resurrect-strategy-nvim 'session'";
-        }
-        {
-          plugin = tmuxPlugins.continuum;
-          extraConfig = ''
-            set -g @continuum-restore 'on'
-            set -g @continuum-save-interval '10'
-          '';
-        }
-      ];
-      extraConfig = ''
-        # True color and undercurl support for Ghostty
-        set -g default-terminal "xterm-256color"
-        set -ag terminal-overrides ",xterm-256color:RGB"
-        set -as terminal-overrides ',*:Smulx=\E[4::%p1%dm'
-        set -as terminal-overrides ',*:Setcx=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m'
-
-        # Keyboard repeat rate safety
-        set -s escape-time 0
-
-        # Start window numbering at 1
-        set -g base-index 1
-        setw -g pane-base-index 1
-        set -g renumber-windows on
-
-        # pbcopy integration for macOS
-        bind-key -T copy-mode-vi v send-keys -X begin-selection
-        bind-key -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "pbcopy"
-        bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "pbcopy"
-
-        # Flexoki Dark Aesthetic Status Line
-        set -g status-style "bg=#100f0f,fg=#cecdc3"
-        set -g status-left "#[fg=#205ea6,bold] #S #[fg=#343331]| "
-        set -g status-left-length 20
-        set -g status-right "#[fg=#878580]%Y-%m-%d #[fg=#66800d,bold]%H:%M "
-        set -g status-right-length 50
-        set -g window-status-format "#[fg=#878580] #I: #W "
-        set -g window-status-current-format "#[fg=#bc5215,bold,bg=#282726] #I: #W* "
-        set -g pane-border-style "fg=#282726"
-        set -g pane-active-border-style "fg=#205ea6"
-      '';
-    };
-
     delta = {
       enable = true;
       enableGitIntegration = true;
@@ -390,9 +347,11 @@
         init.defaultBranch = "main";
         pull.rebase = true;
         push.autoSetupRemote = true;
-        core.editor = "nvim";
-        core.fsmonitor = true;
-        core.untrackedCache = true;
+        core = {
+          editor = "nvim";
+          fsmonitor = true;
+          untrackedCache = true;
+        };
         gpg.format = "ssh";
         commit.gpgsign = true;
         tag.gpgsign = true;
@@ -409,13 +368,7 @@
       TOKEN=$(${pkgs.sqlite}/bin/sqlite3 "$AUTH_DB" "SELECT cast(token_ciphertext as text) FROM oauth_tokens LIMIT 1;" 2>/dev/null)
       if [ -n "$TOKEN" ]; then
         mkdir -p "$(dirname "$HOSTS_JSON")"
-        cat > "$HOSTS_JSON" <<EOF
-{
-  "github.com": {
-    "oauth_token": "$TOKEN"
-  }
-}
-EOF
+        printf '{\n  "github.com": {\n    "oauth_token": "%s"\n  }\n}\n' "$TOKEN" > "$HOSTS_JSON"
         chmod 600 "$HOSTS_JSON"
       fi
     fi

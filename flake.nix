@@ -2,7 +2,7 @@
   description = "My Nix setups";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-weekly/*";
 
     nix-darwin = {
       url = "github:nix-darwin/nix-darwin";
@@ -19,9 +19,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
+    nixpkgs-stable.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-26.05-chilled/*";
 
-    determinate.url = "github:DeterminateSystems/determinate";
+    determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
 
     mac-app-util.url = "github:hraban/mac-app-util";
   };

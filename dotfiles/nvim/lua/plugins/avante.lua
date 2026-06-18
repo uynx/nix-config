@@ -29,24 +29,45 @@ return {
     {
       "zbirenbaum/copilot.lua",
       opts = {
-        suggestion = { enabled = false },
+        suggestion = {
+          enabled = true,
+          auto_trigger = true,
+          keymap = {
+            accept = false, -- Managed contextually by blink.cmp
+            next = "<M-]>",
+            prev = "<M-[>",
+            dismiss = "<C-]>",
+          },
+        },
         panel = { enabled = false },
       },
     },
     "Kaiser-Yang/blink-cmp-avante",
     {
       "saghen/blink.cmp",
-      opts = {
-        sources = {
-          default = { "avante" },
-          providers = {
-            avante = {
-              name = "Avante",
-              module = "blink-cmp-avante",
-            },
-          },
-        },
-      },
+      opts = function(_, opts)
+        opts.sources = opts.sources or {}
+        opts.sources.default = opts.sources.default or {}
+        table.insert(opts.sources.default, "avante")
+        opts.sources.providers = opts.sources.providers or {}
+        opts.sources.providers.avante = {
+          name = "Avante",
+          module = "blink-cmp-avante",
+        }
+
+        -- Configure Tab to contextually accept Copilot multiline suggestions
+        opts.keymap = opts.keymap or {}
+        opts.keymap["<Tab>"] = {
+          function(cmp)
+            if require("copilot.suggestion").is_visible() then
+              require("copilot.suggestion").accept()
+              return true
+            end
+          end,
+          "select_next",
+          "fallback",
+        }
+      end,
     },
   },
 }

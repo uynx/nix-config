@@ -3,9 +3,18 @@ default-root-container-layout = "tiles"
 default-root-container-orientation = "auto"
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
-# exec-on-workspace-change = ['/bin/bash', '-c'] use this for sketchybar in the future
-on-focus-changed = ["move-mouse window-lazy-center"]
-on-focused-monitor-changed = ["move-mouse monitor-lazy-center"]
+exec-on-workspace-change = [
+  '/bin/bash', '-c',
+  '/Users/uynx/.nix-profile/bin/sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE FOCUSED_MONITOR="$(/Users/uynx/.nix-profile/bin/aerospace list-monitors --focused | cut -d\"|\" -f1 | xargs)"'
+]
+on-focus-changed = [
+  "move-mouse window-lazy-center",
+  "exec-and-forget /bin/bash -c '/Users/uynx/.nix-profile/bin/sketchybar --trigger aerospace_focus_change FOCUSED_APP=\"$(/Users/uynx/.nix-profile/bin/aerospace list-windows --focused --format %{app-name})\" FOCUSED_MONITOR=\"$(/Users/uynx/.nix-profile/bin/aerospace list-monitors --focused | cut -d\"|\" -f1 | xargs)\" FOCUSED_WORKSPACE=\"$(/Users/uynx/.nix-profile/bin/aerospace list-workspaces --focused)\"'"
+]
+on-focused-monitor-changed = [
+  "move-mouse monitor-lazy-center",
+  "exec-and-forget /bin/bash -c '/Users/uynx/.nix-profile/bin/sketchybar --trigger aerospace_monitor_change FOCUSED_MONITOR=\"$(/Users/uynx/.nix-profile/bin/aerospace list-monitors --focused | cut -d\"|\" -f1 | xargs)\" FOCUSED_WORKSPACE=\"$(/Users/uynx/.nix-profile/bin/aerospace list-workspaces --focused)\"'"
+]
 start-at-login = false
 
 [key-mapping]
@@ -61,4 +70,12 @@ run = "move-node-to-workspace 2"
 [mode.service.binding]
 esc = ["reload-config", "mode main"]
 shift-down = ["volume set 0", "mode main"]
+
+[gaps]
+inner.horizontal = 6
+inner.vertical = 6
+outer.left = 6
+outer.bottom = 6
+outer.top = 6
+outer.right = 6
 
