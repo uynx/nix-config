@@ -85,6 +85,7 @@
     lima
     devpod
     dive
+    whatsapp-for-mac
 
     swi-prolog
     sketchybar

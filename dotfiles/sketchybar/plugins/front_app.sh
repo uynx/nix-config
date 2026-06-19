@@ -37,9 +37,19 @@ sketchybar --set "$NAME" label="$APP_NAME" icon="$ICON"
 if [ "$MONITOR_ID" = "$FOCUSED_MONITOR" ]; then
   sketchybar --set "spaces.$MONITOR_ID" background.border_color=0xff205ea6 \
              --set "front_app_bracket.$MONITOR_ID" background.border_color=0xff205ea6 \
-             --set "status_bracket.$MONITOR_ID" background.border_color=0xff205ea6
+             --set "volume_bracket.$MONITOR_ID" background.border_color=0xff205ea6 \
+             --set "brightness_bracket.$MONITOR_ID" background.border_color=0xff205ea6 \
+             --set "weather_bracket.$MONITOR_ID" background.border_color=0xff205ea6 \
+             --set "sys_bracket.$MONITOR_ID" background.border_color=0xff205ea6 \
+             --set "clock_bracket.$MONITOR_ID" background.border_color=0xff205ea6 \
+             --set "battery_bracket.$MONITOR_ID" background.border_color=0xff205ea6
 else
   sketchybar --set "spaces.$MONITOR_ID" background.border_color=0x40cecdc3 \
              --set "front_app_bracket.$MONITOR_ID" background.border_color=0x40cecdc3 \
-             --set "status_bracket.$MONITOR_ID" background.border_color=0x40cecdc3
+             --set "volume_bracket.$MONITOR_ID" background.border_color=0x40cecdc3 \
+             --set "brightness_bracket.$MONITOR_ID" background.border_color=0x40cecdc3 \
+             --set "weather_bracket.$MONITOR_ID" background.border_color=0x40cecdc3 \
+             --set "sys_bracket.$MONITOR_ID" background.border_color=0x40cecdc3 \
+             --set "clock_bracket.$MONITOR_ID" background.border_color=0x40cecdc3 \
+             --set "battery_bracket.$MONITOR_ID" background.border_color=0x40cecdc3
 fi

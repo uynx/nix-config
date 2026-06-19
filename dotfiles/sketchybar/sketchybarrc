@@ -120,7 +120,7 @@ do
 
   sketchybar --add item weather.$m left \
              --set weather.$m display=$m \
-                              update_freq=300 \
+                              update_freq=180 \
                               background.padding_left=12 \
                               icon.drawing=off \
                               script="$CONFIG_DIR/plugins/weather.sh" \
