@@ -36,6 +36,39 @@
     hyperfine
     bandwhich
 
+    (writeShellScriptBin "memory-sync" ''
+      set -euo pipefail
+      VAULT_DIR="$HOME/ai_memory"
+
+      if [ ! -d "$VAULT_DIR" ]; then
+        echo "Error: AI memory directory $VAULT_DIR does not exist." >&2
+        exit 1
+      fi
+
+      cd "$VAULT_DIR"
+      if [ ! -d .git ]; then
+        echo "Error: AI memory directory $VAULT_DIR is not a Git repository." >&2
+        exit 1
+      fi
+
+      git add .
+
+      if git diff --cached --quiet; then
+        echo "No changes to sync."
+      else
+        echo "Committing memory snapshot..."
+        git commit -m "Memory snapshot: $(date '+%Y-%m-%d %H:%M:%S')"
+      fi
+
+      if git remote | grep -q '^origin$'; then
+        echo "Pushing changes to remote..."
+        git push origin main
+      else
+        echo "Note: No git remote 'origin' configured. Set one with:"
+        echo "  cd $VAULT_DIR && git remote add origin <your-private-repo-url>"
+      fi
+    '')
+
     (neovim.override {
       withPerl = true;
       withNodeJs = true;
@@ -114,6 +147,9 @@
 
     ".config/tmux".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/tmux";
+
+    "AGENTS.md".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/AGENTS.md";
   };
 
   services.colima = {

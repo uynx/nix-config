@@ -233,6 +233,7 @@
     shells = [
       pkgs.fish
       pkgs.dash
+      pkgs.bash
       pkgs.bashInteractive
     ];
   };
@@ -251,6 +252,7 @@
       "streamlabs"
       "mullvad-browser"
       "antigravity"
+      "cursor"
     ];
     masApps = {
       "cakewallet" = 1334702542;
