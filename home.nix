@@ -56,8 +56,24 @@
       if git diff --cached --quiet; then
         echo "No changes to sync."
       else
-        echo "Committing memory snapshot..."
-        git commit -m "Memory snapshot: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "Generating commit message..."
+        STAGED_FILES=$(git diff --cached --name-only)
+        COMMIT_MSG="Updates."
+
+        if echo "$STAGED_FILES" | grep -q 'journal/'; then
+          PROJ_NAME=$(echo "$STAGED_FILES" | grep 'journal/' | head -n 1 | sed -E 's|journal/([^0-9]+)_[0-9-]+\.md|\1|' | sed 's/_/ /g')
+          PROJ_NAME_CAPS=$(echo "$PROJ_NAME" | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1')
+          COMMIT_MSG="Journal: Log daily progress for $PROJ_NAME_CAPS"
+        elif echo "$STAGED_FILES" | grep -q 'concepts/'; then
+          CONCEPT_NAME=$(echo "$STAGED_FILES" | grep 'concepts/' | head -n 1 | sed -E 's|concepts/(.+)\.md|\1|' | sed 's/_/ /g')
+          CONCEPT_NAME_CAPS=$(echo "$CONCEPT_NAME" | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1')
+          COMMIT_MSG="Concept: Refine $CONCEPT_NAME_CAPS documentation"
+        elif echo "$STAGED_FILES" | grep -q -E 'index.md|projects.md'; then
+          COMMIT_MSG="Index: Update vault index and project milestones"
+        fi
+
+        echo "Committing with message: $COMMIT_MSG"
+        git commit -m "$COMMIT_MSG"
       fi
 
       if git remote | grep -q '^origin$'; then
