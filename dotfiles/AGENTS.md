@@ -62,7 +62,7 @@ All memory context is stored at `/Users/uynx/ai_memory/` with the following stru
      ```
    * Update the Project Overview (Head) node's pointer to link to this new daily node.
    * Prune the `Recent Journal Logs` section in `/Users/uynx/ai_memory/index.md` to maintain only the **10 most recent logs**, keeping the index compact.
-   * **Sync Memory Vault**: Run the `memory-sync` utility. You MUST write a unique, descriptive, human-sounding commit message summarizing the changes (e.g. `memory-sync "Journal: Log daily progress for Nix Darwin Setup and update migration guides"`) and pass it as the first argument. Do not use generic messages or default fallbacks when executing inside an AI session.
+   * **Sync Memory Vault**: Run the `memory-sync` utility ONLY once at the very end of the session/goal when all changes are finalized, rather than after every intermediate turn. You MUST write a unique, descriptive, human-sounding commit message summarizing the changes (e.g. `memory-sync "Journal: Log daily progress for Nix Darwin Setup and update migration guides"`) and pass it as the first argument. Do not use generic messages or default fallbacks when executing inside an AI session.
 2. **Cross-Project Linking**: If the task overlaps with or references another project or concept, append a wikilink to the bottom metadata links (e.g., `**Overlap**: `[[link]]``).
 3. **Topic Creation**: The agent is authorized to proactively create new concept/topic nodes in `/Users/uynx/ai_memory/concepts/` when it encounters new domains or significant sub-topics during ingestion or synthesis, provided the new file conforms to the HTML-wrapper formatting protocol and is indexed in `index.md`.
 4. **Provenance & Namespace Safety**:
