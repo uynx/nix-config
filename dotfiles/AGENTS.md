@@ -41,14 +41,11 @@ All memory context is stored at `/Users/uynx/ai_memory/` with the following stru
 
     <section id="retrieval-protocol">
 ## Memory Retrieval Protocol (Read & Traverse)
-1. The memory system is structured as a knowledge graph of Markdown files connected via `[[wikilinks]]` syntax.
-2. Do not read the rest of the memory at start. Only read a specific project node if the user's prompt directly references it or requires its specific details to complete.
-3. **Search Ordering & Tooling**:
-   * When looking up user details, settings, project history, or configuration files, ALWAYS search inside the memory directory `/Users/uynx/ai_memory/` first before searching the project workspace or elsewhere.
-   * If you are unsure which concept files or daily logs contain the relevant context, inspect `/Users/uynx/ai_memory/index.md` first to map the vault layout and identify specific target nodes.
-   * **DO NOT use standard `grep`**. For fast lookups across memory files, you must ALWAYS use `rg` (ripgrep) or the `grep_search` tool inside `/Users/uynx/ai_memory/` first before searching the project workspace or elsewhere. Avoid full-file reads or broad directory traversals unless absolutely necessary.
-4. Limit graph traversal: Follow links dynamically as long as you believe the linked file contains information directly useful to address your prompt or technical request. Stop traversing/reading as soon as the information is no longer useful.
-5. **Strict Context Isolation (Anti-Pollution Guard)**: DO NOT perform generic, non-targeted text searches (e.g., broad queries, global wildcard greps) across the entire `/Users/uynx/ai_memory/` directory on startup. Doing so will flood your context window with obsolete timeline logs, causing immediate model degradation. Keep searches restricted strictly to the relevant project thread.
+1. **Structure**: The memory system is a knowledge graph of Markdown files linked via `[[wikilinks]]`. Follow links dynamically to gather required context, stopping as soon as the technical request can be addressed.
+2. **Targeted Reads**: Do not read the entire vault at startup. Only open a project node if directly referenced or required. If mapping layout is needed, inspect `/Users/uynx/ai_memory/index.md` first.
+3. **Vault First Search**: ALWAYS search inside `/Users/uynx/ai_memory/` first when looking up user profile, settings, history, or configurations.
+4. **Search Tooling**: Use `rg` or the `grep_search` tool instead of standard `grep`. Avoid full-file reads or broad directory traversals.
+5. **Anti-Pollution Guard**: DO NOT run broad, non-targeted text searches (e.g., wildcard greps) across the entire memory vault on startup to avoid flooding your context window with obsolete logs.
     </section>
 
     <section id="consolidation-protocol">
@@ -84,8 +81,7 @@ When executing or proposing terminal commands, you must select the tool that is 
 
     <section id="coding-guidelines">
 ## Coding Guidelines
-* **YAGNI & Conciseness**: When writing or implementing code inside source files or code blocks, strictly adhere to YAGNI ("You Aren't Gonna Need It") and implement code as concisely as possible (preferring clean one-liners where appropriate).
-* **Brevity & Succinctness**: All prose explanations, reasoning, and textual answers must be as short, direct, and succinct as possible. Minimize fluff, explanations of obvious code, and filler text.
+* **YAGNI & Conciseness**: When writing or implementing code inside source files or code blocks, strictly adhere to YAGNI and prioritize one-liners. 
     </section>
 
     <section id="slash-commands">
