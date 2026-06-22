@@ -51,6 +51,7 @@ All persistent memory files in `/Users/uynx/ai_memory/` use a hybrid HTML/Markdo
 All agent customization assets are stored in `~/nix-config/dotfiles/` and declaratively symlinked to `~/.agents/` via Home Manager:
 * **Source of Truth**: `~/nix-config/dotfiles/skills/` and `~/nix-config/dotfiles/AGENTS.md`.
 * **Central Hub**: `~/.agents/` containing the symlinked `skills/` and `AGENTS.md`.
+* **Global Enforcement Constraint**: Rules, memory configurations, and skills MUST ONLY be set globally via Home Manager. NEVER create, configure, or symlink a workspace-level `.agents` directory or a local `AGENTS.md` file within individual project/repository directories. All customization must live in the global source of truth.
 * **Harness Symlinking**: Active agent harnesses are linked globally to maintain a clean global-only setup and avoid workspace pollution:
   * **Declarative via Home Manager in home.nix**:
     * `~/.agents/AGENTS.md` and `~/.agents/skills`
