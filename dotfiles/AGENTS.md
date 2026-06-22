@@ -72,14 +72,14 @@ All memory context is stored at `/Users/uynx/ai_memory/` with the following stru
     </section>
 
     <section id="preferred-tools">
-## Preferred CLI Tools & Modern Alternatives
-The environment has modern command-line utilities installed. When executing or proposing terminal commands, you must use these modern tools instead of their legacy counterparts:
-* **Interpreter Selection**: Use `dash` instead of `bash` for executing POSIX-compliant commands or scripts.
-* `rg` instead of `grep`
-* `fd` instead of `find`
-* `sd` instead of `sed`
-* `bat` instead of `cat`
-* `eza` instead of `ls` or `tree`
+## Preferred CLI Tools & Modern Alternatives (Performance Audited)
+When executing or proposing terminal commands, you must select the tool that is fastest in the execution context:
+* **Interpreter Selection**: ALWAYS use `dash` instead of `bash` (dash is ~3x faster for script invocation and startup).
+* **Text Searching**: ALWAYS use `rg` instead of `grep` (rg is consistently ~1.5x faster even on small repositories, and scales much better).
+* **Find/Traversal**: Use `find` for small/targeted directory structures (find is ~1.7x faster for small workspaces due to zero gitignore-parsing overhead). Reserve `fd` for large workspaces or when `.gitignore` compliance is required.
+* **Find-and-Replace**: Use `sd` instead of `sed` for file editing and large operations (sd is ~3x faster on file targets). Use `sed` only for simple inline stream replacements on stdin.
+* **File Reading**: ALWAYS use `cat` instead of `bat` (cat is ~3x faster for raw reading; bat incurs heavy syntax-highlighting/theme overhead).
+* **Directory Listing**: ALWAYS use standard `ls` instead of `eza` for quick listings (ls is ~1.3x faster). Use `eza` only when active git-status overlays or tree-view structures are explicitly needed.
     </section>
 
     <section id="coding-guidelines">
