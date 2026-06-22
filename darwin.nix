@@ -247,12 +247,13 @@
       cleanup = "zap";
     };
     casks = [
-      "libreoffice"
-      "protonvpn"
-      "streamlabs"
-      "mullvad-browser"
       "antigravity"
       "cursor"
+      "grok-build"
+      "libreoffice"
+      "mullvad-browser"
+      "protonvpn"
+      "streamlabs"
     ];
     masApps = {
       "cakewallet" = 1334702542;

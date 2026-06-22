@@ -295,19 +295,6 @@
         wta = "git worktree add";
         wtr = "git worktree remove";
 
-        cat = "bat";
-        grep = "rg";
-        find = "fd";
-        sed = "sd";
-        ping = "gping";
-        top = "btop";
-        htop = "btop";
-        dig = "doggo";
-        du = "dust";
-        df = "duf";
-        ps = "procs";
-        cd = "z";
-        zi = "z -i";
         vi = "nvim";
         vim = "nvim";
         tree = "eza --tree --icons";
