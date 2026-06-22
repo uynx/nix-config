@@ -4,12 +4,12 @@
 Configuration and rule definitions for workspace agent sessions and the local AI memory system.
     </header>
 
-    <section id="formatting-protocol">
-## Memory Formatting Protocol
-All persistent memory files in `/Users/uynx/ai_memory/` use a hybrid HTML/Markdown structure:
-* **Wrapper**: Main content block wrapped in `<article>`.
-* **Hierarchy**: `<header>` for title/description, `<section id="...">` for each major heading.
-* **Metadata/Links**: Place wikilinks and metadata outside and after `</article>` to preserve Obsidian parsing.
+    <section id="mandatory-bootstrap">
+## CRITICAL: Mandatory Startup Bootstrap (MUST RUN FIRST)
+Before invoking ANY other tools, reading codebase files, running terminal commands, or answering the user, you MUST call `view_file` to read the core memory files:
+1. `/Users/uynx/ai_memory/identity.md`
+2. `/Users/uynx/ai_memory/index.md`
+This is a hard, non-negotiable instruction. If you run any other tool or output any text before reading these files at the start of a conversation, you have failed the session.
     </section>
 
     <section id="role-purpose">
@@ -20,15 +20,13 @@ You are a persistent memory agent. All operations and configurations are managed
 Maintain system configurations in the former and preserve context/connections in the latter.
     </section>
 
-    <section id="agent-customizations">
-## Agent Customizations & Symlinks
-All agent customization assets are stored in `~/nix-config/dotfiles/` and declaratively symlinked to `~/.agents/` via Home Manager:
-* **Source of Truth**: `~/nix-config/dotfiles/skills/` and `~/nix-config/dotfiles/AGENTS.md`.
-* **Central Hub**: `~/.agents/` containing the symlinked `skills/` and `AGENTS.md`.
-* **Harness Symlinking**: Active agent harnesses are linked globally to maintain a clean global-only setup and avoid workspace pollution:
-  * **Declarative via Home Manager in home.nix**:
-    * `~/.agents/AGENTS.md` and `~/.agents/skills`
-    * Each harness is symlinked to the central hub `~/.agents` so that these files are read globally in all sessions.
+    <section id="retrieval-protocol">
+## Memory Retrieval Protocol (Read & Traverse)
+1. **Structure**: The memory system is a knowledge graph of Markdown files linked via `[[wikilinks]]`. Follow links dynamically to gather required context, stopping as soon as the technical request can be addressed.
+2. **Mandatory Session Bootstrap**: At the start of EVERY conversation, before executing any other operations, you MUST read the core memory files `/Users/uynx/ai_memory/identity.md` and `/Users/uynx/ai_memory/index.md` to load user identity, preferences, and the index. Only recurse or open additional project nodes/logs if it is directly necessary and helpful for the task at hand.
+3. **Vault First Search**: ALWAYS search inside `/Users/uynx/ai_memory/` first when looking up user profile, settings, history, or configurations.
+4. **Search Tooling**: Use `rg` instead of standard `grep`. Avoid full-file reads or broad directory traversals.
+5. **Anti-Pollution Guard**: While reading core index and identity files at startup is mandatory, avoid running broad, non-targeted text searches (e.g., wildcard greps) across all historical journal logs to prevent flooding your context window with obsolete logs.
     </section>
 
     <section id="file-structure">
@@ -40,13 +38,23 @@ All memory context is stored at `/Users/uynx/ai_memory/` with the following stru
 * `/journal/`: Folder containing chronological daily logs for each project (e.g., `{project_name}_YYYY-MM-DD.md`) linked via backward chains for history.
     </section>
 
-    <section id="retrieval-protocol">
-## Memory Retrieval Protocol (Read & Traverse)
-1. **Structure**: The memory system is a knowledge graph of Markdown files linked via `[[wikilinks]]`. Follow links dynamically to gather required context, stopping as soon as the technical request can be addressed.
-2. **Targeted Reads**: Do not read the entire vault at startup. Only open a project node if directly referenced or required. If mapping layout is needed, inspect `/Users/uynx/ai_memory/index.md` first.
-3. **Vault First Search**: ALWAYS search inside `/Users/uynx/ai_memory/` first when looking up user profile, settings, history, or configurations.
-4. **Search Tooling**: Use `rg` instead of standard `grep`. Avoid full-file reads or broad directory traversals.
-5. **Anti-Pollution Guard**: DO NOT run broad, non-targeted text searches (e.g., wildcard greps) across the entire memory vault on startup to avoid flooding your context window with obsolete logs.
+    <section id="formatting-protocol">
+## Memory Formatting Protocol
+All persistent memory files in `/Users/uynx/ai_memory/` use a hybrid HTML/Markdown structure:
+* **Wrapper**: Main content block wrapped in `<article>`.
+* **Hierarchy**: `<header>` for title/description, `<section id="...">` for each major heading.
+* **Metadata/Links**: Place wikilinks and metadata outside and after `</article>` to preserve Obsidian parsing.
+    </section>
+
+    <section id="agent-customizations">
+## Agent Customizations & Symlinks
+All agent customization assets are stored in `~/nix-config/dotfiles/` and declaratively symlinked to `~/.agents/` via Home Manager:
+* **Source of Truth**: `~/nix-config/dotfiles/skills/` and `~/nix-config/dotfiles/AGENTS.md`.
+* **Central Hub**: `~/.agents/` containing the symlinked `skills/` and `AGENTS.md`.
+* **Harness Symlinking**: Active agent harnesses are linked globally to maintain a clean global-only setup and avoid workspace pollution:
+  * **Declarative via Home Manager in home.nix**:
+    * `~/.agents/AGENTS.md` and `~/.agents/skills`
+    * Each harness is symlinked to the central hub `~/.agents` so that these files are read globally in all sessions.
     </section>
 
     <section id="consolidation-protocol">

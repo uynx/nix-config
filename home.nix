@@ -159,6 +159,12 @@
 
     ".agents/AGENTS.md".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/AGENTS.md";
+
+    ".gemini/config/skills".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/skills";
+
+    ".gemini/config/AGENTS.md".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/AGENTS.md";
   };
 
   services.colima = {
