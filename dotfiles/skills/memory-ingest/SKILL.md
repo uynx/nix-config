@@ -41,4 +41,4 @@ Use this skill when you need to process new raw documents (Markdown clips, PDFs,
 - Upon successful ingestion and logging, move the original raw source file from `/Users/uynx/ai_memory/raw/` to the archive directory `/Users/uynx/ai_memory/raw/archive/` to keep your incoming raw folder clean.
 
 ### Step 8: Sync Memory Vault
-- Run the `memory-sync` utility to commit and push changes (using caveman lite level to write the commit message).
+- Using caveman lite level to write the commit message, run the `memory-sync` utility to commit and push changes.
