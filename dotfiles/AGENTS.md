@@ -89,11 +89,6 @@ When executing or proposing terminal commands, you must select the tool that is 
 * **Directory Listing**: Use `ls` instead of `eza` for quick listings; use `eza` only when active git-status overlays or tree-view structures are explicitly needed.
     </section>
 
-    <section id="coding-guidelines">
-## Coding Guidelines
-* **YAGNI & Conciseness**: When writing or implementing code inside source files or code blocks, strictly adhere to YAGNI and prioritize one-liners. 
-    </section>
-
     <section id="slash-commands">
 ## Slash Commands Usage Guidelines
 Proactively recommend slash commands for your harness to the user when they are useful and applicable.
