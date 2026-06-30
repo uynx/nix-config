@@ -6,12 +6,18 @@
   ...
 }:
 
+let
+  username = "uynx"; # <-- CHANGE THIS to your macOS username
+  gitName = "Brandon Alexander"; # <-- CHANGE THIS to your Git name
+  gitEmail = "brandonwalex@pm.me"; # <-- CHANGE THIS to your Git email
+  gitSigningKey = "~/.ssh/id_ed25519.pub"; # <-- CHANGE THIS to your SSH signing key (or set commit.gpgsign to false below if not signing)
+in
 {
   imports = [ ];
 
   home = {
-    username = "uynx";
-    homeDirectory = "/Users/uynx";
+    username = username;
+    homeDirectory = "/Users/${username}";
     stateVersion = "26.05";
     sessionVariables = {
       EDITOR = "nvim";
@@ -345,9 +351,9 @@
       enable = true;
       settings = {
         user = {
-          name = "Brandon Alexander";
-          email = "brandonwalex@pm.me";
-          signingkey = "~/.ssh/id_ed25519.pub";
+          name = gitName;
+          email = gitEmail;
+          signingkey = gitSigningKey;
         };
         init.defaultBranch = "main";
         pull.rebase = true;

@@ -5,8 +5,14 @@
   ...
 }:
 
+let
+  username = "uynx"; # <-- CHANGE THIS to your macOS username
+in
 {
-  users.users.uynx.home = "/Users/uynx";
+  users.users.${username} = {
+    home = "/Users/${username}";
+    shell = pkgs.fish;
+  };
 
   determinateNix = {
     enable = true;
@@ -17,7 +23,7 @@
       auto-optimise-store = true;
       trusted-users = [
         "root"
-        "uynx"
+        username
       ];
       extra-substituters = [
         "https://nix-community.cachix.org"
@@ -33,7 +39,7 @@
   home-manager = {
     useGlobalPkgs = true;
     backupFileExtension = "bak";
-    users.uynx = import ./home.nix;
+    users.${username} = import ./home.nix;
     sharedModules = [
       inputs.mac-app-util.homeManagerModules.default
       inputs.nix-index-database.homeModules.nix-index
@@ -48,7 +54,7 @@
   };
 
   system = {
-    primaryUser = "uynx";
+    primaryUser = username;
 
     configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
 
@@ -222,7 +228,7 @@
       };
 
       screencapture = {
-        location = "${config.users.users.uynx.home}/Pictures";
+        location = "${config.users.users.${username}.home}/Pictures";
         type = "png";
       };
     };
@@ -290,7 +296,6 @@
 
   programs.fish.enable = true;
   programs.bash.enable = true;
-  users.users."uynx".shell = pkgs.fish;
 
   nixpkgs.hostPlatform = "aarch64-darwin";
   nixpkgs.config.allowUnfree = true;
