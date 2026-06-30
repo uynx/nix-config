@@ -158,6 +158,7 @@
         AppleKeyboardUIMode = 3;
         AppleInterfaceStyle = "Dark";
         AppleICUForce24HourTime = false;
+        _HIHideMenuBar = true;
 
         NSAutomaticWindowAnimationsEnabled = false;
 
@@ -246,8 +247,15 @@
       upgrade = true;
       cleanup = "zap";
     };
+    brews = [
+      "openclaw-cli"
+      "hermes-agent"
+    ];
     casks = [
       "antigravity"
+      "antigravity-cli"
+      "claude-code"
+      "codex"
       "cursor"
       "grok-build"
       "libreoffice"
@@ -263,7 +271,6 @@
   fonts.packages = with pkgs; [
     nerd-fonts.hack
     julia-mono
-    sketchybar-app-font
   ];
 
   networking = {
@@ -279,26 +286,7 @@
     sleep.allowSleepByPowerButton = true;
   };
 
-  services.sketchybar = {
-    enable = true;
-    extraPackages = [
-      pkgs.aerospace
-    ];
-  };
-
-  launchd.user.agents.weather-watcher = {
-    serviceConfig = {
-      ProgramArguments = [
-        "/bin/bash"
-        "-c"
-        "/run/current-system/sw/bin/sketchybar --trigger weather_update"
-      ];
-      WatchPaths = [
-        "/Users/uynx/Library/Containers/com.apple.weather/Data/Library/Caches/com.apple.weather"
-      ];
-      RunAtLoad = false;
-    };
-  };
+  services.sketchybar.enable = false;
 
   programs.fish.enable = true;
   programs.bash.enable = true;

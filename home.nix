@@ -127,7 +127,6 @@
     whatsapp-for-mac
 
     swi-prolog
-    sketchybar
 
     tmux
     tmuxPlugins.sensible
@@ -145,11 +144,7 @@
     ".config/ghostty/config".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
 
-    ".aerospace.toml".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/aerospace.toml";
 
-    ".config/sketchybar".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/sketchybar";
 
     ".config/tmux".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/tmux";
@@ -187,22 +182,13 @@
       package = pkgs.ghostty-bin;
     };
 
-    antigravity-cli.enable = true;
-
     fastfetch.enable = true;
     bun.enable = true;
     lazydocker.enable = true;
     java.enable = true;
     cargo.enable = true;
 
-    aerospace = {
-      enable = true;
-      package = pkgs.aerospace;
-      launchd = {
-        enable = true;
-        keepAlive = true;
-      };
-    };
+
 
     vscodium = {
       enable = true;
@@ -410,5 +396,10 @@
         chmod 600 "$HOSTS_JSON"
       fi
     fi
+  '';
+
+  home.activation.createAiBrainDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p "$HOME/ai_memory/concepts"
+    mkdir -p "$HOME/ai_memory/journal"
   '';
 }
