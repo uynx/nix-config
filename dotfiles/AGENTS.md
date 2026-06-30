@@ -6,10 +6,10 @@ Config & rules for agent sessions + memory vault.
 
     <section id="mandatory-bootstrap">
 ## CRITICAL: Mandatory Startup Bootstrap (MUST RUN FIRST)
-Before tools/codebase/terminal/reply, MUST call `view_file` on core memory files:
+At very start of chat session, before any tools/codebase/terminal/reply in first turn, MUST call `view_file` on core memory files:
 1. `/Users/uynx/ai_memory/identity.md`
 2. `/Users/uynx/ai_memory/index.md`
-Hard rule. Tool/text before reading files = session fail.
+Hard rule for first turn of session. Subsequent turns in same chat do not require re-reading. Tool/text before reading files on startup = session fail.
     </section>
 
     <section id="role-purpose">
