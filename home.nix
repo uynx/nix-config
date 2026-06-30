@@ -109,24 +109,9 @@
     nixfmt
     statix
 
-    (pkgs-stable.texlive.combine {
-      inherit (pkgs-stable.texlive)
-        scheme-full
-        biber
-        ;
-    })
-
-    melonds
     proton-pass
     qbittorrent
-    wireshark
-
-    lima
-    devpod
-    dive
     whatsapp-for-mac
-
-    swi-prolog
 
     tmux
     tmuxPlugins.sensible
@@ -162,11 +147,7 @@
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/AGENTS.md";
   };
 
-  services.colima = {
-    enable = true;
-    bashPackage = pkgs.bash;
-    dockerPackage = pkgs.docker;
-  };
+
 
   programs = {
     gh = {
