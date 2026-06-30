@@ -20,8 +20,8 @@ in
     homeDirectory = "/Users/${username}";
     stateVersion = "26.05";
     sessionVariables = {
-      EDITOR = "nvim";
-      VISUAL = "nvim";
+      EDITOR = "nano";
+      VISUAL = "nano";
     };
   };
 
@@ -38,82 +38,6 @@ in
     gping
     doggo
     obsidian
-    tokei
-    hyperfine
-    bandwhich
-
-    (writeShellScriptBin "memory-sync" ''
-      set -euo pipefail
-      VAULT_DIR="$HOME/ai_memory"
-
-      if [ ! -d "$VAULT_DIR" ]; then
-        echo "Error: AI memory directory $VAULT_DIR does not exist." >&2
-        exit 1
-      fi
-
-      cd "$VAULT_DIR"
-      if [ ! -d .git ]; then
-        echo "Error: AI memory directory $VAULT_DIR is not a Git repository." >&2
-        exit 1
-      fi
-
-      if [ $# -lt 1 ] || [ -z "$1" ]; then
-        echo "Error: You must provide a commit message." >&2
-        echo "Usage: memory-sync \"Your descriptive commit message\"" >&2
-        exit 1
-      fi
-
-      git add .
-
-      if git diff --cached --quiet; then
-        echo "No changes to sync."
-      else
-        echo "Committing with message: $1"
-        git commit -m "$1"
-      fi
-
-      if git remote | grep -q '^origin$'; then
-        echo "Pushing changes to remote..."
-        git push origin main
-      else
-        echo "Note: No git remote 'origin' configured. Set one with:"
-        echo "  cd $VAULT_DIR && git remote add origin <your-private-repo-url>"
-      fi
-    '')
-
-    (neovim.override {
-      withPerl = true;
-      withNodeJs = true;
-      withPython3 = true;
-      withRuby = true;
-    })
-
-    tree-sitter
-    nodejs
-    rustc
-    (python3.withPackages (
-      ps: with ps; [
-        pip
-        setuptools
-      ]
-    ))
-    clang
-    ast-grep
-    lua5_1
-    luarocks
-    julia-bin
-    php
-    php.packages.composer
-    ruby
-    uv
-
-    imagemagick
-    ghostscript
-    mermaid-cli
-
-    nil
-    nixfmt
-    statix
 
     proton-pass
     qbittorrent
@@ -127,30 +51,11 @@ in
   ];
 
   home.file = {
-    ".config/nvim".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/nvim";
-    ".local/share/nvim/site/parser/norg.so".source =
-      "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
-
     ".config/ghostty/config".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/ghostty_config";
 
-
-
     ".config/tmux".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/tmux";
-
-    ".agents/skills".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/skills";
-
-    ".agents/AGENTS.md".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/AGENTS.md";
-
-    ".gemini/config/skills".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/skills";
-
-    ".gemini/config/AGENTS.md".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/dotfiles/AGENTS.md";
   };
 
 
@@ -250,7 +155,6 @@ in
         set -g fish_greeting "Welcome! To update system packages, run:
   1. 'update' (fetches latest packages)
   2. 'reb'    (applies configurations and rebuilds system)"
-        fish_vi_key_bindings
       '';
 
       shellAliases = {
@@ -267,8 +171,6 @@ in
         wta = "git worktree add";
         wtr = "git worktree remove";
 
-        vi = "nvim";
-        vim = "nvim";
         tree = "eza --tree --icons";
         ll = "eza -la --icons --group-directories-first --header --git-ignore";
       };
@@ -373,22 +275,4 @@ in
       };
     };
   };
-
-  home.activation.copilotBridge = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    AUTH_DB="$HOME/.config/github-copilot/auth.db"
-    HOSTS_JSON="$HOME/.config/github-copilot/hosts.json"
-    if [ -f "$AUTH_DB" ]; then
-      TOKEN=$(${pkgs.sqlite}/bin/sqlite3 "$AUTH_DB" "SELECT cast(token_ciphertext as text) FROM oauth_tokens LIMIT 1;" 2>/dev/null)
-      if [ -n "$TOKEN" ]; then
-        mkdir -p "$(dirname "$HOSTS_JSON")"
-        printf '{\n  "github.com": {\n    "oauth_token": "%s"\n  }\n}\n' "$TOKEN" > "$HOSTS_JSON"
-        chmod 600 "$HOSTS_JSON"
-      fi
-    fi
-  '';
-
-  home.activation.createAiBrainDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    mkdir -p "$HOME/ai_memory/concepts"
-    mkdir -p "$HOME/ai_memory/journal"
-  '';
 }
