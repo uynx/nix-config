@@ -200,7 +200,6 @@ let
             '\t\t\t}\n\t\t}\n\t}\n}\n'
         )
 
-
     def block_for_key(source, key, low=0, high=None):
         if high is None:
             high = len(source)
@@ -229,7 +228,6 @@ let
                 if depth == 0:
                     return opening, pos
         return None
-
 
     region = (0, len(text))
     for key in ("InstallConfigStore", "Software", "Valve", "Steam"):
@@ -319,10 +317,15 @@ let
       STEAM_ARGS="$STEAM_ARGS -silent -applaunch $APP_ID"
     fi
 
-    exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- \
-      /usr/bin/muvm --gpu-mode=venus \
-      --execute-pre=/usr/local/libexec/steam-guest-tune -- FEXBash -c \
-      "$STEAM_BIN $STEAM_ARGS"
+    set -- /usr/bin/muvm --gpu-mode=venus
+    if [ "$APP_ID" = 990080 ]; then
+      # memory headroom on this 16 GiB host.
+      set -- "$@" --vram=4096
+    fi
+    set -- "$@" --execute-pre=/usr/local/libexec/steam-guest-tune -- \
+      FEXBash -c "$STEAM_BIN $STEAM_ARGS"
+
+    exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- "$@"
   '';
 
   # One reproducible Steam VM: Venus fixes DXVK black screens on the native DRM
@@ -642,7 +645,6 @@ let
         print("Already up to date.")
         raise SystemExit(0)
 
-
     def h(arch):
         url = (
             f"{base}/pool/main/b/brave-origin/"
@@ -662,7 +664,6 @@ let
         return subprocess.run(
             cmd_convert, capture_output=True, text=True, check=True
         ).stdout.strip()
-
 
     arm, amd = h("arm64"), h("amd64")
     text = re.sub(r'version = "[^"]+";', f'version = "{latest}";', text)
