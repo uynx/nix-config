@@ -400,7 +400,6 @@ let
 
     set -- /usr/bin/muvm \
       -e "BROWSER=$GUEST_BIN/xdg-open" \
-      -e "PATH=$GUEST_BIN:$PATH" \
       --gpu-mode=venus
     if [ "$APP_ID" = 990080 ]; then
       # memory headroom on this 16 GiB host.
