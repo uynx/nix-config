@@ -922,6 +922,7 @@ in
       vesktop
       cameractrls-gtk4
       v4l-utils
+      mpv
     ];
     file = {
       ".config/nvim".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/nvim";
