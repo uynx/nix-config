@@ -841,6 +841,12 @@ let
     exec ${pkgs.nodejs}/bin/npx -y @openai/codex "$@"
   '';
 
+  update-agy = pkgs.writeShellScriptBin "update-agy" ''
+    set -eu
+    echo "Installing/Updating agy CLI..."
+    ${pkgs.curl}/bin/curl -fsSL https://antigravity.google.com/install.sh | ${pkgs.bash}/bin/bash
+  '';
+
   home = "/home/uynx";
 in
 {
@@ -874,6 +880,7 @@ in
     };
     packages = with pkgs; [
       update-antigravity
+      update-agy
       codex
       steam-asahi
       steam-asahi-bootstrap
