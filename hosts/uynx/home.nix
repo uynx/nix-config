@@ -1074,7 +1074,7 @@ in
     '';
     activation.installAgy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -f "${home}/.local/bin/agy" ]; then
-        ${pkgs.curl}/bin/curl -fsSL https://antigravity.google.com/install.sh | ${pkgs.bash}/bin/bash
+        ${pkgs.curl}/bin/curl -fsSL https://antigravity.google.com/install.sh | ${pkgs.bash}/bin/bash || true
       fi
     '';
     activation.installGrok = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
