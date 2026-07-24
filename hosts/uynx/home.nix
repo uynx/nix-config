@@ -855,6 +855,7 @@ in
         '';
       };
     file.".local/bin/hypr-close-active".source = "${hypr-close-active}/bin/hypr-close-active";
+    file.".local/bin/dictate".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/scripts/maintenance/dictate";
     sessionVariables = {
       EDITOR = "nvim";
       VISUAL = "nvim";
@@ -875,6 +876,9 @@ in
       size = 24;
     };
     packages = with pkgs; [
+      wl-clipboard
+      wtype
+      sox
       steam-asahi
       steam-asahi-bootstrap
       steam-asahi-doctor
@@ -1090,6 +1094,14 @@ in
     activation.installClaude = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -f "${home}/.local/bin/claude" ]; then
         ${pkgs.curl}/bin/curl -fsSL https://claude.ai/install.sh | ${pkgs.bash}/bin/bash || true
+      fi
+    '';
+    activation.installWhisperCpp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if [ ! -f "${home}/.local/bin/whisper-cli" ]; then
+        mkdir -p "${home}/.local/share/whisper.cpp" "${home}/.local/bin"
+        export PATH="${pkgs.gzip}/bin:${pkgs.gnutar}/bin:${pkgs.curl}/bin:${pkgs.coreutils}/bin:$PATH"
+        curl -fsSL https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.1/whisper-bin-ubuntu-arm64.tar.gz | tar -xz -C "${home}/.local/share/whisper.cpp" --strip-components=1
+        ln -sf "${home}/.local/share/whisper.cpp/whisper-cli" "${home}/.local/bin/whisper-cli"
       fi
     '';
     activation.generateSteamGameEntries = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
