@@ -10,115 +10,6 @@
 let
   H = "${pkgs.hyprland}/bin/hyprctl";
   J = "${pkgs.jq}/bin/jq";
-  workspace-switcher = pkgs.writeShellScriptBin "workspace-switcher" ''
-    KEY=$1
-    ACTION=''${2:-goto}
-    STATE=/tmp/hyprland_merged_workspaces
-    HDMI=$(grep -q "^connected$" /sys/class/drm/*-HDMI-A-1/status 2>/dev/null && echo 1 || echo 0)
-
-    if [ "$ACTION" = sync ]; then
-      if [ "$HDMI" = 0 ]; then
-        if [ ! -f "$STATE" ]; then
-          CUR=$(${H} activeworkspace -j | ${J} -r .id)
-          : >"$STATE"
-          ${H} clients -j | ${J} -r '.[]|select(.workspace.id>=4 and .workspace.id<=6)|"\(.workspace.id):\(.address)"' |
-            while IFS=: read -r ws addr; do
-              echo "$ws:$addr" >>"$STATE"
-              ${H} dispatch movetoworkspacesilent "$((ws - 3)),address:$addr"
-            done
-          [ "$CUR" -ge 4 ] && [ "$CUR" -le 6 ] && ${H} dispatch workspace "$((CUR - 3))"
-        fi
-      else
-        for ws in 1 2 3; do ${H} dispatch moveworkspacetomonitor "$ws HDMI-A-1"; done
-        if [ -f "$STATE" ]; then
-          while IFS=: read -r o a; do ${H} dispatch movetoworkspacesilent "$o,address:$a"; done <"$STATE"
-          rm -f "$STATE"
-        fi
-      fi
-      exit 0
-    fi
-
-    BASE=1
-    if [ "$HDMI" = 1 ]; then
-      [ "$(${H} monitors -j | ${J} -r '.[]|select(.focused==true)|.name')" != HDMI-A-1 ] && BASE=4
-    fi
-    case "$KEY" in
-      u) T=$BASE ;; i) T=$((BASE + 1)) ;; o) T=$((BASE + 2)) ;; *) exit 1 ;;
-    esac
-    ${H} dispatch "$([ "$ACTION" = move ] && echo movetoworkspace || echo workspace)" "$T"
-  '';
-
-  monitor-hotplug = pkgs.writeShellScriptBin "monitor-hotplug" ''
-    ${pkgs.systemd}/bin/udevadm monitor --subsystem=drm --udev | while read -r line; do
-      echo "$line" | grep -q change || continue
-      sleep 0.25
-      ${workspace-switcher}/bin/workspace-switcher "" sync
-    done
-  '';
-
-  antigravity-launcher = pkgs.writeShellScriptBin "antigravity-launcher" ''
-    set -eu
-
-    HAS_WINDOW=$(${H} clients -j 2>/dev/null | ${J} -r '.[] | select(((.class // "") | ascii_downcase) == "antigravity") | .pid' 2>/dev/null || true)
-    if [ -z "$HAS_WINDOW" ]; then
-      ${pkgs.procps}/bin/pkill -f "/.local/share/antigravity/antigravity" 2>/dev/null || true
-      sleep 0.1
-    fi
-    exec /home/uynx/.local/share/antigravity/antigravity "$@"
-  '';
-
-  update-brave-origin = pkgs.writers.writePython3Bin "update-brave-origin" { } ''
-    import os
-    import re
-    import subprocess
-    import urllib.request
-
-    base = "https://brave-browser-apt-release.s3.brave.com"
-    url = f"{base}/dists/stable/main/binary-arm64/Packages"
-    idx = urllib.request.urlopen(url).read().decode()
-    pat = r"Package: brave-origin\n.*?Version: ([\d.]+)"
-    latest = re.search(pat, idx, re.DOTALL).group(1)
-    path = os.path.expanduser("~/nixos-config/hosts/uynx/brave-origin.nix")
-    text = open(path).read()
-    cur = re.search(r'version = "([\d.]+)";', text).group(1)
-    print(f"Current: {cur} | Latest: {latest}")
-    if cur == latest:
-        print("Already up to date.")
-        raise SystemExit(0)
-
-
-    def h(arch):
-        url = (
-            f"{base}/pool/main/b/brave-origin/"
-            f"brave-origin_{latest}_{arch}.deb"
-        )
-        print(f"Hashing {arch}...")
-        cmd = ["nix-prefetch-url", url]
-        pf = subprocess.run(
-            cmd, capture_output=True, text=True, check=True
-        )
-        cmd_convert = [
-            "nix", "hash", "convert",
-            "--hash-algo", "sha256",
-            "--to", "sri",
-            pf.stdout.strip()
-        ]
-        return subprocess.run(
-            cmd_convert, capture_output=True, text=True, check=True
-        ).stdout.strip()
-
-
-    arm, amd = h("arm64"), h("amd64")
-    text = re.sub(r'version = "[^"]+";', f'version = "{latest}";', text)
-    text = re.sub(
-        r'hash = if arch == "arm64" then "[^"]+"\s+else "[^"]+";',
-        f'hash = if arch == "arm64" then "{arm}"\n         else "{amd}";',
-        text,
-    )
-    open(path, "w").write(text)
-    print("Updated brave-origin.nix successfully!")
-  '';
-
   home = "/home/uynx";
 in
 {
@@ -130,7 +21,6 @@ in
     sessionVariables = {
       EDITOR = "nvim";
       VISUAL = "nvim";
-      AGY_CLI_DISABLE_AUTO_UPDATE = "true";
       PROTON_PASS_KEY_PROVIDER = "fs";
       GSK_RENDERER = "gl";
     };
@@ -150,8 +40,6 @@ in
       wl-clipboard
       wtype
       sox
-      hyprlandPlugins.hy3
-      hyprpaper
       coreutils
       wget
       dust
@@ -210,10 +98,6 @@ in
       tmuxPlugins.vim-tmux-navigator
       tmuxPlugins.resurrect
       tmuxPlugins.continuum
-      monitor-hotplug
-      workspace-switcher
-      antigravity-launcher
-      update-brave-origin
       obs-studio
       vesktop
       v4l-utils
@@ -228,10 +112,6 @@ in
         config-file = ${home}/dotfiles/ghostty_config
         font-size = 12
       '';
-      ".config/hypr/hyprland.conf".source =
-        config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/hypr/hyprland.conf";
-      ".config/hypr/hyprpaper.conf".source =
-        config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/hypr/hyprpaper.conf";
       ".config/fuzzel/fuzzel.ini".source =
         config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/fuzzel/fuzzel.ini";
       ".config/waybar".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/waybar";
@@ -272,11 +152,6 @@ in
         "${home}/nixos-config" \
         "${home}/.local/share/antigravity"
     '';
-    activation.installAgy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      if [ ! -f "${home}/.local/bin/agy" ]; then
-        ${pkgs.curl}/bin/curl -fsSL https://antigravity.google.com/install.sh | ${pkgs.bash}/bin/bash || true
-      fi
-    '';
     activation.installGrok = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -f "${home}/.grok/bin/grok" ]; then
         ${pkgs.curl}/bin/curl -fsSL https://x.ai/cli/install.sh | ${pkgs.bash}/bin/bash || true
@@ -309,21 +184,6 @@ in
   };
 
   dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
-
-  xdg.desktopEntries = {
-    antigravity = {
-      name = "Antigravity";
-      genericName = "Text Editor";
-      comment = "Antigravity AI Code Editor";
-      exec = "${antigravity-launcher}/bin/antigravity-launcher %U";
-      icon = "antigravity";
-      type = "Application";
-      categories = [
-        "Development"
-        "IDE"
-      ];
-    };
-  };
 
   programs = {
     gh = {
@@ -448,10 +308,6 @@ in
           pager = "bat --style=plain";
         };
       };
-    };
-    chromium = {
-      enable = true;
-      package = pkgs.callPackage ./_brave-origin.nix { };
     };
     jq.enable = true;
     go.enable = true;
