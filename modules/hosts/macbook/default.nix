@@ -29,7 +29,10 @@
             };
           };
           sharedModules = [ inputs.nix-index-database.homeModules.nix-index ];
-          users.uynx = import ./_home.nix;
+          users.uynx.imports = [
+            ./_home.nix
+            self.homeModules.steamAsahi
+          ];
         };
       }
     ];
