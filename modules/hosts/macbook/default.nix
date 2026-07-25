@@ -1,13 +1,21 @@
-{ inputs, ... }:
+{ self, inputs, ... }:
 {
-  flake.nixosConfigurations.uynx = inputs.nixpkgs.lib.nixosSystem {
+  flake.nixosConfigurations.macbook = inputs.nixpkgs.lib.nixosSystem {
     system = "aarch64-linux";
     specialArgs = { inherit inputs; };
-    modules = [
-      ./_configuration.nix
+    modules = with self.nixosModules; [
+      core
+      hardwareMacbook
+      hyprland
+      greetd
+      steamAsahi
+
+      ./_hardware-configuration.nix
       inputs.determinate.nixosModules.default
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
       inputs.home-manager.nixosModules.home-manager
+
+      { networking.hostName = "MacBook-Pro"; }
       {
         home-manager = {
           useGlobalPkgs = true;
