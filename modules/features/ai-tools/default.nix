@@ -5,13 +5,42 @@
     { config, pkgs, lib, ... }:
     let
       home = "/home/uynx";
+      H = "${pkgs.hyprland}/bin/hyprctl";
+      J = "${pkgs.jq}/bin/jq";
+
+      # Electron leaves a headless process behind if only the window is closed,
+      # so drop any stale one before launching.
+      antigravity-launcher = pkgs.writeShellScriptBin "antigravity-launcher" ''
+        set -eu
+
+        HAS_WINDOW=$(${H} clients -j 2>/dev/null | ${J} -r '.[] | select(((.class // "") | ascii_downcase) == "antigravity") | .pid' 2>/dev/null || true)
+        if [ -z "$HAS_WINDOW" ]; then
+          ${pkgs.procps}/bin/pkill -f "/.local/share/antigravity/antigravity" 2>/dev/null || true
+          sleep 0.1
+        fi
+        exec ${home}/.local/share/antigravity/antigravity "$@"
+      '';
     in
     {
       home.packages = with pkgs; [
         wl-clipboard
         wtype
         sox
+        antigravity-launcher
       ];
+
+      xdg.desktopEntries.antigravity = {
+        name = "Antigravity";
+        genericName = "Text Editor";
+        comment = "Antigravity AI Code Editor";
+        exec = "${antigravity-launcher}/bin/antigravity-launcher %U";
+        icon = "antigravity";
+        type = "Application";
+        categories = [
+          "Development"
+          "IDE"
+        ];
+      };
 
       home.sessionPath = [
         "${home}/.grok/bin"
@@ -24,6 +53,12 @@
         ".local/bin/dictate".source =
           config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/scripts/maintenance/dictate";
       };
+
+      home.activation.installAgy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        if [ ! -f "${home}/.local/bin/agy" ]; then
+          ${pkgs.curl}/bin/curl -fsSL https://antigravity.google.com/install.sh | ${pkgs.bash}/bin/bash || true
+        fi
+      '';
 
       # Modern Copilot plugins keep the token in auth.db; avante.nvim wants hosts.json.
       home.activation.copilotBridge = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
