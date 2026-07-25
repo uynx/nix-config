@@ -1,11 +1,11 @@
 { self, inputs, ... }:
 {
-  flake.nixosConfigurations.macbook = inputs.nixpkgs.lib.nixosSystem {
+  flake.nixosConfigurations.asahi = inputs.nixpkgs.lib.nixosSystem {
     system = "aarch64-linux";
     specialArgs = { inherit inputs; };
     modules = with self.nixosModules; [
       core
-      hardwareMacbook
+      hardwareAsahi
       hyprland
       greetd
       steamAsahi
@@ -15,7 +15,7 @@
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
       inputs.home-manager.nixosModules.home-manager
 
-      { networking.hostName = "MacBook-Pro"; }
+      { networking.hostName = "asahi"; }
       {
         home-manager = {
           useGlobalPkgs = true;

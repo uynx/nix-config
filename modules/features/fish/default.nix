@@ -7,7 +7,7 @@
         fish_vi_key_bindings
       '';
       functions.reb.body = ''
-        set -l target "macbook"
+        set -l target "asahi"
         if test (count $argv) -gt 0; set target $argv[1]; end
         sudo nixos-rebuild switch --flake ~/nixos-config#$target --impure
       '';
