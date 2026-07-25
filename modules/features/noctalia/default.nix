@@ -1,13 +1,14 @@
 {
   # Quickshell-based desktop shell: bar, launcher, notifications, lock screen.
-  # Supports Hyprland natively, so it can replace waybar/fuzzel/dunst without
-  # touching the compositor.
   #
-  # Config is still mutable in ~/.config/noctalia for now. Once the GUI settings
-  # are dialled in, snapshot them with
-  #   noctalia-shell ipc call state all > settings.json
-  # and bake them via wrapper-modules, the same way vimjoyer does.
+  # settings.json stays mutable in ~/.config/noctalia so the settings GUI keeps
+  # working. Only the colour scheme is managed here — freezing settings.json
+  # would make it a read-only store symlink and disable that GUI.
   flake.homeModules.noctalia = { pkgs, ... }: {
     home.packages = [ pkgs.noctalia-shell ];
+
+    # Flexoki, matching ghostty's "Flexoki Dark" and the neovim colorscheme.
+    # Select it in Noctalia's settings once it appears.
+    home.file.".config/noctalia/colorschemes/Flexoki/Flexoki.json".source = ./Flexoki.json;
   };
 }

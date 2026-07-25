@@ -36,6 +36,33 @@
           path = "/home/uynx/dotfiles/wallpaper.png";
           fit = "Cover";
         };
+
+        # Flexoki Dark, matching ghostty and neovim. No Flexoki GTK theme
+        # exists, so the palette is applied directly rather than via a package.
+        extraCss = ''
+          window, .background {
+            background-color: #100f0f;
+            color: #cecdc3;
+          }
+          entry, button {
+            background-color: #403e3c;
+            color: #cecdc3;
+            border: 1px solid #575653;
+            border-radius: 6px;
+          }
+          entry:focus {
+            border-color: #d0a215;
+          }
+          button:hover {
+            background-color: #575653;
+          }
+          label {
+            color: #cecdc3;
+          }
+          .title, #clock {
+            color: #d0a215;
+          }
+        '';
       };
 
       # ReGreet builds its session list from wayland-sessions desktop files.
