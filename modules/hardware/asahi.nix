@@ -1,6 +1,6 @@
 {
   # Apple Silicon (Asahi). Specialized ARM.
-  flake.nixosModules.hardwareMacbook = {
+  flake.nixosModules.hardwareAsahi = {
     hardware.asahi = {
       enable = true;
       # Must stay a real path, not a store string: the asahi module reads
