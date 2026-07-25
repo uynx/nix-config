@@ -6,7 +6,7 @@
     modules = with self.nixosModules; [
       core
       hardwareAsahi
-      hyprland
+      niri
       greetd
       steamAsahi
 

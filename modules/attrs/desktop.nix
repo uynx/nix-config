@@ -3,7 +3,7 @@
   flake.homeModules.desktopHome = {
     imports = with self.homeModules; [
       theme
-      hyprland
+      niri
       noctalia
       ghostty
       fish
