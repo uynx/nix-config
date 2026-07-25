@@ -2,7 +2,12 @@
   # Vendor CLIs with no nixpkgs derivation. Installed imperatively on first
   # activation, guarded so a rebuild is a no-op once present.
   flake.homeModules.aiTools =
-    { config, pkgs, lib, ... }:
+    {
+      config,
+      pkgs,
+      lib,
+      ...
+    }:
     let
       home = "/home/uynx";
       H = "${pkgs.hyprland}/bin/hyprctl";
@@ -57,20 +62,6 @@
       home.activation.installAgy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         if [ ! -f "${home}/.local/bin/agy" ]; then
           ${pkgs.curl}/bin/curl -fsSL https://antigravity.google.com/install.sh | ${pkgs.bash}/bin/bash || true
-        fi
-      '';
-
-      # Modern Copilot plugins keep the token in auth.db; avante.nvim wants hosts.json.
-      home.activation.copilotBridge = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        AUTH_DB="${home}/.config/github-copilot/auth.db"
-        HOSTS_JSON="${home}/.config/github-copilot/hosts.json"
-        if [ -f "$AUTH_DB" ]; then
-          TOKEN=$(${pkgs.sqlite}/bin/sqlite3 "$AUTH_DB" "SELECT cast(token_ciphertext as text) FROM oauth_tokens LIMIT 1;" 2>/dev/null)
-          if [ -n "$TOKEN" ]; then
-            mkdir -p "$(dirname "$HOSTS_JSON")"
-            printf '{\n  "github.com": {\n    "oauth_token": "%s"\n  }\n}\n' "$TOKEN" >"$HOSTS_JSON"
-            chmod 600 "$HOSTS_JSON"
-          fi
         fi
       '';
 
