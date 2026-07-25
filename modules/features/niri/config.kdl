@@ -32,25 +32,23 @@ output "HDMI-A-1" {
 
 layout {
     gaps 8
-    center-focused-column "never"
+    center-focused-column "always"
     preset-column-widths {
-        proportion 0.33333
         proportion 0.5
-        proportion 0.66667
+        proportion 0.75
+        proportion 1.0
     }
-    default-column-width { proportion 0.5; }
+    default-column-width { proportion 0.75; }
 }
 
-spawn-at-startup "xwayland-satellite"
+xwayland-satellite {
+    path "@xwaylandSatellite@"
+}
 spawn-at-startup "noctalia-shell"
 spawn-at-startup "protonvpn-app"
 
 prefer-no-csd
 screenshot-path "~/Pictures/Screenshots/screenshot-%Y-%m-%d-%H-%M-%S.png"
-
-environment {
-    DISPLAY ":0"
-}
 
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
