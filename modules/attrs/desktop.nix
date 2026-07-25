@@ -13,7 +13,6 @@
       media
       apps
       aiTools
-      antigravity
       braveOrigin
     ];
   };
