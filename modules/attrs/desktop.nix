@@ -5,6 +5,7 @@
       theme
       hyprland
       waybar
+      noctalia
       fuzzel
       ghostty
       fish
