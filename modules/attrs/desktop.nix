@@ -9,7 +9,6 @@
       ghostty
       fish
       tmux
-      cava
       media
       apps
       aiTools
