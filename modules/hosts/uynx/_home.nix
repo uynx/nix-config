@@ -1270,7 +1270,7 @@ in
     };
     chromium = {
       enable = true;
-      package = pkgs.callPackage ./brave-origin.nix { };
+      package = pkgs.callPackage ./_brave-origin.nix { };
     };
     jq.enable = true;
     go.enable = true;

@@ -1,6 +1,6 @@
 { pkgs, ... }:
 {
-  imports = [ ./hardware-configuration.nix ];
+  imports = [ ./_hardware-configuration.nix ];
 
   hardware = {
     asahi = {
