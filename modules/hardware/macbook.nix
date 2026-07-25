@@ -3,7 +3,11 @@
   flake.nixosModules.hardwareMacbook = {
     hardware.asahi = {
       enable = true;
-      peripheralFirmwareDirectory = "/nix/store/jd2gkq3m7c2plcx48bxdsm0xwalcpldw-asahi-peripheral-firmware";
+      # Must stay a real path, not a store string: the asahi module reads
+      # firmware.cpio out of this at BUILD time, so it has to be a derivation
+      # input. A context-free string is invisible inside the build sandbox.
+      # This is why rebuilds need --impure.
+      peripheralFirmwareDirectory = /boot/vendorfw;
     };
 
     boot = {
