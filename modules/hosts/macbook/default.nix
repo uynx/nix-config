@@ -29,9 +29,12 @@
             };
           };
           sharedModules = [ inputs.nix-index-database.homeModules.nix-index ];
-          users.uynx.imports = [
+          users.uynx.imports = with self.homeModules; [
             ./_home.nix
-            self.homeModules.steamAsahi
+            steamAsahi
+            hyprland
+            antigravity
+            braveOrigin
           ];
         };
       }
