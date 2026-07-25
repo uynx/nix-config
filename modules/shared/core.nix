@@ -20,7 +20,6 @@
       wget
       curl
       ghostty
-      fuzzel
       brightnessctl
       flatpak
     ];
