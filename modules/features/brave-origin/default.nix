@@ -14,7 +14,9 @@
       idx = urllib.request.urlopen(url).read().decode()
       pat = r"Package: brave-origin\n.*?Version: ([\d.]+)"
       latest = re.search(pat, idx, re.DOTALL).group(1)
-      path = os.path.expanduser("~/nixos-config/modules/features/brave-origin/_brave-origin.nix")
+      # Split: writePython3Bin runs a PEP8 check and E501 fires at 79 chars.
+      rel = "modules/features/brave-origin/_brave-origin.nix"
+      path = os.path.expanduser(f"~/nixos-config/{rel}")
       text = open(path).read()
       cur = re.search(r'version = "([\d.]+)";', text).group(1)
       print(f"Current: {cur} | Latest: {latest}")
