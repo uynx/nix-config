@@ -4,7 +4,7 @@
     console.useXkbConfig = true;
     # xkb lives under services.xserver even on Wayland; console.useXkbConfig reads it.
     services.xserver = {
-      enable = true;
+      enable = false;
       xkb = {
         layout = "us";
         options = "caps:escape";
