@@ -3,7 +3,7 @@
   flake.nixosModules.hardwareMacbook = {
     hardware.asahi = {
       enable = true;
-      peripheralFirmwareDirectory = /boot/vendorfw;
+      peripheralFirmwareDirectory = "/nix/store/jd2gkq3m7c2plcx48bxdsm0xwalcpldw-asahi-peripheral-firmware";
     };
 
     boot = {
