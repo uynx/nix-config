@@ -1,5 +1,11 @@
+{ inputs, ... }:
 {
   flake.homeModules.cli = { pkgs, ... }: {
+    # comma needs programs.nix-index-database, which only exists once this
+    # module is loaded. Declare it here rather than relying on the host adding
+    # it to sharedModules, or this feature silently breaks on any other host.
+    imports = [ inputs.nix-index-database.homeModules.nix-index ];
+
     home.packages = with pkgs; [
       coreutils
       wget

@@ -28,7 +28,6 @@
               config.allowUnfree = true;
             };
           };
-          sharedModules = [ inputs.nix-index-database.homeModules.nix-index ];
           users.uynx.imports = with self.homeModules; [
             ./_home.nix
             desktopHome
