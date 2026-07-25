@@ -2,6 +2,7 @@
   description = "Asahi NixOS — uynx";
 
   inputs = {
+    # System
     nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-weekly/*";
     nixpkgs-stable.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-26.05-chilled/*";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
@@ -17,45 +18,15 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Dendritic
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    import-tree.url = "github:vic/import-tree";
+    wrappers = {
+      url = "github:BirdeeHub/nix-wrapper-modules";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs =
-    inputs@{
-      self,
-      nixpkgs,
-      nixos-apple-silicon,
-      home-manager,
-      nix-index-database,
-      determinate,
-      nixpkgs-stable,
-      ...
-    }:
-    {
-      nixosConfigurations.uynx = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        specialArgs = { inherit inputs; };
-        modules = [
-          ./configuration.nix
-          determinate.nixosModules.default
-          nixos-apple-silicon.nixosModules.apple-silicon-support
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "bak";
-              extraSpecialArgs = {
-                inherit inputs;
-                pkgs-stable = import nixpkgs-stable {
-                  system = "aarch64-linux";
-                  config.allowUnfree = true;
-                };
-              };
-              sharedModules = [ nix-index-database.homeModules.nix-index ];
-              users.uynx = import ./hosts/uynx/home.nix;
-            };
-          }
-        ];
-      };
-    };
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 }
