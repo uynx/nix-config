@@ -954,7 +954,6 @@ in
       update-brave-origin
       obs-studio
       vesktop
-      cameractrls-gtk4
       v4l-utils
       mpv
       fetch
@@ -1318,18 +1317,4 @@ in
     };
   };
 
-  systemd.user.services.cameractrlsd = {
-    Unit = {
-      Description = "CameraCtrls daemon - restore control values";
-      After = [ "graphical-session.target" ];
-    };
-    Service = {
-      Type = "simple";
-      ExecStart = "${pkgs.cameractrls}/bin/cameractrlsd";
-      Restart = "on-failure";
-    };
-    Install = {
-      WantedBy = [ "graphical-session.target" ];
-    };
-  };
 }
