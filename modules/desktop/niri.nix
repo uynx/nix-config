@@ -2,6 +2,11 @@
   flake.nixosModules.niri = { pkgs, ... }: {
     programs.niri.enable = true;
 
+    # noctalia's battery widget reads Quickshell.Services.UPower and hides
+    # itself when no device is on the bus, so without this the icon is simply
+    # absent. Waybar polled /sys/class/power_supply directly and never needed it.
+    services.upower.enable = true;
+
     # niri has no built-in XWayland; X11 clients need this bridge.
     environment.systemPackages = with pkgs; [
       xwayland-satellite
