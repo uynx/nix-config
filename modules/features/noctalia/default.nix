@@ -13,16 +13,18 @@
     let
       saved = builtins.fromJSON (builtins.readFile ./settings.json);
 
-      # The ghostty template expects `terminal_normal_*` colour keys that the
-      # custom Flexoki scheme does not define, so it threw ~52 "Unknown color"
-      # lines on every login. It could never have applied anyway: ghostty's
-      # config is a read-only store symlink.
-      disableGhostty = map (t: t // { enabled = t.enabled && t.id != "ghostty"; });
+      # All of noctalia's "apply theme to app" templates are off. Two reasons:
+      # the ghostty one threw ~52 "Unknown color" lines every login because the
+      # custom Flexoki scheme does not define its `terminal_normal_*` keys, and
+      # the ones aimed at apps Nix does not manage (btop, yazi, discord, code,
+      # steam) genuinely wrote files into ~/.config — which is exactly the
+      # unmanaged drift this repo exists to remove. Theming belongs in Nix.
+      disableTemplates = map (t: t // { enabled = false; });
 
       settings = lib.recursiveUpdate saved {
         # Shared with the SDDM greeter, which uses the same directory.
         wallpaper.directory = "${../../wallpapers}";
-        templates.activeTemplates = disableGhostty saved.templates.activeTemplates;
+        templates.activeTemplates = disableTemplates saved.templates.activeTemplates;
       };
     in
     {
