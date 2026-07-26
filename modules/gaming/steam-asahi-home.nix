@@ -10,8 +10,38 @@
 
     let
       home = "/home/uynx";
-      H = "${pkgs.hyprland}/bin/hyprctl";
-      J = "${pkgs.jq}/bin/jq";
+      N = "${lib.getExe pkgs.niri}";
+      J = "${lib.getExe pkgs.jq}";
+
+      # The same three queries were spelled out at a dozen call sites against
+      # Hyprland. Defining them once keeps the port small and the scripts
+      # readable. Note niri calls Hyprland's `class` `app_id` and its `address`
+      # `id`, and returns outputs as an object keyed by name rather than a list.
+      shellHelpers = ''
+        # Id of the first window whose app_id matches $1, or empty.
+        window_id() {
+          ${N} msg -j windows 2>/dev/null | ${J} -r --arg app "$1" \
+            '[.[] | select(((.app_id // "") | ascii_downcase) == $app) | .id][0] // empty' \
+            2>/dev/null || true
+        }
+
+        # True while any Steam, CS2 or Steam-game window is still open.
+        any_steam_window() {
+          ${N} msg -j windows 2>/dev/null | ${J} -e '
+            any(.[]; ((.app_id // "") | ascii_downcase) as $c
+                     | $c == "steam" or $c == "cs2" or ($c | test("^steam_app_[0-9]+$")))
+          ' >/dev/null 2>&1
+        }
+
+        # The external monitor if attached, otherwise whichever output has focus.
+        target_output() {
+          if ${N} msg -j outputs 2>/dev/null | ${J} -e 'has("HDMI-A-1")' >/dev/null 2>&1; then
+            ${N} msg -j outputs 2>/dev/null | ${J} -c '."HDMI-A-1"'
+          else
+            ${N} msg -j focused-output 2>/dev/null
+          fi
+        }
+      '';
     x86-pkgs = import inputs.nixpkgs {
       system = "x86_64-linux";
       config.allowUnfree = true;
@@ -400,12 +430,11 @@
     # Windows games still use Proton and FEX inside the same Venus VM.
     steam-asahi = pkgs.writeShellScriptBin "steam-asahi" ''
       set -eu
+      ${shellHelpers}
 
-      STEAM_ADDRESS=$(${H} clients -j 2>/dev/null | ${J} -r '
-        [.[] | select(((.class // "") | ascii_downcase) == "steam") | .address][0] // empty
-      ' 2>/dev/null || true)
-      if [ -n "$STEAM_ADDRESS" ]; then
-        exec ${H} dispatch focuswindow "address:$STEAM_ADDRESS"
+      STEAM_ID=$(window_id steam)
+      if [ -n "$STEAM_ID" ]; then
+        exec ${N} msg action focus-window --id "$STEAM_ID"
       fi
 
       if [ "$(${pkgs.docker}/bin/docker container inspect \
@@ -413,11 +442,9 @@
          [ -p /home/uynx/.local/share/steam-asahi/home/.steam/steam.pipe ]; then
         ${steam-asahi-remote}/bin/steam-asahi-remote ui || true
         for _ in $(${pkgs.coreutils}/bin/seq 1 50); do
-          STEAM_ADDRESS=$(${H} clients -j 2>/dev/null | ${J} -r '
-            [.[] | select(((.class // "") | ascii_downcase) == "steam") | .address][0] // empty
-          ' 2>/dev/null || true)
-          if [ -n "$STEAM_ADDRESS" ]; then
-            exec ${H} dispatch focuswindow "address:$STEAM_ADDRESS"
+          STEAM_ID=$(window_id steam)
+          if [ -n "$STEAM_ID" ]; then
+            exec ${N} msg action focus-window --id "$STEAM_ID"
           fi
           sleep 0.1
         done
@@ -428,67 +455,55 @@
       exec ${steam-asahi-run}/bin/steam-asahi-run "$@"
     '';
 
+    # Waits for the game window, focuses it, then shuts the VM down once the
+    # last Steam window is gone.
+    #
+    # The old version also forced fullscreen here. It cannot: niri's IPC does
+    # not report whether a window is already fullscreen, so a toggle is as
+    # likely to leave the game windowed as fullscreen it. That moved to a
+    # declarative `window-rule { open-fullscreen true }` in the niri config,
+    # which excludes Stick Fight (674940) exactly as this code did.
     steam-game-watch = pkgs.writeShellScriptBin "steam-game-watch" ''
       set -u
+      ${shellHelpers}
 
       APP_ID=$1
       LOCK=$2
       if [ "$APP_ID" = 730 ]; then
-        CLASS=cs2
+        APP=cs2
       else
-        CLASS=steam_app_$APP_ID
+        APP=steam_app_$APP_ID
       fi
       cleanup() { rm -rf "$LOCK"; }
       trap cleanup EXIT
       printf '%s\n' "$$" >"$LOCK/pid"
 
-      ADDRESS=
+      ID=
       for _ in $(${pkgs.coreutils}/bin/seq 1 600); do
-        ADDRESS=$(${H} clients -j 2>/dev/null | ${J} -r --arg class "$CLASS" '
-          [.[] | select(((.class // "") | ascii_downcase) == $class) | .address][0] // empty
-        ' 2>/dev/null || true)
-        [ -n "$ADDRESS" ] && break
+        ID=$(window_id "$APP")
+        [ -n "$ID" ] && break
         sleep 0.5
       done
 
-      if [ -z "$ADDRESS" ]; then
-        WINDOWS=$(${H} clients -j 2>/dev/null | ${J} -r '
-          any(.[]; ((.class // "") | ascii_downcase) == "steam" or
-                   ((.class // "") | ascii_downcase) == "cs2" or
-                   ((.class // "") | test("^steam_app_[0-9]+$")))
-        ' 2>/dev/null || echo true)
-        [ "$WINDOWS" = true ] || ${steam-asahi-stop}/bin/steam-asahi-stop
+      if [ -z "$ID" ]; then
+        any_steam_window || ${steam-asahi-stop}/bin/steam-asahi-stop
         exit 0
       fi
 
-      ${H} dispatch focuswindow "address:$ADDRESS" >/dev/null 2>&1 || true
-      if [ "$APP_ID" != 674940 ]; then
-        FULLSCREEN=$(${H} clients -j 2>/dev/null | ${J} -r --arg address "$ADDRESS" '
-          [.[] | select(.address == $address) | .fullscreen][0] // 0
-        ' 2>/dev/null || echo 0)
-        if [ "$FULLSCREEN" = 0 ]; then
-          ${H} dispatch fullscreen 0 >/dev/null 2>&1 || true
-        fi
-      fi
+      ${N} msg action focus-window --id "$ID" >/dev/null 2>&1 || true
 
-      while ${H} clients -j 2>/dev/null | ${J} -e --arg class "$CLASS" '
-        any(.[]; ((.class // "") | ascii_downcase) == $class)
-      ' >/dev/null 2>&1; do
+      while [ -n "$(window_id "$APP")" ]; do
         sleep 0.5
       done
       sleep 1
 
-      WINDOWS=$(${H} clients -j 2>/dev/null | ${J} -r '
-        any(.[]; ((.class // "") | ascii_downcase) == "steam" or
-                 ((.class // "") | ascii_downcase) == "cs2" or
-                 ((.class // "") | test("^steam_app_[0-9]+$")))
-      ' 2>/dev/null || echo true)
-      [ "$WINDOWS" = true ] || ${steam-asahi-stop}/bin/steam-asahi-stop
+      any_steam_window || ${steam-asahi-stop}/bin/steam-asahi-stop
     '';
 
     # Match Wine's virtual desktop to the target monitor's exact logical size.
     steam-launch = pkgs.writeShellScriptBin "steam-launch" ''
       set -eu
+      ${shellHelpers}
 
       APP_ID=$1
       case "$APP_ID" in
@@ -496,15 +511,13 @@
       esac
 
       if [ "$APP_ID" = 730 ]; then
-        CLASS=cs2
+        APP=cs2
       else
-        CLASS=steam_app_$APP_ID
+        APP=steam_app_$APP_ID
       fi
-      GAME_ADDRESS=$(${H} clients -j 2>/dev/null | ${J} -r --arg class "$CLASS" '
-        [.[] | select(((.class // "") | ascii_downcase) == $class) | .address][0] // empty
-      ' 2>/dev/null || true)
-      if [ -n "$GAME_ADDRESS" ]; then
-        exec ${H} dispatch focuswindow "address:$GAME_ADDRESS"
+      GAME_ID=$(window_id "$APP")
+      if [ -n "$GAME_ID" ]; then
+        exec ${N} msg action focus-window --id "$GAME_ID"
       fi
 
       LOCK="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/steam-asahi-launch-$APP_ID"
@@ -534,14 +547,16 @@
           ;;
       esac
 
-      if ! RESOLUTION=$(${H} monitors -j 2>/dev/null | ${J} -er '
-        (if any(.name == "HDMI-A-1") then .[] | select(.name == "HDMI-A-1") else .[] | select(.focused) end)
-        | select(.width > 0 and .height > 0 and .scale > 0)
-        | "\((.width / .scale) | floor)x\((.height / .scale) | floor)"
+      # Hyprland reported physical pixels and a scale, so the old code divided.
+      # niri's `logical` block is already scaled — 1512x945 on this panel, not
+      # 3024x1890 — so dividing again would halve the Wine desktop.
+      OUTPUT=$(target_output)
+      if ! RESOLUTION=$(printf '%s' "$OUTPUT" | ${J} -er '
+        .logical | select(.width > 0 and .height > 0) | "\(.width)x\(.height)"
       ' 2>/dev/null); then
         ${pkgs.libnotify}/bin/notify-send \
           "Steam game not launched" \
-          "Could not read the target monitor resolution from Hyprland."
+          "Could not read the target monitor resolution from niri."
         exit 1
       fi
       WIDTH=''${RESOLUTION%x*}
@@ -549,14 +564,14 @@
 
       if [ "$APP_ID" = 730 ]; then
         CS2_VIDEO=/home/uynx/.local/share/steam-asahi/home/.local/share/Steam/userdata/483670283/730/local/cfg/cs2_video.txt
-        if ${H} monitors -j 2>/dev/null | ${J} -e 'any(.name == "HDMI-A-1")' >/dev/null; then
+        if ${N} msg -j outputs 2>/dev/null | ${J} -e 'has("HDMI-A-1")' >/dev/null 2>&1; then
           CS2_MONITOR=1
         else
           CS2_MONITOR=0
         fi
-        CS2_REFRESH=$(${H} monitors -j 2>/dev/null | ${J} -r '
-          (if any(.name == "HDMI-A-1") then .[] | select(.name == "HDMI-A-1") else .[] | select(.focused) end)
-          | .refreshRate | round
+        # niri reports refresh rate in millihertz; Hyprland reported Hz.
+        CS2_REFRESH=$(printf '%s' "$OUTPUT" | ${J} -r '
+          (.modes[.current_mode].refresh_rate / 1000) | round
         ' 2>/dev/null || echo 60)
         if [ -f "$CS2_VIDEO" ]; then
           sed -i -E \
@@ -637,10 +652,7 @@
           exit 0
         fi
 
-        STEAM_ADDRESS=$(${H} clients -j 2>/dev/null | ${J} -r '
-          [.[] | select(((.class // "") | ascii_downcase) == "steam") | .address][0] // empty
-        ' 2>/dev/null || true)
-        if [ -n "$STEAM_ADDRESS" ]; then
+        if [ -n "$(window_id steam)" ]; then
           ${pkgs.libnotify}/bin/notify-send \
             "Steam game not launched" \
             "Steam is still starting; try again in a moment."
@@ -701,18 +713,23 @@
         -exec cp {} "$APPLICATIONS/" \;
     '';
 
-    steam-fuzzel = pkgs.writeShellScriptBin "steam-fuzzel" ''
+    # Refresh the generated .desktop files, then open noctalia's launcher.
+    # Was steam-fuzzel; fuzzel was removed along with Waybar.
+    steam-menu = pkgs.writeShellScriptBin "steam-menu" ''
       ${steam-game-entries}/bin/steam-game-entries
-      exec ${pkgs.fuzzel}/bin/fuzzel "$@"
+      exec ${pkgs.noctalia-shell}/bin/noctalia-shell ipc call launcher toggle
     '';
 
-    hypr-close-active = pkgs.writeShellScriptBin "hypr-close-active" ''
+    # Bound to Mod+W and Mod+Q. niri's own close-window is correct for ordinary
+    # windows but wrong for these two, which leave processes behind when only
+    # the window is closed.
+    close-active = pkgs.writeShellScriptBin "close-active" ''
       set -eu
 
-      ACTIVE=$(${H} activewindow -j 2>/dev/null || echo '{}')
-      CLASS=$(printf '%s' "$ACTIVE" | ${J} -r '.class // ""' 2>/dev/null || true)
+      ACTIVE=$(${N} msg -j focused-window 2>/dev/null || echo '{}')
+      APP=$(printf '%s' "$ACTIVE" | ${J} -r '.app_id // ""' 2>/dev/null || true)
       PID=$(printf '%s' "$ACTIVE" | ${J} -r '.pid // 0' 2>/dev/null || true)
-      case "$CLASS" in
+      case "$APP" in
         steam|Steam|steam_app_[0-9]*|cs2)
           # The VM is the reliable process boundary. Closing only the XWayland
           # window can leave Proton and the game running headless.
@@ -727,7 +744,7 @@
           ${pkgs.procps}/bin/pkill -f "/.local/share/antigravity/antigravity" 2>/dev/null || true
           ;;
         *)
-          exec ${H} dispatch closewindow active
+          exec ${N} msg action close-window
           ;;
       esac
     '';
@@ -739,14 +756,11 @@
         steam-asahi-doctor
         steam-asahi-stop
         steam-game-entries
-        steam-fuzzel
+        steam-menu
         distrobox
         dive
-        hypr-close-active
+        close-active
       ];
-
-      home.file.".local/bin/hypr-close-active".source =
-        "${hypr-close-active}/bin/hypr-close-active";
 
       xdg.desktopEntries.steam = {
         name = "Steam";

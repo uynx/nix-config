@@ -60,6 +60,17 @@ window-rule {
     default-column-width { proportion 0.33; }
 }
 
+// Steam games open fullscreen. This replaces an imperative fullscreen toggle
+// that used to live in steam-game-watch: niri's IPC does not report whether a
+// window is already fullscreen, so a toggle would be a coin flip. Stick Fight
+// (674940) is excluded because it runs inside a Wine virtual desktop.
+window-rule {
+    match app-id="^steam_app_[0-9]+$"
+    match app-id="^cs2$"
+    exclude app-id="^steam_app_674940$"
+    open-fullscreen true
+}
+
 prefer-no-csd
 screenshot-path "~/Pictures/Screenshots/screenshot-%Y-%m-%d-%H-%M-%S.png"
 
@@ -75,8 +86,10 @@ binds {
     Mod+Space { spawn "sh" "-c" "noctalia-shell ipc call launcher toggle"; }
 
     // Window management
-    Mod+W { close-window; }
-    Mod+Q { close-window; }
+    // close-active, not niri's close-window: Steam games and Antigravity leave
+    // processes running when only their window is closed.
+    Mod+W { spawn "close-active"; }
+    Mod+Q { spawn "close-active"; }
     Mod+V { toggle-window-floating; }
     Mod+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
