@@ -1,4 +1,8 @@
-// Translated from hypr/hyprland.conf. Mod is Alt, matching $mainMod = ALT.
+// Translated from hypr/hyprland.conf, whose $mainMod was ALT.
+//
+// niri's `Mod` is NOT Alt here: it means Super on a TTY and Alt only when niri
+// runs nested in another compositor. So every Mod+ bind below is Super+ in this
+// session. To get Hyprland's Alt back, set `mod-key "Alt"` in the input block.
 
 input {
     keyboard {
