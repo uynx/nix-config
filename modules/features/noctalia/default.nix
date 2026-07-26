@@ -1,14 +1,19 @@
 {
   # Quickshell-based desktop shell: bar, launcher, notifications, lock screen.
   #
-  # settings.json stays mutable in ~/.config/noctalia so the settings GUI keeps
-  # working. Only the colour scheme is managed here — freezing settings.json
-  # would make it a read-only store symlink and disable that GUI.
-  flake.homeModules.noctalia = { pkgs, ... }: {
-    home.packages = [ pkgs.noctalia-shell ];
+  # settings.json is frozen here, so ~/.config/noctalia/settings.json is a
+  # read-only store symlink and noctalia's settings GUI can no longer save.
+  # To change a setting: edit settings.json in this repo and rebuild. To try
+  # something interactively first, `rm ~/.config/noctalia/settings.json`,
+  # restart noctalia, tune it in the GUI, then copy the result back here.
+  flake.homeModules.noctalia =
+    { pkgs, ... }:
+    {
+      home.packages = [ pkgs.noctalia-shell ];
 
-    # Flexoki, matching ghostty's "Flexoki Dark" and the neovim colorscheme.
-    # Select it in Noctalia's settings once it appears.
-    home.file.".config/noctalia/colorschemes/Flexoki/Flexoki.json".source = ./Flexoki.json;
-  };
+      home.file.".config/noctalia/settings.json".source = ./settings.json;
+
+      # Flexoki, matching ghostty's "Flexoki Dark" and the neovim colorscheme.
+      home.file.".config/noctalia/colorschemes/Flexoki/Flexoki.json".source = ./Flexoki.json;
+    };
 }
