@@ -7,7 +7,7 @@
       core
       hardwareAsahi
       niri
-      greetd
+      sddm
       steamAsahi
 
       ./_hardware-configuration.nix
