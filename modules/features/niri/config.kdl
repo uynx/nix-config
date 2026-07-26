@@ -86,8 +86,8 @@ binds {
     Mod+Space { spawn "sh" "-c" "noctalia-shell ipc call launcher toggle"; }
 
     // Window management
-    // close-active, not niri's close-window: Steam games and Antigravity leave
-    // processes running when only their window is closed.
+    // close-active, not niri's close-window: a Steam game leaves Proton running
+    // inside the VM when only its window is closed.
     Mod+W { spawn "close-active"; }
     Mod+Q { spawn "close-active"; }
     Mod+V { toggle-window-floating; }

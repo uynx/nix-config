@@ -3,15 +3,13 @@
   # from each vendor's own release feed by `update-ai-clis` — read those two for
   # the pattern before adding another AI app.
   #
-  # Antigravity is deliberately NOT pinned, and does not need to be: `agy` has
-  # its own `update` subcommand and the IDE ships electron-updater, so both keep
-  # themselves current. Nix's job for them is only the runtime — nix-ld
-  # libraries, the launcher, and the desktop entry.
+  # `agy` is the one exception to the pinning above, and it is deliberate: it
+  # has its own `update` subcommand, which `update` calls. Pinning it is not
+  # possible anyway — its updater service exposes the current version but builds
+  # the download URL at runtime from split Go constants, so there is no URL to
+  # fetch. Installing on a new machine is a manual download.
   #
-  # Pinning them is also not possible: the vendor's install.sh endpoint now
-  # returns an HTML page rather than a script, and the updater manifest 404s on
-  # every standard electron-updater path, so there is no versioned URL to fetch.
-  # Installing on a new machine is a manual download; `update` refreshes it.
+  # The Antigravity GUI was removed 2026-07-26; only the CLI remains.
   flake.homeModules.aiTools =
     {
       config,
@@ -71,21 +69,6 @@
           bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
         '';
       };
-
-      # Electron leaves a headless process behind if only the window is closed,
-      # so drop any stale one before launching. Was querying hyprctl, which has
-      # not existed since the move to niri — so the stale process was never
-      # actually cleaned up.
-      antigravity-launcher = pkgs.writeShellScriptBin "antigravity-launcher" ''
-        set -eu
-
-        HAS_WINDOW=$(${N} msg -j windows 2>/dev/null | ${J} -r '.[] | select(((.app_id // "") | ascii_downcase) == "antigravity") | .pid' 2>/dev/null || true)
-        if [ -z "$HAS_WINDOW" ]; then
-          ${pkgs.procps}/bin/pkill -f "/.local/share/antigravity/antigravity" 2>/dev/null || true
-          sleep 0.1
-        fi
-        exec ${home}/.local/share/antigravity/antigravity "$@"
-      '';
 
       # 140 MB, pinned by hash instead of curl'd on first run into
       # ~/.local/share, so dictation works on a fresh machine with no network.
@@ -150,7 +133,6 @@
         wl-clipboard
         wtype
         sox
-        antigravity-launcher
         dictate
         update-ai-clis
 
@@ -160,19 +142,6 @@
         aiClis.codex
         aiClis.grok
       ];
-
-      xdg.desktopEntries.antigravity = {
-        name = "Antigravity";
-        genericName = "Text Editor";
-        comment = "Antigravity AI Code Editor";
-        exec = "${antigravity-launcher}/bin/antigravity-launcher %U";
-        icon = "antigravity";
-        type = "Application";
-        categories = [
-          "Development"
-          "IDE"
-        ];
-      };
 
       # ~/.grok/bin is gone with the vendor installer. ~/.local/bin stays only
       # for `agy`; note it is PREPENDED, so any leftover binary there shadows
@@ -193,27 +162,9 @@
           "${home}/ai_memory/concepts" \
           "${home}/ai_memory/journal" \
           "${home}/dotfiles" \
-          "${home}/nixos-config" \
-          "${home}/.local/share/antigravity"
+          "${home}/nixos-config"
       '';
 
-      home.activation.installGrok = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -f "${home}/.grok/bin/grok" ]; then
-          ${pkgs.curl}/bin/curl -fsSL https://x.ai/cli/install.sh | ${pkgs.bash}/bin/bash || true
-        fi
-      '';
-
-      home.activation.installCodex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -f "${home}/.local/bin/codex" ]; then
-          ${pkgs.nodejs}/bin/npm install -g --prefix ${home}/.local @openai/codex || true
-        fi
-      '';
-
-      home.activation.installClaude = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -f "${home}/.local/bin/claude" ]; then
-          ${pkgs.curl}/bin/curl -fsSL https://claude.ai/install.sh | ${pkgs.bash}/bin/bash || true
-        fi
-      '';
 
     };
 }

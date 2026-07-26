@@ -721,8 +721,8 @@
     '';
 
     # Bound to Mod+W and Mod+Q. niri's own close-window is correct for ordinary
-    # windows but wrong for these two, which leave processes behind when only
-    # the window is closed.
+    # windows but wrong for Steam, where closing the XWayland window leaves
+    # Proton and the game running headless inside the VM.
     close-active = pkgs.writeShellScriptBin "close-active" ''
       set -eu
 
@@ -734,14 +734,6 @@
           # The VM is the reliable process boundary. Closing only the XWayland
           # window can leave Proton and the game running headless.
           exec ${steam-asahi-stop}/bin/steam-asahi-stop
-          ;;
-        antigravity|Antigravity)
-          # Electron app leaves headless process + SingletonSocket if only window closed.
-          # Kill the main process tree directly so it exits fully and cleans up.
-          if [ "$PID" -gt 0 ] 2>/dev/null; then
-            kill -15 "$PID" 2>/dev/null || kill -9 "$PID" 2>/dev/null || true
-          fi
-          ${pkgs.procps}/bin/pkill -f "/.local/share/antigravity/antigravity" 2>/dev/null || true
           ;;
         *)
           exec ${N} msg action close-window
