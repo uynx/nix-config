@@ -4,6 +4,7 @@
     imports = with self.homeModules; [
       theme
       niri
+      launchers
       noctalia
       ghostty
       fish
