@@ -8,8 +8,25 @@
       '';
       functions.reb.body = ''
         set -l target "asahi"
+        set -l repo ~/nixos-config
         if test (count $argv) -gt 0; set target $argv[1]; end
-        sudo nixos-rebuild switch --flake ~/nixos-config#$target --impure
+
+        # Stage before building: a flake build cannot see untracked files, so a
+        # newly written module is silently skipped unless it is at least staged.
+        git -C $repo add -A
+
+        if sudo nixos-rebuild switch --flake $repo#$target --impure
+            # Commit only on success, so a broken config never becomes a commit.
+            # This is a checkpoint for rolling back, not a substitute for real
+            # commit messages — amend or reword it if the change deserves one.
+            if not git -C $repo diff --cached --quiet
+                git -C $repo commit -q -m "rebuild "(date '+%Y-%m-%d %H:%M:%S')
+                echo "Committed as "(git -C $repo rev-parse --short HEAD)
+            end
+        else
+            echo "Rebuild failed. Changes are staged but not committed."
+            return 1
+        end
       '';
       functions.pass-find.body = ''
         if not pass-cli test >/dev/null 2>&1
