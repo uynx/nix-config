@@ -67,10 +67,10 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // Apps
-    Mod+P { spawn "sh" "-c" "~/dotfiles/ghostty-activation.sh"; }
+    Mod+P { spawn "ghostty-activation"; }
     Mod+Shift+Escape { spawn "ghostty" "-e" "btop"; }
-    Mod+N { spawn "sh" "-c" "~/dotfiles/brave-activation.sh Default Personal"; }
-    Mod+M { spawn "sh" "-c" "~/dotfiles/brave-activation.sh 'Profile 1' School"; }
+    Mod+N { spawn "brave-activation" "Personal"; }
+    Mod+M { spawn "brave-activation" "School"; }
     Mod+D { spawn "dictate"; }
     Mod+Space { spawn "sh" "-c" "noctalia-shell ipc call launcher toggle"; }
 
