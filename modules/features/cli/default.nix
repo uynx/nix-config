@@ -120,6 +120,19 @@
         settings = {
           add_newline = false;
           command_timeout = 3000;
+          # Redefining the standard colour names in a palette retints every
+          # module at once, without having to restyle each one individually.
+          palette = "flexoki";
+          palettes.flexoki = {
+            black = "#100f0f";
+            red = "#d14d41";
+            green = "#879a39";
+            yellow = "#d0a215";
+            blue = "#4385be";
+            purple = "#ce5d97";
+            cyan = "#3aa99f";
+            white = "#cecdc3";
+          };
         };
       };
 
