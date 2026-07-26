@@ -3,10 +3,15 @@
   # from each vendor's own release feed by `update-ai-clis` — read those two for
   # the pattern before adding another AI app.
   #
-  # Antigravity is the exception: its installer endpoint now serves an HTML page
-  # instead of a script, so `curl ... | bash` had been a silent no-op and the
-  # copy in ~/.local/share is frozen at whatever was installed on 2026-07-15.
-  # There is no reproducible source for it, and its auto-updater feed 404s.
+  # Antigravity is deliberately NOT pinned, and does not need to be: `agy` has
+  # its own `update` subcommand and the IDE ships electron-updater, so both keep
+  # themselves current. Nix's job for them is only the runtime — nix-ld
+  # libraries, the launcher, and the desktop entry.
+  #
+  # Pinning them is also not possible: the vendor's install.sh endpoint now
+  # returns an HTML page rather than a script, and the updater manifest 404s on
+  # every standard electron-updater path, so there is no versioned URL to fetch.
+  # Installing on a new machine is a manual download; `update` refreshes it.
   flake.homeModules.aiTools =
     {
       config,
