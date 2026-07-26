@@ -39,7 +39,7 @@
         end
       '';
       shellAliases = {
-        update = "update-brave-origin && nix flake update --flake ~/nixos-config";
+        update = "update-brave-origin && update-ai-clis && nix flake update --flake ~/nixos-config";
         word = "libreoffice --writer";
         powerpoint = "libreoffice --impress";
         gen = "nix-env --list-generations";
