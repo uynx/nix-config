@@ -32,8 +32,9 @@
             FontSize = "";
 
             # Store path, not ~/dotfiles: /home/uynx is 0700, so the greeter user
-            # could never read the wallpaper ReGreet was pointed at.
-            Background = "${./wallpaper.png}";
+            # could never read the wallpaper ReGreet was pointed at. Shared with
+            # noctalia, which scans the same directory.
+            Background = "${../wallpapers}/wallpaper.png";
             BackgroundPlaceholder = "";
             # Crop rather than stretch: the wallpaper is 1813x1080 (1.68) and the
             # panel is 1.60, so a fit would letterbox and a fill would distort.
