@@ -1,6 +1,12 @@
 {
-  # Vendor CLIs with no nixpkgs derivation. Installed imperatively on first
-  # activation, guarded so a rebuild is a no-op once present.
+  # AI tooling. The three CLIs are pinned derivations in _ai-clis.nix, bumped
+  # from each vendor's own release feed by `update-ai-clis` — read those two for
+  # the pattern before adding another AI app.
+  #
+  # Antigravity is the exception: its installer endpoint now serves an HTML page
+  # instead of a script, so `curl ... | bash` had been a silent no-op and the
+  # copy in ~/.local/share is frozen at whatever was installed on 2026-07-15.
+  # There is no reproducible source for it, and its auto-updater feed 404s.
   flake.homeModules.aiTools =
     {
       config,
@@ -12,6 +18,54 @@
       home = "/home/uynx";
       N = "${lib.getExe pkgs.niri}";
       J = "${lib.getExe pkgs.jq}";
+
+      aiClis = pkgs.callPackage ./_ai-clis.nix { };
+
+      # Bumps the pins in _ai-clis.nix from each vendor's own release feed, so a
+      # rebuild ships today's CLI without dragging the rest of nixpkgs forward.
+      # Run by the `update` alias alongside update-brave-origin.
+      #
+      # Each tool needs two things: where to ask for the latest version, and how
+      # to build the download URL from it. Adding a tool means one more `bump`
+      # call here plus a matching entry in _ai-clis.nix.
+      update-ai-clis = pkgs.writeShellApplication {
+        name = "update-ai-clis";
+        runtimeInputs = with pkgs; [
+          curl
+          nix
+          gnused
+          jq
+        ];
+        text = ''
+          file=${home}/nixos-config/modules/features/ai-tools/_ai-clis.nix
+
+          # bump <name> <latest-version> <download-url>
+          bump() {
+            name=$1 latest=$2 url=$3
+            current=$(sed -n "s/^    $name = { version = \"\([^\"]*\)\".*/\1/p" "$file")
+            if [ "$current" = "$latest" ]; then
+              printf '%-12s %s (up to date)\n' "$name" "$current"
+              return
+            fi
+            hash=$(nix hash convert --hash-algo sha256 --to sri \
+              "$(nix-prefetch-url --type sha256 "$url")")
+            sed -i "s|^    $name = { version = \"[^\"]*\"; hash = \"[^\"]*\"; };|    $name = { version = \"$latest\"; hash = \"$hash\"; };|" "$file"
+            printf '%-12s %s -> %s\n' "$name" "$current" "$latest"
+          }
+
+          claude=$(curl -fsSL https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]')
+          bump claude-code "$claude" \
+            "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude"
+
+          codex=$(curl -fsSL https://api.github.com/repos/openai/codex/releases/latest \
+            | jq -r '.tag_name | ltrimstr("rust-v")')
+          bump codex "$codex" \
+            "https://github.com/openai/codex/releases/download/rust-v$codex/codex-aarch64-unknown-linux-musl.tar.gz"
+
+          grok=$(curl -fsSL https://x.ai/cli/stable | tr -d '[:space:]')
+          bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
+        '';
+      };
 
       # Electron leaves a headless process behind if only the window is closed,
       # so drop any stale one before launching. Was querying hyprctl, which has
@@ -93,6 +147,13 @@
         sox
         antigravity-launcher
         dictate
+        update-ai-clis
+
+        # Listed one by one rather than attrValues: callPackage wraps the set
+        # with `override` helpers, which are not packages.
+        aiClis.claude-code
+        aiClis.codex
+        aiClis.grok
       ];
 
       xdg.desktopEntries.antigravity = {
@@ -108,10 +169,10 @@
         ];
       };
 
-      home.sessionPath = [
-        "${home}/.grok/bin"
-        "${home}/.local/bin"
-      ];
+      # ~/.grok/bin is gone with the vendor installer. ~/.local/bin stays only
+      # for `agy`; note it is PREPENDED, so any leftover binary there shadows
+      # the packaged one — the old claude/codex/grok copies had to be deleted.
+      home.sessionPath = [ "${home}/.local/bin" ];
 
       # The only things left pointing outside the store, deliberately: the agent
       # skills and AGENTS.md are rewritten by the memory workflow constantly, so
@@ -121,12 +182,6 @@
         ".agents/skills".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
         ".agents/AGENTS.md".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
       };
-
-      home.activation.installAgy = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        if [ ! -f "${home}/.local/bin/agy" ]; then
-          ${pkgs.curl}/bin/curl -fsSL https://antigravity.google.com/install.sh | ${pkgs.bash}/bin/bash || true
-        fi
-      '';
 
       home.activation.createRequiredDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         mkdir -p \
