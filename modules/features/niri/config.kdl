@@ -47,6 +47,15 @@ xwayland-satellite {
 spawn-at-startup "noctalia-shell"
 spawn-at-startup "protonvpn-app"
 
+// Proton VPN opens itself floating; force it into the scrolling layout so
+// Mod+H / Mod+L reach it like any other window. It is a narrow app, so give it
+// a third of the screen rather than the global 0.75.
+window-rule {
+    match app-id="^proton\\.vpn\\.app\\.gtk$"
+    open-floating false
+    default-column-width { proportion 0.33; }
+}
+
 prefer-no-csd
 screenshot-path "~/Pictures/Screenshots/screenshot-%Y-%m-%d-%H-%M-%S.png"
 
@@ -110,6 +119,15 @@ binds {
     XF86AudioNext  allow-when-locked=true { spawn "playerctl" "next"; }
     XF86AudioPause allow-when-locked=true { spawn "playerctl" "play-pause"; }
     XF86AudioPlay  allow-when-locked=true { spawn "playerctl" "play-pause"; }
+
+    // Screenshots — saved to screenshot-path above and copied to the clipboard.
+    // Mod+S duplicates Print because this laptop's keyboard has no Print key.
+    Print       { screenshot; }
+    Ctrl+Print  { screenshot-screen; }
+    Alt+Print   { screenshot-window; }
+    Mod+S       { screenshot; }
+    Mod+Ctrl+S  { screenshot-screen; }
+    Mod+Alt+S   { screenshot-window; }
 
     Mod+Shift+Q { quit; }
 }
