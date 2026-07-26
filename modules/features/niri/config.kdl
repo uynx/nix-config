@@ -51,12 +51,20 @@ xwayland-satellite {
 spawn-at-startup "noctalia-shell"
 spawn-at-startup "protonvpn-app"
 
-// Proton VPN opens itself floating; force it into the scrolling layout so
-// Mod+H / Mod+L reach it like any other window. It is a narrow app, so give it
-// a third of the screen rather than the global 0.75.
+// Tile everything. A window-rule with no `match` applies to every window, so
+// apps that ask to be floating — Proton VPN, Steam's updater, assorted dialogs
+// — join the scrolling layout instead of sitting on top of it. Rules are
+// applied in order, so anything below can still override this.
+//
+// Mod+V toggles a window back to floating when one genuinely wants it.
+window-rule {
+    open-floating false
+}
+
+// Proton VPN is a narrow app; a third of the screen suits it better than the
+// global 0.75.
 window-rule {
     match app-id="^proton\\.vpn\\.app\\.gtk$"
-    open-floating false
     default-column-width { proportion 0.33; }
 }
 
