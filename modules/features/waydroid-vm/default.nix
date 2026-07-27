@@ -15,7 +15,7 @@
     system = "aarch64-linux";
     modules = [
       (
-        { modulesPath, pkgs, ... }:
+        { modulesPath, pkgs, lib, ... }:
         let
           # show-full-ui races the container service on a cold boot, and on
           # first boot it also waits behind the image download.
@@ -56,6 +56,28 @@
         in
         {
           imports = [ "${modulesPath}/virtualisation/qemu-vm.nix" ];
+
+          # Android's netd builds all of its per-app networking on iptables
+          # chains (bw_* for bandwidth, fw_* for the per-app firewall). nixpkgs
+          # ships kernels with NETFILTER_XTABLES_LEGACY off, so those tables do
+          # not exist, netd installs zero chains, and every app's traffic
+          # half-works while a root shell — which bypasses the chains — looks
+          # perfectly healthy. That mismatch is why the network measured fine
+          # from ssh while the browser and WhatsApp stalled.
+          #
+          # This forces a full kernel rebuild, which is slow but is the only
+          # real fix: waydroid#105's usual workaround needs these same tables.
+          boot.kernelPatches = [
+            {
+              name = "iptables-legacy-for-android-netd";
+              patch = null;
+              structuredExtraConfig = with lib.kernel; {
+                NETFILTER_XTABLES_LEGACY = yes;
+                IP_NF_IPTABLES_LEGACY = yes;
+                IP6_NF_IPTABLES_LEGACY = yes;
+              };
+            }
+          ];
 
           virtualisation = {
             waydroid.enable = true;
