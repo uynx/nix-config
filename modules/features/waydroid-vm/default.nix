@@ -65,17 +65,17 @@
               # qemu's aarch64 "virt" machine has no default display adapter and
               # the NixOS VM module does not add one, so without this the guest
               # has no /dev/dri at all and every compositor dies on startup.
-              "-device virtio-gpu-gl-pci"
-              # show-menubar=off because clicks landed consistently ~31px above
-              # where they were pressed, and 31px is about the height of gtk's
-              # menubar — the guest's mode was 1426x1035 while Android sized
-              # itself 1426x1004. Removing the bar is the fix to try; forcing
-              # Android's size to match instead treated the symptom.
-              # zoom-to-fit because the guest framebuffer does not track window
-              # resizes: qemu then centres a stale, smaller framebuffer inside
-              # the window ("boxed"), and pointer coordinates map to the window
-              # rather than the framebuffer, so clicks land off-target.
-              "-display gtk,gl=on,show-menubar=off,zoom-to-fit=on"
+              # The guest does not follow window resizes. Its framebuffer stuck
+              # at 1426x1035 inside a 1904x1035 tile, which pillarboxed the
+              # picture and made pointer coordinates map to the window rather
+              # than the framebuffer, so clicks landed off-target. zoom-to-fit
+              # cannot fix that — it preserves aspect ratio, so it just adds
+              # bars. Pin the guest to the HDMI output's exact mode and go
+              # fullscreen instead, so framebuffer, compositor and Android all
+              # agree 1:1 and no scaling happens anywhere.
+              "-device virtio-gpu-gl-pci,xres=1920,yres=1080"
+              "-display gtk,gl=on,show-menubar=off"
+              "-full-screen"
 
               # hda-duplex is the whole point: a call needs mic in, not just
               # audio out. Everything else here is incidental.
@@ -98,6 +98,29 @@
             };
             script = ''
               [ -d /var/lib/waydroid/images ] || ${pkgs.waydroid}/bin/waydroid init
+            '';
+          };
+
+          # Waydroid maps the Wayland pointer into Android's *app* area, not its
+          # full display. With the software navigation bar drawn, those differ
+          # (measured: cur=1920x1080 against app=1920x1017), so every click
+          # landed 63px short and you had to aim below each button. Telling
+          # Android it has hardware navigation keys removes the bar, making the
+          # two areas identical. Trade-off: no on-screen Back/Home/Recents.
+          systemd.services.waydroid-props = {
+            description = "Ensure Waydroid base properties before the container starts";
+            wantedBy = [ "multi-user.target" ];
+            after = [ "waydroid-image.service" ];
+            before = [ "waydroid-container.service" ];
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+            };
+            script = ''
+              f=/var/lib/waydroid/waydroid_base.prop
+              mkdir -p /var/lib/waydroid
+              touch "$f"
+              grep -q '^qemu.hw.mainkeys=' "$f" || echo 'qemu.hw.mainkeys=1' >> "$f"
             '';
           };
 
