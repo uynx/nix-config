@@ -71,12 +71,25 @@
             {
               name = "iptables-legacy-for-android-netd";
               patch = null;
+              # The IP_NF_* ones only offer module-or-off, so asking for `yes`
+              # makes the config generator loop and fail.
               structuredExtraConfig = with lib.kernel; {
                 NETFILTER_XTABLES_LEGACY = yes;
-                IP_NF_IPTABLES_LEGACY = yes;
-                IP6_NF_IPTABLES_LEGACY = yes;
+                IP_NF_IPTABLES_LEGACY = module;
+                IP6_NF_IPTABLES_LEGACY = module;
               };
             }
+          ];
+
+          # Load them up front rather than relying on the container to do it:
+          # netd runs early and gives no useful error when a table is missing.
+          boot.kernelModules = [
+            "ip_tables"
+            "iptable_filter"
+            "iptable_nat"
+            "iptable_mangle"
+            "iptable_raw"
+            "ip6_tables"
           ];
 
           virtualisation = {
