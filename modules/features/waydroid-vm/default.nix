@@ -28,6 +28,18 @@
               sleep 2
             done
 
+            # Android doze suspends background network, which stalls WhatsApp's
+            # initial companion-mode sync partway through. There is no battery
+            # here to save, so turn it off every boot rather than by hand.
+            {
+              until ${pkgs.waydroid}/bin/waydroid status 2>/dev/null \
+                | grep -q 'Session:[[:space:]]*RUNNING'; do
+                sleep 2
+              done
+              sudo ${pkgs.waydroid}/bin/waydroid shell -- dumpsys deviceidle disable
+              sudo ${pkgs.waydroid}/bin/waydroid shell -- svc power stayon true
+            } &
+
             exec ${pkgs.waydroid}/bin/waydroid show-full-ui
           '';
         in
@@ -59,7 +71,11 @@
               # menubar — the guest's mode was 1426x1035 while Android sized
               # itself 1426x1004. Removing the bar is the fix to try; forcing
               # Android's size to match instead treated the symptom.
-              "-display gtk,gl=on,show-menubar=off"
+              # zoom-to-fit because the guest framebuffer does not track window
+              # resizes: qemu then centres a stale, smaller framebuffer inside
+              # the window ("boxed"), and pointer coordinates map to the window
+              # rather than the framebuffer, so clicks land off-target.
+              "-display gtk,gl=on,show-menubar=off,zoom-to-fit=on"
 
               # hda-duplex is the whole point: a call needs mic in, not just
               # audio out. Everything else here is incidental.
