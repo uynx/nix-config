@@ -142,8 +142,12 @@
               Type = "oneshot";
               RemainAfterExit = true;
             };
+            # GAPPS rather than VANILLA: WhatsApp leans on Play Services for
+            # parts of registration and for push, and its sync failures are
+            # reported almost exclusively against de-Googled builds. Play also
+            # supplies the push channel incoming calls need to ring at all.
             script = ''
-              [ -d /var/lib/waydroid/images ] || ${pkgs.waydroid}/bin/waydroid init
+              [ -d /var/lib/waydroid/images ] || ${pkgs.waydroid}/bin/waydroid init -s GAPPS
             '';
           };
 
