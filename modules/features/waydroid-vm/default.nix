@@ -38,6 +38,17 @@
               done
               sudo ${pkgs.waydroid}/bin/waydroid shell -- dumpsys deviceidle disable
               sudo ${pkgs.waydroid}/bin/waydroid shell -- svc power stayon true
+
+              # Clamp TCP MSS to the real path MTU. Waydroid's iptables path
+              # does this; its nftables path does not, and the guest reaches
+              # the outside through qemu's user-mode networking, which cannot
+              # carry full-size segments. The result is the documented
+              # waydroid#105 symptom: DNS and ping fine, handshakes fine, but
+              # any sustained transfer stalls — pages half-load and WhatsApp's
+              # sync never finishes. The table only exists once the container
+              # has started, so this cannot go in networking.nftables.ruleset.
+              sudo ${pkgs.nftables}/bin/nft add rule inet lxc forward \
+                tcp flags syn tcp option maxseg size set rt mtu || true
             } &
 
             exec ${pkgs.waydroid}/bin/waydroid show-full-ui
@@ -65,17 +76,17 @@
               # qemu's aarch64 "virt" machine has no default display adapter and
               # the NixOS VM module does not add one, so without this the guest
               # has no /dev/dri at all and every compositor dies on startup.
-              # The guest does not follow window resizes. Its framebuffer stuck
-              # at 1426x1035 inside a 1904x1035 tile, which pillarboxed the
-              # picture and made pointer coordinates map to the window rather
-              # than the framebuffer, so clicks landed off-target. zoom-to-fit
-              # cannot fix that — it preserves aspect ratio, so it just adds
-              # bars. Pin the guest to the HDMI output's exact mode and go
-              # fullscreen instead, so framebuffer, compositor and Android all
-              # agree 1:1 and no scaling happens anywhere.
-              "-device virtio-gpu-gl-pci,xres=1920,yres=1080"
-              "-display gtk,gl=on,show-menubar=off"
-              "-full-screen"
+              # No display device here on purpose. The screen size has to match
+              # the monitor the window actually lands on, in *logical* pixels,
+              # or every pointer coordinate is scaled and clicks land off
+              # target. That is only knowable at launch, so the `android` fish
+              # function computes it and passes the GPU and display through
+              # QEMU_OPTS. This is the same rule the Steam launcher follows for
+              # Wine's virtual desktop.
+              # Lets pointer events be injected at exact coordinates, which is
+              # the only way to measure what Android actually receives versus
+              # what was sent. Guessing at the mapping wasted several reboots.
+              "-qmp unix:/tmp/waydroid-qmp.sock,server=on,wait=off"
 
               # hda-duplex is the whole point: a call needs mic in, not just
               # audio out. Everything else here is incidental.
@@ -101,14 +112,14 @@
             '';
           };
 
-          # Waydroid maps the Wayland pointer into Android's *app* area, not its
-          # full display. With the software navigation bar drawn, those differ
-          # (measured: cur=1920x1080 against app=1920x1017), so every click
-          # landed 63px short and you had to aim below each button. Telling
-          # Android it has hardware navigation keys removes the bar, making the
-          # two areas identical. Trade-off: no on-screen Back/Home/Recents.
+          # Android's resolution must follow the Wayland output rather than be
+          # pinned: the output size now depends on which monitor the window
+          # opens on. These keys were written into the disk image by earlier
+          # attempts and would override that, so strip them every boot.
+          # qemu.hw.mainkeys=1 is stripped too — hiding the navigation bar did
+          # not fix the clicks and only cost the Back/Home/Recents buttons.
           systemd.services.waydroid-props = {
-            description = "Ensure Waydroid base properties before the container starts";
+            description = "Strip stale Waydroid display overrides before the container starts";
             wantedBy = [ "multi-user.target" ];
             after = [ "waydroid-image.service" ];
             before = [ "waydroid-container.service" ];
@@ -118,9 +129,11 @@
             };
             script = ''
               f=/var/lib/waydroid/waydroid_base.prop
-              mkdir -p /var/lib/waydroid
-              touch "$f"
-              grep -q '^qemu.hw.mainkeys=' "$f" || echo 'qemu.hw.mainkeys=1' >> "$f"
+              [ -e "$f" ] || exit 0
+              ${pkgs.gnused}/bin/sed -i \
+                -e '/^qemu\.hw\.mainkeys=/d' \
+                -e '/^persist\.waydroid\.width=/d' \
+                -e '/^persist\.waydroid\.height=/d' "$f"
             '';
           };
 
@@ -130,6 +143,15 @@
             user = "android";
             program = "${launch}/bin/launch-waydroid";
           };
+
+          # Draw the cursor into the framebuffer instead of using the GPU's
+          # cursor plane. Through virtio-gpu that plane renders the sprite
+          # vertically flipped while its hotspot stays at the top-left, so the
+          # arrow you see sits about one cursor-height below the point that
+          # actually clicks — every button had to be clicked from below. The
+          # geometry was never wrong, which is why matching resolutions never
+          # helped.
+          systemd.services.cage-tty1.environment.WLR_NO_HARDWARE_CURSORS = "1";
 
           # Waydroid's container comes up well after the compositor does, and a
           # dead compositor means a blank window with no way back.
