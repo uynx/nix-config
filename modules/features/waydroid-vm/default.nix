@@ -35,7 +35,22 @@
             cores = 4;
             diskSize = 16384; # Android system image plus apps
             graphics = true;
+            # The qemu window shows the Android screen but nothing about the
+            # machine behind it, so keep a way in: ssh -p 2222 android@localhost
+            forwardPorts = [
+              {
+                from = "host";
+                host.port = 2222;
+                guest.port = 22;
+              }
+            ];
             qemu.options = [
+              # qemu's aarch64 "virt" machine has no default display adapter and
+              # the NixOS VM module does not add one, so without this the guest
+              # has no /dev/dri at all and every compositor dies on startup.
+              "-device virtio-gpu-gl-pci"
+              "-display gtk,gl=on"
+
               # hda-duplex is the whole point: a call needs mic in, not just
               # audio out. Everything else here is incidental.
               "-audiodev pipewire,id=snd0"
@@ -67,6 +82,13 @@
             program = "${launch}/bin/launch-waydroid";
           };
 
+          # Waydroid's container comes up well after the compositor does, and a
+          # dead compositor means a blank window with no way back.
+          systemd.services.cage-tty1.serviceConfig = {
+            Restart = "on-failure";
+            RestartSec = 5;
+          };
+
           services.pipewire = {
             enable = true;
             alsa.enable = true;
@@ -74,6 +96,11 @@
           };
 
           hardware.graphics.enable = true;
+
+          services.openssh = {
+            enable = true;
+            settings.PasswordAuthentication = true;
+          };
 
           # Throwaway local guest, reachable only from this machine's qemu
           # window. Not worth a password prompt in front of a phone call.
