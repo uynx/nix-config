@@ -30,7 +30,17 @@
     {
       home.packages = [ pkgs.noctalia-shell ];
 
-      home.file.".config/noctalia/settings.json".text = builtins.toJSON settings;
+      # force, because noctalia rewrites this file at runtime whenever it is not
+      # a store symlink. backupFileExtension then tries to move it to
+      # settings.json.bak on the next activation, that name is already taken from
+      # the time before, and home-manager aborts the whole activation — so *no*
+      # managed file gets linked and every app silently falls back to stale
+      # config. There is nothing to preserve here anyway: this file is generated
+      # from the settings.json in this repo.
+      home.file.".config/noctalia/settings.json" = {
+        text = builtins.toJSON settings;
+        force = true;
+      };
 
       # Flexoki, matching ghostty's "Flexoki Dark" and the neovim colorscheme.
       home.file.".config/noctalia/colorschemes/Flexoki/Flexoki.json".source = ./Flexoki.json;
