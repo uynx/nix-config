@@ -6,6 +6,41 @@
         set -g fish_greeting ""
         fish_vi_key_bindings
       '';
+      # Start the Android virtual machine, sized to the monitor it opens on.
+      #
+      # The screen has to be the monitor's *logical* size. niri already reports
+      # logical pixels (1512x945 on the laptop panel, not 3024x1890), so it is
+      # used as-is — dividing by the scale again would halve it. Getting this
+      # wrong does not just letterbox the picture: qemu maps pointer position
+      # by proportion, so any mismatch scales every click and buttons stop
+      # responding where they are pressed. Same rule as Wine's virtual desktop
+      # in the Steam launcher.
+      functions.android.body = ''
+        set -l state ~/.local/share/waydroid-vm
+
+        # The external monitor if attached, otherwise whichever output has focus.
+        set -l output
+        if ${pkgs.niri}/bin/niri msg -j outputs | ${pkgs.jq}/bin/jq -e 'has("HDMI-A-1")' >/dev/null 2>&1
+            set output (${pkgs.niri}/bin/niri msg -j outputs | ${pkgs.jq}/bin/jq -c '."HDMI-A-1"')
+        else
+            set output (${pkgs.niri}/bin/niri msg -j focused-output)
+        end
+
+        set -l size (printf '%s' "$output" | ${pkgs.jq}/bin/jq -er '.logical | "\(.width) \(.height)"' | string split ' ')
+        if test (count $size) -ne 2
+            echo "Could not read the monitor size from niri."
+            return 1
+        end
+
+        # The disk image lives in the working directory, so running this
+        # anywhere else would start a blank Android and re-download 1.6 GB.
+        mkdir -p $state
+        cd $state
+        or return 1
+
+        set -x QEMU_OPTS "-device virtio-gpu-gl-pci,xres=$size[1],yres=$size[2] -display gtk,gl=on,show-menubar=off -full-screen"
+        nix run ~/nixos-config#nixosConfigurations.waydroid.config.system.build.vm
+      '';
       functions.reb.body = ''
         set -l target "asahi"
         set -l repo ~/nixos-config
@@ -51,10 +86,6 @@
         tree = "eza --tree --icons";
         ll = "eza -la --icons --group-directories-first --header --git-ignore";
         pf = "pass-find";
-        # The cd is required, not cosmetic: the VM's disk image is created in
-        # the working directory, so running this anywhere else starts a blank
-        # Android with no apps and re-downloads the system image.
-        android = "cd ~/.local/share/waydroid-vm && nix run ~/nixos-config#nixosConfigurations.waydroid.config.system.build.vm";
       };
       plugins = [
         {
