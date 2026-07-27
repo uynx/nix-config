@@ -51,6 +51,10 @@
         tree = "eza --tree --icons";
         ll = "eza -la --icons --group-directories-first --header --git-ignore";
         pf = "pass-find";
+        # The cd is required, not cosmetic: the VM's disk image is created in
+        # the working directory, so running this anywhere else starts a blank
+        # Android with no apps and re-downloads the system image.
+        android = "cd ~/.local/share/waydroid-vm && nix run ~/nixos-config#nixosConfigurations.waydroid.config.system.build.vm";
       };
       plugins = [
         {
