@@ -116,6 +116,20 @@
       # Puts niri in the session picker.
       services.displayManager.sessionPackages = [ pkgs.niri ];
 
+      # Weston takes the lowest-numbered DRM card. Until apple-drm binds, that
+      # is U-Boot's simpledrm on card0 — and binding is what tears simpledrm
+      # down, so a greeter that starts first opens a card that is disappearing
+      # underneath it, dies on drmModeGetResources, and SDDM logs the death as
+      # a success and never retries. The screen is left blank with the console
+      # cursor. Waiting for the display node means card0 is already gone and
+      # weston picks the real one without being told which index it is.
+      systemd.services.display-manager = {
+        preStart = ''
+          until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done
+        '';
+        serviceConfig.TimeoutStartSec = "60s";
+      };
+
       services.gnome.gnome-keyring.enable = true;
       security.pam.services.sddm.enableGnomeKeyring = true;
     };
