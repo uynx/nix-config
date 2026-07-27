@@ -18,9 +18,13 @@
         { modulesPath, pkgs, ... }:
         let
           # show-full-ui races the container service on a cold boot, and on
-          # first boot it also waits behind a ~2 GB image download.
+          # first boot it also waits behind the image download.
+          #
+          # Wait on the *container unit*, not on "waydroid status | grep
+          # RUNNING": the session only reaches RUNNING because show-full-ui
+          # starts it, so waiting for RUNNING first deadlocks.
           launch = pkgs.writeShellScriptBin "launch-waydroid" ''
-            until ${pkgs.waydroid}/bin/waydroid status 2>/dev/null | grep -q RUNNING; do
+            until systemctl is-active --quiet waydroid-container; do
               sleep 2
             done
             exec ${pkgs.waydroid}/bin/waydroid show-full-ui
@@ -96,6 +100,15 @@
           };
 
           hardware.graphics.enable = true;
+
+          # waydroid-net.sh sets up the container's bridge. Its default build
+          # shells out to legacy iptables, and nixpkgs kernels no longer ship
+          # the ip_tables module at all, so every table creation fails and the
+          # Android session never starts. Turning nftables on makes the NixOS
+          # module pick pkgs.waydroid-nftables, which speaks nft instead.
+          networking.nftables.enable = true;
+          # The same script runs dnsmasq for the container's DHCP.
+          environment.systemPackages = [ pkgs.dnsmasq ];
 
           services.openssh = {
             enable = true;
