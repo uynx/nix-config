@@ -27,6 +27,7 @@
             until systemctl is-active --quiet waydroid-container; do
               sleep 2
             done
+
             exec ${pkgs.waydroid}/bin/waydroid show-full-ui
           '';
         in
@@ -53,7 +54,12 @@
               # the NixOS VM module does not add one, so without this the guest
               # has no /dev/dri at all and every compositor dies on startup.
               "-device virtio-gpu-gl-pci"
-              "-display gtk,gl=on"
+              # show-menubar=off because clicks landed consistently ~31px above
+              # where they were pressed, and 31px is about the height of gtk's
+              # menubar — the guest's mode was 1426x1035 while Android sized
+              # itself 1426x1004. Removing the bar is the fix to try; forcing
+              # Android's size to match instead treated the symptom.
+              "-display gtk,gl=on,show-menubar=off"
 
               # hda-duplex is the whole point: a call needs mic in, not just
               # audio out. Everything else here is incidental.
