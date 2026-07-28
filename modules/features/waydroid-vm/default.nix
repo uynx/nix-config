@@ -39,13 +39,6 @@
               sudo ${pkgs.waydroid}/bin/waydroid shell -- dumpsys deviceidle disable
               sudo ${pkgs.waydroid}/bin/waydroid shell -- svc power stayon true
 
-              # Android caches the device name in its settings database on
-              # first boot, so it keeps reporting "linux,dummy-virt" long
-              # after the properties say Pixel 5. This lives in /data, which
-              # no property can override.
-              sudo ${pkgs.waydroid}/bin/waydroid shell -- \
-                settings put global device_name "Pixel 5" || true
-
               # There used to be a TCP MSS clamp here, working around qemu's
               # user-mode networking being unable to carry full-size segments
               # (waydroid#105). passt replaced that uplink and does not need
@@ -185,114 +178,14 @@
               Type = "oneshot";
               RemainAfterExit = true;
             };
-            script =
-              let
-                # A real Pixel 5 build, taken from a device dump rather than
-                # invented: TQ3A.230901.001 is also the build id this image
-                # already reports, so nothing contradicts the base system.
-                fp = "google/redfin/redfin:13/TQ3A.230901.001/10750268:user/release-keys";
-                desc = "redfin-user 13 TQ3A.230901.001 10750268 release-keys";
-                buildId = "TQ3A.230901.001";
-                incremental = "10750268";
-
-                # Android keeps a separate copy of the identity on every
-                # partition, and a scan found five of them still announcing
-                # "WayDroid arm64 only Device" on userdebug/test-keys while
-                # the base properties claimed to be a Pixel. Generate the
-                # whole matrix instead of listing it by hand, which is how
-                # system_ext and vendor_dlkm got missed the first time.
-                idParts = [ "system" "system_ext" "vendor" "vendor_dlkm" "odm" "product" ];
-                buildParts = idParts ++ [ "bootimage" ];
-
-                identity = {
-                  brand = "google";
-                  manufacturer = "Google";
-                  name = "redfin";
-                  device = "redfin";
-                  model = "Pixel 5";
-                };
-
-                mkIdent =
-                  prefix:
-                  lib.concatMapStringsSep "\n" (k: "ro.product.${prefix}${k}=${identity.${k}}") (
-                    builtins.attrNames identity
-                  );
-
-                mkBuild = prefix: ''
-                  ro.${prefix}build.fingerprint=${fp}
-                  ro.${prefix}build.id=${buildId}
-                  ro.${prefix}build.tags=release-keys
-                  ro.${prefix}build.type=user
-                  ro.${prefix}build.version.incremental=${incremental}
-                '';
-
-                propText = ''
-                  ro.debuggable=0
-                  ${mkIdent ""}
-                  ${lib.concatMapStringsSep "\n" (p: mkIdent "${p}.") idParts}
-                  ro.build.product=redfin
-                  ro.build.flavor=redfin-user
-                  ro.build.display.id=${buildId}
-                  ro.build.description=${desc}
-                  ro.build.version.security_patch=2023-09-05
-                  ro.build.user=android-build
-                  ro.build.host=abfarm-release
-                  ${mkBuild ""}
-                  ${lib.concatMapStringsSep "\n" (p: mkBuild "${p}.") buildParts}
-                  ro.system.build.product=redfin
-                  ro.system.build.flavor=redfin-user
-                  ro.system.build.description=${desc}
-                  ro.system_ext.build.description=${desc}
-                  ro.vendor.build.security_patch=2023-09-05
-
-                  # Play Integrity reads FIRST_API_LEVEL directly. The Pixel 5
-                  # shipped on Android 11, so claiming 33 here contradicts the
-                  # fingerprint.
-                  ro.product.first_api_level=30
-                  ro.board.first_api_level=30
-
-                  # These exist only on custom ROMs; their mere presence gives
-                  # the game away, and they cannot be deleted from a read-only
-                  # image, so blank them.
-                  ro.lineage.version=
-                  ro.lineage.display.version=
-                  ro.lineage.build.version=
-                  ro.lineage.device=
-                  ro.lineage.releasetype=
-                  ro.modversion=
-                '';
-              in
-              ''
-                f=/var/lib/waydroid/waydroid_base.prop
-                [ -e "$f" ] || exit 0
-                # Drop anything this service wrote on a previous boot so the
-                # block below is authoritative rather than accumulating.
-                ${pkgs.gnused}/bin/sed -i \
-                  -e '/^qemu\.hw\.mainkeys=/d' \
-                  -e '/^persist\.waydroid\.width=/d' \
-                  -e '/^persist\.waydroid\.height=/d' \
-                  -e '/^ro\.product\./d' \
-                  -e '/^ro\.build\./d' \
-                  -e '/^ro\.[a-z_]*\.build\./d' \
-                  -e '/^ro\.board\.first_api_level=/d' \
-                  -e '/^ro\.lineage\./d' \
-                  -e '/^ro\.modversion=/d' \
-                  -e '/^ro\.debuggable=/d' "$f"
-
-                # Google refuses to finish its embedded sign-in flow on a
-                # device advertising itself as "linux,dummy-virt" on a
-                # userdebug/test-keys build — the page loads fine and simply
-                # never reports ready, which reads as "Checking info..."
-                # forever. Every one of these has to agree: a half-spoofed
-                # device (release-keys tags but a userdebug type, or a
-                # fingerprint whose build id does not match ro.build.id) is
-                # more obviously fake than an honest one.
-                cat >> "$f" <<'PROPEOF'
-${propText}
-PROPEOF
-                # The generated block is indented for readability.
-                ${pkgs.gnused}/bin/sed -i 's/^[[:space:]]*//' "$f"
-              '';
+            script = ''
+              f=/var/lib/waydroid/waydroid_base.prop
+              [ -e "$f" ] || exit 0
+              ${pkgs.gnused}/bin/sed -i \
+                -e '/^qemu\.hw\.mainkeys=/d' \
+                -e '/^persist\.waydroid\.width=/d' \
+                -e '/^persist\.waydroid\.height=/d' "$f"
+            '';
           };
 
           # The VM window is the Android screen; there is no desktop behind it.
