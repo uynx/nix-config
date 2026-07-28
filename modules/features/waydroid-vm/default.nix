@@ -98,14 +98,24 @@
             cores = 4;
             diskSize = 16384; # Android system image plus apps
             graphics = true;
-            # The qemu window shows the Android screen but nothing about the
-            # machine behind it, so keep a way in: ssh -p 2222 android@localhost
-            forwardPorts = [
-              {
-                from = "host";
-                host.port = 2222;
-                guest.port = 22;
-              }
+
+            # qemu's default uplink is SLIRP, a TCP/IP stack reimplemented in
+            # userspace. It is fine for one transfer at a time — which is
+            # exactly what every measurement here used, and why the network
+            # kept "measuring healthy" — but it is a known-weak point for what
+            # apps actually do: many parallel connections and long-lived ones.
+            # passt is the modern replacement, still unprivileged, but with a
+            # far more correct stack. qemu >= 9.2 spawns it itself.
+            #
+            # This replaces networkingOptions wholesale, so
+            # virtualisation.forwardPorts no longer applies — the ssh forward
+            # that keeps this guest debuggable moves to passt's tcp-ports.
+            # mkForce because qemu-vm.nix *defines* this list rather than only
+            # defaulting it, so a plain assignment concatenates and the guest
+            # ends up with both uplinks.
+            qemu.networkingOptions = lib.mkForce [
+              "-netdev passt,id=net0,path=${pkgs.passt}/bin/passt,tcp-ports=2222:22"
+              "-device virtio-net-pci,netdev=net0"
             ];
             qemu.options = [
               # qemu's aarch64 "virt" machine has no default display adapter and
