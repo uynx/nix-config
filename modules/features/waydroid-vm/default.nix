@@ -39,6 +39,13 @@
               sudo ${pkgs.waydroid}/bin/waydroid shell -- dumpsys deviceidle disable
               sudo ${pkgs.waydroid}/bin/waydroid shell -- svc power stayon true
 
+              # Android caches the device name in its settings database on
+              # first boot, so it keeps reporting "linux,dummy-virt" long
+              # after the properties say Pixel 5. This lives in /data, which
+              # no property can override.
+              sudo ${pkgs.waydroid}/bin/waydroid shell -- \
+                settings put global device_name "Pixel 5" || true
+
               # There used to be a TCP MSS clamp here, working around qemu's
               # user-mode networking being unable to carry full-size segments
               # (waydroid#105). passt replaced that uplink and does not need
@@ -216,6 +223,21 @@
                 ro.product.name=redfin
                 ro.product.device=redfin
                 ro.product.model=Pixel 5
+                ro.product.system.brand=google
+                ro.product.system.manufacturer=Google
+                ro.product.system.name=redfin
+                ro.product.system.device=redfin
+                ro.product.system.model=Pixel 5
+                ro.product.vendor.brand=google
+                ro.product.vendor.manufacturer=Google
+                ro.product.vendor.name=redfin
+                ro.product.vendor.device=redfin
+                ro.product.vendor.model=Pixel 5
+                ro.product.odm.brand=google
+                ro.product.odm.manufacturer=Google
+                ro.product.odm.name=redfin
+                ro.product.odm.device=redfin
+                ro.product.odm.model=Pixel 5
                 ro.build.product=redfin
                 ro.build.flavor=redfin-user
                 ro.build.id=TQ3A.230901.001
