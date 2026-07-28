@@ -178,14 +178,68 @@
               Type = "oneshot";
               RemainAfterExit = true;
             };
-            script = ''
-              f=/var/lib/waydroid/waydroid_base.prop
-              [ -e "$f" ] || exit 0
-              ${pkgs.gnused}/bin/sed -i \
-                -e '/^qemu\.hw\.mainkeys=/d' \
-                -e '/^persist\.waydroid\.width=/d' \
-                -e '/^persist\.waydroid\.height=/d' "$f"
-            '';
+            script =
+              let
+                # A real Pixel 5 build, taken from a device dump rather than
+                # invented: TQ3A.230901.001 is also the build id this image
+                # already reports, so nothing contradicts the base system.
+                fp = "google/redfin/redfin:13/TQ3A.230901.001/10750268:user/release-keys";
+                desc = "redfin-user 13 TQ3A.230901.001 10750268 release-keys";
+              in
+              ''
+                f=/var/lib/waydroid/waydroid_base.prop
+                [ -e "$f" ] || exit 0
+                ${pkgs.gnused}/bin/sed -i \
+                  -e '/^qemu\.hw\.mainkeys=/d' \
+                  -e '/^persist\.waydroid\.width=/d' \
+                  -e '/^persist\.waydroid\.height=/d' \
+                  -e '/^ro\.product\./d' \
+                  -e '/^ro\.build\./d' \
+                  -e '/^ro\.system\.build\./d' \
+                  -e '/^ro\.vendor\.build\./d' \
+                  -e '/^ro\.odm\.build\./d' \
+                  -e '/^ro\.bootimage\.build\./d' \
+                  -e '/^ro\.debuggable=/d' "$f"
+
+                # Google refuses to finish its embedded sign-in flow on a
+                # device advertising itself as "linux,dummy-virt" on a
+                # userdebug/test-keys build — the page loads fine and simply
+                # never reports ready, which reads as "Checking info..."
+                # forever. Every one of these has to agree: a half-spoofed
+                # device (release-keys tags but a userdebug type, or a
+                # fingerprint whose build id does not match ro.build.id) is
+                # more obviously fake than an honest one.
+                cat >> "$f" <<'EOF'
+                ro.debuggable=0
+                ro.product.brand=google
+                ro.product.manufacturer=Google
+                ro.product.name=redfin
+                ro.product.device=redfin
+                ro.product.model=Pixel 5
+                ro.build.product=redfin
+                ro.build.flavor=redfin-user
+                ro.build.id=TQ3A.230901.001
+                ro.build.display.id=TQ3A.230901.001
+                ro.build.version.incremental=10750268
+                ro.build.version.security_patch=2023-09-05
+                ro.build.type=user
+                ro.build.tags=release-keys
+                ro.build.description=${desc}
+                ro.build.fingerprint=${fp}
+                ro.system.build.product=redfin
+                ro.system.build.flavor=redfin-user
+                ro.system.build.description=${desc}
+                ro.system.build.fingerprint=${fp}
+                ro.vendor.build.id=TQ3A.230901.001
+                ro.vendor.build.type=user
+                ro.vendor.build.tags=release-keys
+                ro.vendor.build.fingerprint=${fp}
+                ro.bootimage.build.fingerprint=${fp}
+                ro.odm.build.tags=release-keys
+                EOF
+                # The heredoc above is indented for readability; strip it.
+                ${pkgs.gnused}/bin/sed -i 's/^[[:space:]]\+ro\./ro./' "$f"
+              '';
           };
 
           # The VM window is the Android screen; there is no desktop behind it.
