@@ -192,20 +192,91 @@
                 # already reports, so nothing contradicts the base system.
                 fp = "google/redfin/redfin:13/TQ3A.230901.001/10750268:user/release-keys";
                 desc = "redfin-user 13 TQ3A.230901.001 10750268 release-keys";
+                buildId = "TQ3A.230901.001";
+                incremental = "10750268";
+
+                # Android keeps a separate copy of the identity on every
+                # partition, and a scan found five of them still announcing
+                # "WayDroid arm64 only Device" on userdebug/test-keys while
+                # the base properties claimed to be a Pixel. Generate the
+                # whole matrix instead of listing it by hand, which is how
+                # system_ext and vendor_dlkm got missed the first time.
+                idParts = [ "system" "system_ext" "vendor" "vendor_dlkm" "odm" "product" ];
+                buildParts = idParts ++ [ "bootimage" ];
+
+                identity = {
+                  brand = "google";
+                  manufacturer = "Google";
+                  name = "redfin";
+                  device = "redfin";
+                  model = "Pixel 5";
+                };
+
+                mkIdent =
+                  prefix:
+                  lib.concatMapStringsSep "\n" (k: "ro.product.${prefix}${k}=${identity.${k}}") (
+                    builtins.attrNames identity
+                  );
+
+                mkBuild = prefix: ''
+                  ro.${prefix}build.fingerprint=${fp}
+                  ro.${prefix}build.id=${buildId}
+                  ro.${prefix}build.tags=release-keys
+                  ro.${prefix}build.type=user
+                  ro.${prefix}build.version.incremental=${incremental}
+                '';
+
+                propText = ''
+                  ro.debuggable=0
+                  ${mkIdent ""}
+                  ${lib.concatMapStringsSep "\n" (p: mkIdent "${p}.") idParts}
+                  ro.build.product=redfin
+                  ro.build.flavor=redfin-user
+                  ro.build.display.id=${buildId}
+                  ro.build.description=${desc}
+                  ro.build.version.security_patch=2023-09-05
+                  ro.build.user=android-build
+                  ro.build.host=abfarm-release
+                  ${mkBuild ""}
+                  ${lib.concatMapStringsSep "\n" (p: mkBuild "${p}.") buildParts}
+                  ro.system.build.product=redfin
+                  ro.system.build.flavor=redfin-user
+                  ro.system.build.description=${desc}
+                  ro.system_ext.build.description=${desc}
+                  ro.vendor.build.security_patch=2023-09-05
+
+                  # Play Integrity reads FIRST_API_LEVEL directly. The Pixel 5
+                  # shipped on Android 11, so claiming 33 here contradicts the
+                  # fingerprint.
+                  ro.product.first_api_level=30
+                  ro.board.first_api_level=30
+
+                  # These exist only on custom ROMs; their mere presence gives
+                  # the game away, and they cannot be deleted from a read-only
+                  # image, so blank them.
+                  ro.lineage.version=
+                  ro.lineage.display.version=
+                  ro.lineage.build.version=
+                  ro.lineage.device=
+                  ro.lineage.releasetype=
+                  ro.modversion=
+                '';
               in
               ''
                 f=/var/lib/waydroid/waydroid_base.prop
                 [ -e "$f" ] || exit 0
+                # Drop anything this service wrote on a previous boot so the
+                # block below is authoritative rather than accumulating.
                 ${pkgs.gnused}/bin/sed -i \
                   -e '/^qemu\.hw\.mainkeys=/d' \
                   -e '/^persist\.waydroid\.width=/d' \
                   -e '/^persist\.waydroid\.height=/d' \
                   -e '/^ro\.product\./d' \
                   -e '/^ro\.build\./d' \
-                  -e '/^ro\.system\.build\./d' \
-                  -e '/^ro\.vendor\.build\./d' \
-                  -e '/^ro\.odm\.build\./d' \
-                  -e '/^ro\.bootimage\.build\./d' \
+                  -e '/^ro\.[a-z_]*\.build\./d' \
+                  -e '/^ro\.board\.first_api_level=/d' \
+                  -e '/^ro\.lineage\./d' \
+                  -e '/^ro\.modversion=/d' \
                   -e '/^ro\.debuggable=/d' "$f"
 
                 # Google refuses to finish its embedded sign-in flow on a
@@ -216,51 +287,11 @@
                 # device (release-keys tags but a userdebug type, or a
                 # fingerprint whose build id does not match ro.build.id) is
                 # more obviously fake than an honest one.
-                cat >> "$f" <<'EOF'
-                ro.debuggable=0
-                ro.product.brand=google
-                ro.product.manufacturer=Google
-                ro.product.name=redfin
-                ro.product.device=redfin
-                ro.product.model=Pixel 5
-                ro.product.system.brand=google
-                ro.product.system.manufacturer=Google
-                ro.product.system.name=redfin
-                ro.product.system.device=redfin
-                ro.product.system.model=Pixel 5
-                ro.product.vendor.brand=google
-                ro.product.vendor.manufacturer=Google
-                ro.product.vendor.name=redfin
-                ro.product.vendor.device=redfin
-                ro.product.vendor.model=Pixel 5
-                ro.product.odm.brand=google
-                ro.product.odm.manufacturer=Google
-                ro.product.odm.name=redfin
-                ro.product.odm.device=redfin
-                ro.product.odm.model=Pixel 5
-                ro.build.product=redfin
-                ro.build.flavor=redfin-user
-                ro.build.id=TQ3A.230901.001
-                ro.build.display.id=TQ3A.230901.001
-                ro.build.version.incremental=10750268
-                ro.build.version.security_patch=2023-09-05
-                ro.build.type=user
-                ro.build.tags=release-keys
-                ro.build.description=${desc}
-                ro.build.fingerprint=${fp}
-                ro.system.build.product=redfin
-                ro.system.build.flavor=redfin-user
-                ro.system.build.description=${desc}
-                ro.system.build.fingerprint=${fp}
-                ro.vendor.build.id=TQ3A.230901.001
-                ro.vendor.build.type=user
-                ro.vendor.build.tags=release-keys
-                ro.vendor.build.fingerprint=${fp}
-                ro.bootimage.build.fingerprint=${fp}
-                ro.odm.build.tags=release-keys
-                EOF
-                # The heredoc above is indented for readability; strip it.
-                ${pkgs.gnused}/bin/sed -i 's/^[[:space:]]\+ro\./ro./' "$f"
+                cat >> "$f" <<'PROPEOF'
+${propText}
+PROPEOF
+                # The generated block is indented for readability.
+                ${pkgs.gnused}/bin/sed -i 's/^[[:space:]]*//' "$f"
               '';
           };
 
