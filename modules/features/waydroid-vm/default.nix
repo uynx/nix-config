@@ -91,7 +91,12 @@
 
           virtualisation = {
             waydroid.enable = true;
-            memorySize = 4096;
+            # 4096 was not enough. Chromium spawns a process per renderer and
+            # is happy to use a gigabyte on a heavy page; sharing that with
+            # Android, Play Services and Waydroid meant complex sites froze
+            # while video, which needs far less, played fine. The host has
+            # 15 GB.
+            memorySize = 8192;
             cores = 4;
             diskSize = 16384; # Android system image plus apps
             graphics = true;
