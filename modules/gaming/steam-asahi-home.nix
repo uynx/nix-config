@@ -33,13 +33,13 @@
           ' >/dev/null 2>&1
         }
 
-        # The external monitor if attached, otherwise whichever output has focus.
+        # The output the game will actually open on. This used to name HDMI-A-1
+        # and prefer it whenever it was attached, which meant the Wine desktop
+        # could be sized for a monitor the window never landed on. niri opens
+        # windows on the focused output, so asking niri which that is needs no
+        # connector names and cannot disagree with where the window ends up.
         target_output() {
-          if ${N} msg -j outputs 2>/dev/null | ${J} -e 'has("HDMI-A-1")' >/dev/null 2>&1; then
-            ${N} msg -j outputs 2>/dev/null | ${J} -c '."HDMI-A-1"'
-          else
-            ${N} msg -j focused-output 2>/dev/null
-          fi
+          ${N} msg -j focused-output 2>/dev/null
         }
       '';
     x86-pkgs = import inputs.nixpkgs {
@@ -564,11 +564,14 @@
 
       if [ "$APP_ID" = 730 ]; then
         CS2_VIDEO=/home/uynx/.local/share/steam-asahi/home/.local/share/Steam/userdata/483670283/730/local/cfg/cs2_video.txt
-        if ${N} msg -j outputs 2>/dev/null | ${J} -e 'has("HDMI-A-1")' >/dev/null 2>&1; then
-          CS2_MONITOR=1
-        else
-          CS2_MONITOR=0
-        fi
+        # CS2 addresses monitors by X's enumeration order, which follows the
+        # outputs left to right. Derive the index from where the target output
+        # sits in that order rather than assuming a second monitor is index 1.
+        CS2_MONITOR=$(${N} msg -j outputs 2>/dev/null | ${J} -r \
+          --arg name "$(printf '%s' "$OUTPUT" | ${J} -r '.name')" '
+            [to_entries[] | select(.value.logical) | {name: .key, x: .value.logical.x}]
+            | sort_by(.x) | map(.name) | index($name) // 0
+          ' 2>/dev/null || echo 0)
         # niri reports refresh rate in millihertz; Hyprland reported Hz.
         CS2_REFRESH=$(printf '%s' "$OUTPUT" | ${J} -r '
           (.modes[.current_mode].refresh_rate / 1000) | round
