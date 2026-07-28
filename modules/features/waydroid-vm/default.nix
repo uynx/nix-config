@@ -223,6 +223,17 @@
           # Android session never starts. Turning nftables on makes the NixOS
           # module pick pkgs.waydroid-nftables, which speaks nft instead.
           networking.nftables.enable = true;
+
+          # NixOS turns on strict reverse-path filtering
+          # (networking.firewall.checkReversePath), which drops packets whose
+          # return route does not point back out the interface they arrived
+          # on. That is the most commonly reported cause of Waydroid's
+          # signature failure — ping and DNS fine, apps unable to load
+          # anything — because the container's traffic is bridged and NATed.
+          # Nothing here needs a firewall: the guest is reachable only through
+          # the single port passt forwards, so drop the whole thing rather
+          # than tune one sysctl.
+          networking.firewall.enable = false;
           # The same script runs dnsmasq for the container's DHCP.
           environment.systemPackages = [ pkgs.dnsmasq ];
 
