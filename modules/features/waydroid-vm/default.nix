@@ -39,16 +39,13 @@
               sudo ${pkgs.waydroid}/bin/waydroid shell -- dumpsys deviceidle disable
               sudo ${pkgs.waydroid}/bin/waydroid shell -- svc power stayon true
 
-              # Clamp TCP MSS to the real path MTU. Waydroid's iptables path
-              # does this; its nftables path does not, and the guest reaches
-              # the outside through qemu's user-mode networking, which cannot
-              # carry full-size segments. The result is the documented
-              # waydroid#105 symptom: DNS and ping fine, handshakes fine, but
-              # any sustained transfer stalls — pages half-load and WhatsApp's
-              # sync never finishes. The table only exists once the container
-              # has started, so this cannot go in networking.nftables.ruleset.
-              sudo ${pkgs.nftables}/bin/nft add rule inet lxc forward \
-                tcp flags syn tcp option maxseg size set rt mtu || true
+              # There used to be a TCP MSS clamp here, working around qemu's
+              # user-mode networking being unable to carry full-size segments
+              # (waydroid#105). passt replaced that uplink and does not need
+              # it — worse, the clamp took its size from the route MTU, and
+              # passt's route MTU is 65520, so the rule started rewriting MSS
+              # *up* to ~65480 instead of down to ~1460. Removing it restored
+              # 5.5 MB/s bulk transfer and 8/8 parallel connections.
             } &
 
             exec ${pkgs.waydroid}/bin/waydroid show-full-ui
