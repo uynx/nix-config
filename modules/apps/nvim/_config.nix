@@ -118,13 +118,11 @@
       vimtex_callback_progname = "nvim";
     };
 
-    # nvf has no vim-tmux-navigator, and C-hjkl crossing the tmux/vim boundary
-    # is worth keeping.
+    # No nvf module for this one.
     extraPlugins.vim-tmux-navigator.package = tmuxNavigator;
 
-    # autoread only reloads when Neovim actually checks, so poll the events that
-    # matter. Deletion is not covered by autoread at all -- the buffer stays in
-    # memory and writing it would recreate the file -- hence the notify.
+    # autoread only reloads when Neovim actually checks, hence the polling. It
+    # cannot handle deletion at all, so that case only warns.
     luaConfigRC.checktime = ''
       vim.api.nvim_create_autocmd(
         { "FocusGained", "BufEnter", "CursorHold", "CursorHoldI", "TermClose", "TermLeave" },
