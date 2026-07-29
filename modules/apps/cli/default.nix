@@ -25,13 +25,8 @@
     programs = {
       bat.enable = true;
 
-      # Flexoki. The theme file was originally written into ~/.config by one of
-      # noctalia's theming templates; it is in this repo now, and btop.conf is
-      # managed here too, so nothing is left loose in the home directory.
-      btop = {
-        enable = true;
-        settings.color_theme = "flexoki";
-      };
+      # btop is not here any more: it is a wrapped package now, and its config
+      # and Flexoki theme are baked into the derivation. See apps/btop/.
 
       jq.enable = true;
       zoxide.enable = true;
@@ -144,9 +139,5 @@
         nix-direnv.enable = true;
       };
     };
-
-    # btop has no Home Manager option for custom themes, so the file goes in
-    # directly. `color_theme = "flexoki"` above resolves against this directory.
-    home.file.".config/btop/themes/flexoki.theme".source = ./flexoki.theme;
   };
 }

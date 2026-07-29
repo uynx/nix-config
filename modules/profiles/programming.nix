@@ -6,6 +6,7 @@
       git
       nvim
       cli
+      btop
       latex
     ];
   };
