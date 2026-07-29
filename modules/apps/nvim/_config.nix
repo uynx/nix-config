@@ -18,9 +18,8 @@
       scrolloff = 8;
     };
 
-    # Flexoki via base16. nvf has no flexoki theme and flexoki-neovim is not in
-    # nixpkgs; every value below is from ghostty's "Flexoki Dark", the same
-    # source the ghostty, btop and noctalia themes came from.
+    # nvf has no flexoki theme and flexoki-neovim is not in nixpkgs. Values are
+    # ghostty's "Flexoki Dark" verbatim -- do not invent replacements.
     theme = {
       enable = true;
       name = "base16";
@@ -112,8 +111,6 @@
       tex.enable = true;
     };
 
-    # vimtex settings carried over from the LazyVim config: lualatex through
-    # latexmk, previewing in sioyek.
     globals = {
       vimtex_view_method = "sioyek";
       vimtex_compiler_method = "latexmk";
