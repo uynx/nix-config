@@ -20,7 +20,12 @@
       bandwhich
       socat
       fetch
+      nh
+      nvd
     ];
+
+    # nh reads this instead of taking a flake path on every invocation.
+    home.sessionVariables.NH_FLAKE = "/home/uynx/nixos-config";
 
     programs = {
       bat.enable = true;

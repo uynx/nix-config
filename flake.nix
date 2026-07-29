@@ -36,6 +36,14 @@
       url = "github:BirdeeHub/nix-wrapper-modules";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Neovim configured through Nix options instead of Lua. Built as a
+    # standalone package alongside the existing LazyVim setup, not in place of
+    # it -- see apps/nvim-nvf/ for why both exist for now.
+    nvf = {
+      url = "github:NotAShelf/nvf";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
