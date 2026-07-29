@@ -8,6 +8,7 @@
       hardwareAsahi
       niri
       sddm
+      screenUtils
       steamAsahi
 
       ./_hardware-configuration.nix
