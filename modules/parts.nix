@@ -7,6 +7,12 @@
   imports = [
     inputs.home-manager.flakeModules.home-manager
     inputs.nix-darwin.flakeModules.default
+
+    # Declares flake.wrappers, where a program's config is baked into its own
+    # derivation instead of being written to ~/.config. A wrapped program is a
+    # normal package, so it also lands in packages.<system>.<name> and can be
+    # run on any machine with `nix run` without leaving a config file behind.
+    inputs.wrappers.flakeModules.wrappers
   ];
 
   # Architectures perSystem blocks get evaluated for. This is about package
