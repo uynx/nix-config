@@ -10,7 +10,7 @@
       fish
       tmux
       media
-      apps
+      gui
       aiTools
       braveOrigin
     ];
