@@ -50,7 +50,9 @@
         # newly written module is silently skipped unless it is at least staged.
         git -C $repo add -A
 
-        if sudo nixos-rebuild switch --flake $repo#$target --impure
+        # nh wraps nixos-rebuild with a live build monitor and prints an nvd diff
+        # of what changed afterwards. It elevates itself, so no sudo here.
+        if nh os switch $repo -H $target -- --impure
             # Commit only on success, so a broken config never becomes a commit.
             # This is a checkpoint for rolling back, not a substitute for real
             # commit messages — amend or reword it if the change deserves one.
