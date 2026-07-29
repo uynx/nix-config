@@ -1,5 +1,5 @@
 {
-  flake.homeModules.apps = { pkgs, ... }: {
+  flake.homeModules.gui = { pkgs, ... }: {
     home.packages = with pkgs; [
       obsidian
       libreoffice
