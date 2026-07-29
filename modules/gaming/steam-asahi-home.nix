@@ -547,12 +547,17 @@
           ;;
       esac
 
-      # Hyprland reported physical pixels and a scale, so the old code divided.
-      # niri's `logical` block is already scaled — 1512x945 on this panel, not
-      # 3024x1890 — so dividing again would halve the Wine desktop.
+      # Every game here is an X11 client, so the size that matters is the one
+      # XWayland reports — and niri has no built-in XWayland. xwayland-satellite
+      # does not scale, so X clients see raw pixels: `xrandr` calls this panel
+      # 3024x1890, not the 1512x945 in niri's `logical` block. Hyprland's own
+      # XWayland did scale, which is why the logical size was right before and
+      # is wrong now; asking for it here left the Wine desktop at a quarter of
+      # the screen, parked in the corner. Use the mode.
       OUTPUT=$(target_output)
       if ! RESOLUTION=$(printf '%s' "$OUTPUT" | ${J} -er '
-        .logical | select(.width > 0 and .height > 0) | "\(.width)x\(.height)"
+        .modes[.current_mode] | select(.width > 0 and .height > 0)
+        | "\(.width)x\(.height)"
       ' 2>/dev/null); then
         ${pkgs.libnotify}/bin/notify-send \
           "Steam game not launched" \
