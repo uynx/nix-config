@@ -19,6 +19,14 @@
       uv
       swi-prolog
       mermaid-cli
+
+      # Per-project dev shells. devenv reads devenv.nix from the project
+      # directory, so nothing about it is configured here -- it just needs to
+      # be on PATH. secretspec keeps secret *names* in a committed
+      # secretspec.toml and the values in the system keyring, which is why it
+      # pairs with devenv rather than duplicating it.
+      devenv
+      secretspec
     ];
 
     programs = {
