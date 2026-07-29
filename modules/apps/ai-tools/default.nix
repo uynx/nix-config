@@ -40,7 +40,7 @@
           jq
         ];
         text = ''
-          file=${home}/nixos-config/modules/features/ai-tools/_ai-clis.nix
+          file=${home}/nixos-config/modules/apps/ai-tools/_ai-clis.nix
 
           # bump <name> <latest-version> <download-url>
           bump() {
