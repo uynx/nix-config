@@ -21,8 +21,8 @@
 let
   pins = {
     claude-code = { version = "2.1.220"; hash = "sha256-FZ5KUdeW878UZ3V3EA9++4RWEbHOrwwwy9jUZQ2UIYU="; };
-    codex = { version = "0.145.0"; hash = "sha256-04T5C8hCRQtCvWdf7vBqEqRqOxypfvyyJWaycOShEic="; };
-    grok = { version = "0.2.112"; hash = "sha256-0h8aqrp/KTDbDvfVqdw/gUqUxUryCOCR9yojnKwCujk="; };
+    codex = { version = "0.146.0"; hash = "sha256-l1uskVYqvu3rj3ljbVGoZkmzHzSp3mo7ywWVZbbPH4c="; };
+    grok = { version = "0.2.114"; hash = "sha256-R4sGgRhanQx/NY8G4sxTGlTmtRqvU/HKH0tFM5f+PcM="; };
   };
 
   meta = homepage: desc: {
