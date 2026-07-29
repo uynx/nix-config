@@ -15,7 +15,7 @@
         pat = r"Package: brave-origin\n.*?Version: ([\d.]+)"
         latest = re.search(pat, idx, re.DOTALL).group(1)
         # Split: writePython3Bin runs a PEP8 check and E501 fires at 79 chars.
-        rel = "modules/features/brave-origin/_brave-origin.nix"
+        rel = "modules/apps/brave-origin/_brave-origin.nix"
         path = os.path.expanduser(f"~/nixos-config/{rel}")
         text = open(path).read()
         cur = re.search(r'version = "([\d.]+)";', text).group(1)

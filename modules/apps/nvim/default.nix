@@ -1,8 +1,7 @@
 { inputs, self, ... }:
 {
-  # Neovim is a wrapped package built from nvf options rather than a symlink to
-  # ~/dotfiles/nvim. LazyVim is gone: it fetched plugins from git at runtime, so
-  # the editor was never reproducible and lazy-lock.json was the real config.
+  # _config.nix is underscore-prefixed so import-tree does not try to evaluate
+  # it as a flake-parts module.
   perSystem =
     { pkgs, ... }:
     {
