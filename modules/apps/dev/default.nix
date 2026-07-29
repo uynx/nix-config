@@ -27,6 +27,11 @@
       # pairs with devenv rather than duplicating it.
       devenv
       secretspec
+
+      # Nix tooling on the CLI. Neovim gets its own copies through nvf, but
+      # these are wanted outside the editor too.
+      nixfmt
+      statix
     ];
 
     programs = {

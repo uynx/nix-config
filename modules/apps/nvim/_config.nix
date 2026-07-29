@@ -1,0 +1,152 @@
+{ tmuxNavigator }:
+{
+  vim = {
+    viAlias = true;
+    vimAlias = true;
+    withNodeJs = true;
+    withPython3 = true;
+    preventJunkFiles = true;
+    undoFile.enable = true;
+    lineNumberMode = "relNumber";
+    searchCase = "smart";
+
+    options = {
+      tabstop = 2;
+      shiftwidth = 2;
+      expandtab = true;
+      autoread = true;
+      scrolloff = 8;
+    };
+
+    # Flexoki via base16. nvf has no flexoki theme and flexoki-neovim is not in
+    # nixpkgs; every value below is from ghostty's "Flexoki Dark", the same
+    # source the ghostty, btop and noctalia themes came from.
+    theme = {
+      enable = true;
+      name = "base16";
+      base16-colors = {
+        base00 = "#100f0f";
+        base01 = "#403e3c";
+        base02 = "#575653";
+        base03 = "#878580";
+        base04 = "#878580";
+        base05 = "#cecdc3";
+        base06 = "#cecdc3";
+        base07 = "#cecdc3";
+        base08 = "#d14d41";
+        base09 = "#ad8301";
+        base0A = "#d0a215";
+        base0B = "#879a39";
+        base0C = "#3aa99f";
+        base0D = "#4385be";
+        base0E = "#ce5d97";
+        base0F = "#af3029";
+      };
+    };
+
+    lsp.enable = true;
+    formatter.conform-nvim.enable = true;
+    treesitter.enable = true;
+    telescope.enable = true;
+    autocomplete.nvim-cmp.enable = true;
+    snippets.luasnip.enable = true;
+    autopairs.nvim-autopairs.enable = true;
+    comments.comment-nvim.enable = true;
+    binds.whichKey.enable = true;
+    statusline.lualine.enable = true;
+    filetree.neo-tree.enable = true;
+    dashboard.alpha.enable = true;
+    terminal.toggleterm.enable = true;
+    spellcheck.enable = true;
+
+    git = {
+      enable = true;
+      gitsigns.enable = true;
+    };
+
+    ui = {
+      noice.enable = true;
+      illuminate.enable = true;
+      colorizer.enable = true;
+      breadcrumbs.enable = true;
+    };
+
+    visuals = {
+      nvim-web-devicons.enable = true;
+      indent-blankline.enable = true;
+      fidget-nvim.enable = true;
+      rainbow-delimiters.enable = true;
+    };
+
+    utility = {
+      surround.enable = true;
+      direnv.enable = true;
+      oil-nvim.enable = true;
+      undotree.enable = true;
+      motion.leap.enable = true;
+    };
+
+    notes.todo-comments.enable = true;
+    mini.hipatterns.enable = true;
+
+    languages = {
+      # Per-language lsp.enable defaults to vim.lsp.enable, set above.
+      enableTreesitter = true;
+      enableFormat = true;
+
+      nix.enable = true;
+      lua.enable = true;
+      python.enable = true;
+      typescript.enable = true;
+      tsx.enable = true;
+      html.enable = true;
+      css.enable = true;
+      scss.enable = true;
+      svelte.enable = true;
+      vue.enable = true;
+      typst.enable = true;
+      json.enable = true;
+      markdown.enable = true;
+      bash.enable = true;
+      rust.enable = true;
+      tex.enable = true;
+    };
+
+    # vimtex settings carried over from the LazyVim config: lualatex through
+    # latexmk, previewing in sioyek.
+    globals = {
+      vimtex_view_method = "sioyek";
+      vimtex_compiler_method = "latexmk";
+      vimtex_compiler_latexmk_engine = "lualatex";
+      vimtex_callback_progname = "nvim";
+    };
+
+    # nvf has no vim-tmux-navigator, and C-hjkl crossing the tmux/vim boundary
+    # is worth keeping.
+    extraPlugins.vim-tmux-navigator.package = tmuxNavigator;
+
+    # autoread only reloads when Neovim actually checks, so poll the events that
+    # matter. Deletion is not covered by autoread at all -- the buffer stays in
+    # memory and writing it would recreate the file -- hence the notify.
+    luaConfigRC.checktime = ''
+      vim.api.nvim_create_autocmd(
+        { "FocusGained", "BufEnter", "CursorHold", "CursorHoldI", "TermClose", "TermLeave" },
+        {
+          group = vim.api.nvim_create_augroup("uynx_checktime", { clear = true }),
+          callback = function()
+            if vim.fn.mode() ~= "c" and vim.bo.buftype == "" then
+              vim.cmd.checktime()
+            end
+          end,
+        }
+      )
+
+      vim.api.nvim_create_autocmd("FileChangedShellPost", {
+        group = vim.api.nvim_create_augroup("uynx_filechanged", { clear = true }),
+        callback = function()
+          vim.notify("Buffer reloaded from disk", vim.log.levels.INFO)
+        end,
+      })
+    '';
+  };
+}

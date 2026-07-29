@@ -1,25 +1,23 @@
+{ inputs, self, ... }:
 {
-  flake.homeModules.nvim =
-    { config, pkgs, ... }:
-    let
-      home = "/home/uynx";
-    in
+  # Neovim is a wrapped package built from nvf options rather than a symlink to
+  # ~/dotfiles/nvim. LazyVim is gone: it fetched plugins from git at runtime, so
+  # the editor was never reproducible and lazy-lock.json was the real config.
+  perSystem =
+    { pkgs, ... }:
     {
-      home.packages = with pkgs; [
-        (neovim.override {
-          withNodeJs = true;
-          withPython3 = true;
-        })
-        tree-sitter
-        nil
-        nixfmt
-        statix
-      ];
+      packages.nvim =
+        (inputs.nvf.lib.neovimConfiguration {
+          inherit pkgs;
+          modules = [
+            (import ./_config.nix { tmuxNavigator = pkgs.vimPlugins.vim-tmux-navigator; })
+          ];
+        }).neovim;
+    };
 
-      home.file = {
-        ".config/nvim".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/nvim";
-        ".local/share/nvim/site/parser/norg.so".source =
-          "${pkgs.tree-sitter-grammars.tree-sitter-norg}/parser";
-      };
+  flake.homeModules.nvim =
+    { pkgs, ... }:
+    {
+      home.packages = [ self.packages.${pkgs.stdenv.hostPlatform.system}.nvim ];
     };
 }
