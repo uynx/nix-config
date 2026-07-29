@@ -7,6 +7,7 @@
       nvim
       cli
       btop
+      gpg
       latex
     ];
   };
