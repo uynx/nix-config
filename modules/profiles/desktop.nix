@@ -11,6 +11,7 @@
       tmux
       media
       gui
+      screenUtils
       aiTools
       braveOrigin
     ];
