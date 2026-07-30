@@ -29,7 +29,8 @@
             ScreenWidth = "";
             ScreenHeight = "";
             Font = "Hack Nerd Font";
-            FontSize = "";
+            FontSize = "32";
+            HourFormat = "h:mm AP";
 
             # Store path, not ~/dotfiles: /home/uynx is 0700, so the greeter user
             # could never read the wallpaper ReGreet was pointed at. Shared with
