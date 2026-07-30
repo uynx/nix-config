@@ -29,7 +29,7 @@
             ScreenWidth = "";
             ScreenHeight = "";
             Font = "Hack Nerd Font";
-            FontSize = "32";
+            FontSize = "";
             HourFormat = "h:mm AP";
 
             # Store path, not ~/dotfiles: /home/uynx is 0700, so the greeter user
@@ -92,7 +92,8 @@
               main=$out/share/sddm/themes/sddm-astronaut-theme/Main.qml
               chmod u+w "$main"
               substituteInPlace "$main" \
-                --replace-fail 'Screen.ScreenWidth' 'Screen.width'
+                --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
+                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 55)'
             '';
           });
     in
