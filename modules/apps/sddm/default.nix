@@ -90,10 +90,13 @@
             # turn makes the theme correct on any output instead of one.
             postInstall = ''
               main=$out/share/sddm/themes/sddm-astronaut-theme/Main.qml
-              chmod u+w "$main"
+              clock=$out/share/sddm/themes/sddm-astronaut-theme/Components/Clock.qml
+              chmod u+w "$main" "$clock"
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
                 --replace-fail 'parseInt(height / 80)' 'parseInt(height / 65)'
+              substituteInPlace "$clock" \
+                --replace-fail 'root.font.pointSize * 9' 'root.font.pointSize * 5.5'
             '';
           });
     in
