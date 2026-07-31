@@ -48,14 +48,14 @@
 }:
 
 let
-  version = "1.92.144";
+  version = "1.93.129";
 
   arch = if stdenv.hostPlatform.system == "aarch64-linux" then "arm64"
          else if stdenv.hostPlatform.system == "x86_64-linux" then "amd64"
          else throw "Unsupported platform: ${stdenv.hostPlatform.system}";
 
-  hash = if arch == "arm64" then "sha256-zqjpiBMogYhtuEhIlPlK8J2j9hzfd1M8RYlT/c74Na8="
-         else "sha256-KF5WXF7GJPLCcEQyASEVfNrYyFJRXBSyWVPPAZPCa/E=";
+  hash = if arch == "arm64" then "sha256-29NLuWH3TAUGkiiY00J+e+IGaqfIZ/g2vLI1aDXacVw="
+         else "sha256-F5d660t4t52L27gt8SF9n/54lmK+CeqZeqlbS84wjvU=";
 
   deps = [
     alsa-lib
