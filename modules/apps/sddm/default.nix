@@ -93,7 +93,7 @@
               chmod u+w "$main"
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
-                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 55)'
+                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 65)'
             '';
           });
     in
