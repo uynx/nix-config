@@ -103,9 +103,9 @@
         wayland.enable = true;
         package = pkgs.kdePackages.sddm;
         theme = "sddm-astronaut-theme";
-        # qtsvg / qtmultimedia / qtvirtualkeyboard, which the QML needs on its
-        # import path inside the greeter.
-        extraPackages = theme.propagatedBuildInputs;
+        # qtsvg / qtmultimedia / qtvirtualkeyboard / qt5compat (for QtQuick.Effects),
+        # which the QML needs on its import path inside the greeter.
+        extraPackages = theme.propagatedBuildInputs ++ [ pkgs.kdePackages.qt5compat ];
         settings.Theme.CursorTheme = "capitaine-cursors";
       };
 
