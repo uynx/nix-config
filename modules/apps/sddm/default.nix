@@ -99,10 +99,10 @@
                 --replace-fail 'FontSize="12"' 'FontSize=""'
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
-                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 48)'
+                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 70)'
               substituteInPlace "$clock" \
-                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 0.7' \
-                --replace-fail 'font.pointSize: root.font.pointSize * 2' 'font.pointSize: root.font.pointSize * 0.5'
+                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 2.0' \
+                --replace-fail 'font.pointSize: root.font.pointSize * 2' 'font.pointSize: root.font.pointSize * 1.2'
             '';
           });
     in
