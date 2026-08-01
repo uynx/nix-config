@@ -159,7 +159,7 @@
 
       home.activation.createRequiredDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         mkdir -p \
-          "${home}/ai_memory/concepts" \
+          "${home}/ai_memory/topics" \
           "${home}/ai_memory/journal" \
           "${home}/dotfiles" \
           "${home}/nixos-config"
