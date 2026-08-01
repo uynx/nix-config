@@ -94,13 +94,15 @@
               conf=$out/share/sddm/themes/sddm-astronaut-theme/Themes/hyprland_kath.conf
               chmod u+w "$main" "$clock" "$conf"
               substituteInPlace "$conf" \
+                --replace-fail 'ScreenWidth="1920"' 'ScreenWidth=""' \
+                --replace-fail 'ScreenHeight="1080"' 'ScreenHeight=""' \
                 --replace-fail 'FontSize="12"' 'FontSize=""'
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
                 --replace-fail 'parseInt(height / 80)' 'parseInt(height / 48)'
               substituteInPlace "$clock" \
-                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 3.2' \
-                --replace-fail 'font.pointSize: root.font.pointSize * 2' 'font.pointSize: root.font.pointSize * 1.6'
+                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 0.7' \
+                --replace-fail 'font.pointSize: root.font.pointSize * 2' 'font.pointSize: root.font.pointSize * 0.5'
             '';
           });
     in
