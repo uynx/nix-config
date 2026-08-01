@@ -91,7 +91,10 @@
             postInstall = ''
               main=$out/share/sddm/themes/sddm-astronaut-theme/Main.qml
               clock=$out/share/sddm/themes/sddm-astronaut-theme/Components/Clock.qml
-              chmod u+w "$main" "$clock"
+              conf=$out/share/sddm/themes/sddm-astronaut-theme/Themes/hyprland_kath.conf
+              chmod u+w "$main" "$clock" "$conf"
+              substituteInPlace "$conf" \
+                --replace-fail 'FontSize="12"' 'FontSize=""'
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
                 --replace-fail 'parseInt(height / 80)' 'parseInt(height / 48)'
