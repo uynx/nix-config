@@ -99,7 +99,8 @@
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
                 --replace-fail 'parseInt(height / 80)' 'parseInt(height / 48)'
               substituteInPlace "$clock" \
-                --replace-fail 'root.font.pointSize * 9' 'root.font.pointSize * 1.0'
+                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 3.2' \
+                --replace-fail 'font.pointSize: root.font.pointSize * 2' 'font.pointSize: root.font.pointSize * 1.6'
             '';
           });
     in
