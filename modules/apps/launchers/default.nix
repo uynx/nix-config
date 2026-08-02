@@ -71,5 +71,32 @@
           '';
         })
       ];
+
+      # Anything that opens a link — xdg-open, a chat client, a mail app — runs
+      # brave-origin.desktop, whose packaged Exec carries no --user-data-dir and
+      # so lands in ~/.config/BraveSoftware/Brave-Origin: a third, empty profile
+      # with none of the logins, and a separate singleton lock, which is why it
+      # also spawns its own window instead of a tab in the running browser.
+      #
+      # Same entry name as the package's, so this copy in ~/.local/share
+      # shadows it and every consumer is fixed without touching mimeapps.
+      #
+      # home.file rather than xdg.desktopEntries: the latter routes through
+      # xdg.dataFile, which is gated on `xdg.enable`, and that is false here —
+      # so it writes nothing at all. (The same silence applies to the existing
+      # xdg.desktopEntries.steam, which the Steam module's generator covers.)
+      home.file.".local/share/applications/brave-origin.desktop".text = ''
+        [Desktop Entry]
+        Type=Application
+        Name=Brave Origin
+        GenericName=Web Browser
+        Icon=brave-origin
+        Exec=brave-activation Personal %U
+        Terminal=false
+        StartupNotify=true
+        StartupWMClass=brave-origin
+        Categories=Network;WebBrowser;
+        MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/about;x-scheme-handler/unknown;
+      '';
     };
 }
