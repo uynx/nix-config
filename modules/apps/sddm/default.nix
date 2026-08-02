@@ -102,13 +102,32 @@
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
                 --replace-fail 'parseInt(height / 80)' 'parseInt(height / 70)'
-              # Date first, then time: '* 2' is a prefix of any '* 2.x' the time
-              # rule could write, so the reverse order corrupts the file.
-              # Base is parseInt(1890 / 70) = 27pt on this panel, so the clock
-              # lands at 38pt and the date at 24pt.
+              # The clock is sized in PIXELS as a fraction of the panel, not in
+              # points off the base font. Points are scaled by the display's
+              # DPI, so a multiplier that looked right in a preview rendered
+              # very differently on the real greeter — and Qt reports this panel
+              # as 945 tall inside the niri session (eDP-1 is scale 2.0) versus
+              # the full 1890 under the greeter's unscaled Weston, so a preview
+              # taken from a logged-in session showed every font at half size.
+              # Keying off Screen.height in pixels removes both variables: 5.5%
+              # = 104px time, 2.2% = 42px date, identical in preview and greeter.
+              #
+              # Screen needs QtQuick.Window; Clock.qml does not import it.
+              #
+              # This also retires the ordering trap the old point-based rules
+              # had: neither replacement now emits the text the other matches.
+              #
+              # The date rule spans two lines so it can unbold that label alone
+              # without a second pass — the time label's bold line is identical,
+              # and only the preceding size line tells them apart. Bold reads as
+              # chunky at the date's size; set it back to true to undo.
               substituteInPlace "$clock" \
-                --replace-fail 'font.pointSize: root.font.pointSize * 2' 'font.pointSize: root.font.pointSize * 0.9' \
-                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 1.4'
+                --replace-fail 'import QtQuick.Controls 2.15' 'import QtQuick.Controls 2.15
+import QtQuick.Window 2.15' \
+                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pixelSize: Screen.height * 0.055' \
+                --replace-fail 'font.pointSize: root.font.pointSize * 2
+        font.bold: true' 'font.pixelSize: Screen.height * 0.022
+        font.bold: false'
             '';
           });
     in
