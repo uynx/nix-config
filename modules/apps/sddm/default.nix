@@ -7,8 +7,35 @@
   # Noctalia itself still cannot do this job: it ships a LockScreen, which locks
   # an already-running session, whereas a greeter runs before any session exists.
   flake.nixosModules.sddm =
-    { pkgs, ... }:
+    { pkgs, lib, ... }:
     let
+      # Multi-line substitution patterns live here rather than inline in the
+      # postInstall: a Nix '' block strips the common leading indentation, so a
+      # pattern's second line silently loses the eight spaces it must match and
+      # substituteInPlace fails with a pattern-not-found error.
+      dateOld = "font.pointSize: root.font.pointSize * 2\n        font.bold: true";
+      dateNew = "font.pointSize: root.font.pointSize * 0.6\n        font.bold: false";
+
+      # Temporary diagnostics: the greeter reports the numbers it actually
+      # renders with, which cannot be observed any other way — a headless render
+      # uses a different DPI, and a preview inside the desktop session sees the
+      # panel at half height because eDP-1 is scale 2.0 there.
+      # Screen lives in QtQuick.Window, which Clock.qml does not import.
+      importOld = "import QtQuick.Controls 2.15";
+      importNew = "import QtQuick.Controls 2.15\nimport QtQuick.Window 2.15";
+
+      logOld = "    Component.onCompleted: {\n        dateLabel.updateTime()";
+      logNew =
+        "    Component.onCompleted: {\n        console.log(\"GREETER-METRICS"
+        + " screenH=\" + Screen.height"
+        + " + \" dpr=\" + Screen.devicePixelRatio"
+        + " + \" physDpi=\" + (Screen.pixelDensity * 25.4)"
+        + " + \" rootPt=\" + root.font.pointSize"
+        + " + \" timePt=\" + timeLabel.font.pointSize"
+        + " + \" timePx=\" + timeLabel.font.pixelSize"
+        + " + \" datePx=\" + dateLabel.font.pixelSize)"
+        + "\n        dateLabel.updateTime()";
+
       # Flexoki Dark, same values as ghostty, neovim and noctalia.
       bg = "#100f0f";
       fg = "#cecdc3";
@@ -102,32 +129,35 @@
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
                 --replace-fail 'parseInt(height / 80)' 'parseInt(height / 70)'
-              # The clock is sized in PIXELS as a fraction of the panel, not in
-              # points off the base font. Points are scaled by the display's
-              # DPI, so a multiplier that looked right in a preview rendered
-              # very differently on the real greeter — and Qt reports this panel
-              # as 945 tall inside the niri session (eDP-1 is scale 2.0) versus
-              # the full 1890 under the greeter's unscaled Weston, so a preview
-              # taken from a logged-in session showed every font at half size.
-              # Keying off Screen.height in pixels removes both variables: 5.5%
-              # = 104px time, 2.2% = 42px date, identical in preview and greeter.
+              # Sizes stay in POINTS, as multiples of root.font.pointSize.
               #
-              # Screen needs QtQuick.Window; Clock.qml does not import it.
-              #
-              # This also retires the ordering trap the old point-based rules
-              # had: neither replacement now emits the text the other matches.
+              # An earlier attempt moved the clock to font.pixelSize to escape
+              # DPI scaling. That cannot work here: the root Pane sets
+              # font.pointSize, QML inherits that down the tree, and a QFont
+              # holds either a point size or a pixel size — never both — so an
+              # inherited pointSize and a child pixelSize fight and the result
+              # is not reliably the child's. The theme also uses
+              # root.font.pointSize as its LAYOUT unit (field heights, spacings,
+              # margins, icon sizes, ~20 bindings), so points cannot be
+              # abandoned without rescaling all of them. Do not reintroduce
+              # pixelSize for one label.
               #
               # The date rule spans two lines so it can unbold that label alone
               # without a second pass — the time label's bold line is identical,
               # and only the preceding size line tells them apart. Bold reads as
               # chunky at the date's size; set it back to true to undo.
+              #
+              # Ordering: date before time, because '* 2' is a prefix of any
+              # '* 2.x' the time rule could otherwise write.
               substituteInPlace "$clock" \
-                --replace-fail 'import QtQuick.Controls 2.15' 'import QtQuick.Controls 2.15
-import QtQuick.Window 2.15' \
-                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pixelSize: Screen.height * 0.055' \
-                --replace-fail 'font.pointSize: root.font.pointSize * 2
-        font.bold: true' 'font.pixelSize: Screen.height * 0.022
-        font.bold: false'
+                --replace-fail ${lib.escapeShellArg dateOld} ${lib.escapeShellArg dateNew} \
+                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 1.0'
+
+              # Read back with:
+              #   journalctl -b -u display-manager | grep GREETER-METRICS
+              substituteInPlace "$clock" \
+                --replace-fail ${lib.escapeShellArg importOld} ${lib.escapeShellArg importNew} \
+                --replace-fail ${lib.escapeShellArg logOld} ${lib.escapeShellArg logNew}
             '';
           });
     in
