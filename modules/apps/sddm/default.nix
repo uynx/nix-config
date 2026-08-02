@@ -24,6 +24,29 @@
       importOld = "import QtQuick.Controls 2.15";
       importNew = "import QtQuick.Controls 2.15\nimport QtQuick.Window 2.15";
 
+      # DIAGNOSTIC (remove once the greeter is confirmed to read this file).
+      # Every QML edit so far has had zero visible effect while config-file edits
+      # (Font) landed, so the question is no longer what size to use but whether
+      # the greeter reads this QML at all. These make the answer unmistakable:
+      # an absolute pixel size that no inheritance or DPI can alter, and a
+      # hardcoded colour that bypasses the theme config the way the font does
+      # not. Red 40px clock => this file is live. Unchanged huge amber clock =>
+      # it is not, and the theme being rendered lives somewhere else.
+      timeOld = "font.pointSize: root.font.pointSize * 9\n        font.bold: true\n        color: config.TimeTextColor";
+      timeNew = "font.pixelSize: 40\n        font.bold: true\n        color: \"#ff0000\"";
+
+      # Main.qml is the theme's MainScript, so it certainly runs. If its line
+      # appears in the journal and Clock.qml's does not, Clock.qml is not being
+      # executed. If neither appears, greeter output simply never reaches the
+      # journal and the colour test above is the only signal that counts.
+      mainOld = "    focus: true";
+      mainNew =
+        "    focus: true\n\n    Component.onCompleted: console.log(\"GREETER-MAIN"
+        + " screenH=\" + Screen.height"
+        + " + \" dpr=\" + Screen.devicePixelRatio"
+        + " + \" rootPt=\" + root.font.pointSize"
+        + " + \" h=\" + height + \" w=\" + width)";
+
       logOld = "    Component.onCompleted: {\n        dateLabel.updateTime()";
       logNew =
         "    Component.onCompleted: {\n        console.log(\"GREETER-METRICS"
@@ -128,7 +151,8 @@
                 --replace-fail 'FontSize="12"' 'FontSize=""'
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
-                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 70)'
+                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 70)' \
+                --replace-fail ${lib.escapeShellArg mainOld} ${lib.escapeShellArg mainNew}
               # Sizes stay in POINTS, as multiples of root.font.pointSize.
               #
               # An earlier attempt moved the clock to font.pixelSize to escape
@@ -151,7 +175,7 @@
               # '* 2.x' the time rule could otherwise write.
               substituteInPlace "$clock" \
                 --replace-fail ${lib.escapeShellArg dateOld} ${lib.escapeShellArg dateNew} \
-                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 1.0'
+                --replace-fail ${lib.escapeShellArg timeOld} ${lib.escapeShellArg timeNew}
 
               # Read back with:
               #   journalctl -b -u display-manager | grep GREETER-METRICS
