@@ -28,7 +28,9 @@
             # this 3024x1890 display. See the Main.qml fix below.
             ScreenWidth = "";
             ScreenHeight = "";
-            Font = "Hack Nerd Font";
+            # Hack is the coding font (ghostty, nvim) and looks wrong as UI
+            # chrome. Cantarell is already in fonts.packages and is a UI sans.
+            Font = "Cantarell";
             FontSize = "";
             HourFormat = "h:mm AP";
 
@@ -100,9 +102,13 @@
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
                 --replace-fail 'parseInt(height / 80)' 'parseInt(height / 70)'
+              # Date first, then time: '* 2' is a prefix of any '* 2.x' the time
+              # rule could write, so the reverse order corrupts the file.
+              # Base is parseInt(1890 / 70) = 27pt on this panel, so the clock
+              # lands at 38pt and the date at 24pt.
               substituteInPlace "$clock" \
-                --replace-fail 'font.pointSize: root.font.pointSize * 2' 'font.pointSize: root.font.pointSize * 1.2' \
-                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 2.0'
+                --replace-fail 'font.pointSize: root.font.pointSize * 2' 'font.pointSize: root.font.pointSize * 0.9' \
+                --replace-fail 'font.pointSize: root.font.pointSize * 9' 'font.pointSize: root.font.pointSize * 1.4'
             '';
           });
     in
