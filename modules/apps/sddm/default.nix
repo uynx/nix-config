@@ -144,6 +144,10 @@
         # which the QML needs on its import path inside the greeter.
         extraPackages = theme.propagatedBuildInputs ++ [ pkgs.kdePackages.qt5compat ];
         settings.Theme.CursorTheme = "capitaine-cursors";
+        # SDDM's own channel for handing environment to the greeter, which does
+        # not inherit the service's. Belt and braces with the cache wipe in
+        # preStart: either one alone is enough, and both are nearly free.
+        settings.General.GreeterEnvironment = "QML_DISABLE_DISK_CACHE=1";
       };
 
       # SDDM resolves themes from the system profile, not from extraPackages.
@@ -165,6 +169,15 @@
       systemd.services.display-manager = {
         preStart = ''
           until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done
+
+          # Delete the greeter's compiled-QML cache before every start. Qt only
+          # reuses it when the source path and mtime match, and on NixOS both are
+          # permanently fixed, so it never expires on its own and the greeter
+          # redraws whichever theme it compiled first. Removing the directory is
+          # the one approach that does not depend on an environment variable
+          # reaching the greeter, which is a separate process that sddm-helper
+          # starts with a session environment of its own.
+          rm -rf /var/lib/sddm/.cache
         '';
         serviceConfig.TimeoutStartSec = "60s";
 
