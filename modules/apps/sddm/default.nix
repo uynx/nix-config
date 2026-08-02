@@ -13,51 +13,22 @@
       # postInstall: a Nix '' block strips the common leading indentation, so a
       # pattern's second line silently loses the eight spaces it must match and
       # substituteInPlace fails with a pattern-not-found error.
-      dateOld = "font.pointSize: root.font.pointSize * 2\n        font.bold: true";
-      dateNew = "font.pointSize: root.font.pointSize * 0.6\n        font.bold: false";
-
-      # Temporary diagnostics: the greeter reports the numbers it actually
-      # renders with, which cannot be observed any other way — a headless render
-      # uses a different DPI, and a preview inside the desktop session sees the
-      # panel at half height because eDP-1 is scale 2.0 there.
+      # The clock is sized in PIXELS as a fraction of the panel rather than in
+      # points off the base font, so it is independent of DPI and of compositor
+      # scale and a headless render predicts the greeter exactly. The theme's
+      # layout still measures itself in root.font.pointSize; only these two
+      # labels change unit. Date is unbolded — bold reads as heavy at its size.
+      #
       # Screen lives in QtQuick.Window, which Clock.qml does not import.
       importOld = "import QtQuick.Controls 2.15";
       importNew = "import QtQuick.Controls 2.15\nimport QtQuick.Window 2.15";
 
-      # DIAGNOSTIC (remove once the greeter is confirmed to read this file).
-      # Every QML edit so far has had zero visible effect while config-file edits
-      # (Font) landed, so the question is no longer what size to use but whether
-      # the greeter reads this QML at all. These make the answer unmistakable:
-      # an absolute pixel size that no inheritance or DPI can alter, and a
-      # hardcoded colour that bypasses the theme config the way the font does
-      # not. Red 40px clock => this file is live. Unchanged huge amber clock =>
-      # it is not, and the theme being rendered lives somewhere else.
-      timeOld = "font.pointSize: root.font.pointSize * 9\n        font.bold: true\n        color: config.TimeTextColor";
-      timeNew = "font.pixelSize: 40\n        font.bold: true\n        color: \"#ff0000\"";
-
-      # Main.qml is the theme's MainScript, so it certainly runs. If its line
-      # appears in the journal and Clock.qml's does not, Clock.qml is not being
-      # executed. If neither appears, greeter output simply never reaches the
-      # journal and the colour test above is the only signal that counts.
-      mainOld = "    focus: true";
-      mainNew =
-        "    focus: true\n\n    Component.onCompleted: console.log(\"GREETER-MAIN"
-        + " screenH=\" + Screen.height"
-        + " + \" dpr=\" + Screen.devicePixelRatio"
-        + " + \" rootPt=\" + root.font.pointSize"
-        + " + \" h=\" + height + \" w=\" + width)";
-
-      logOld = "    Component.onCompleted: {\n        dateLabel.updateTime()";
-      logNew =
-        "    Component.onCompleted: {\n        console.log(\"GREETER-METRICS"
-        + " screenH=\" + Screen.height"
-        + " + \" dpr=\" + Screen.devicePixelRatio"
-        + " + \" physDpi=\" + (Screen.pixelDensity * 25.4)"
-        + " + \" rootPt=\" + root.font.pointSize"
-        + " + \" timePt=\" + timeLabel.font.pointSize"
-        + " + \" timePx=\" + timeLabel.font.pixelSize"
-        + " + \" datePx=\" + dateLabel.font.pixelSize)"
-        + "\n        dateLabel.updateTime()";
+      # Two lines, so the date's bold is changed without touching the time's
+      # identical one. Ordering matters below: '* 2' is a prefix of any '* 2.x'.
+      dateOld = "font.pointSize: root.font.pointSize * 2\n        font.bold: true";
+      dateNew = "font.pixelSize: Screen.height * 0.022\n        font.bold: false";
+      timeOld = "font.pointSize: root.font.pointSize * 9";
+      timeNew = "font.pixelSize: Screen.height * 0.055";
 
       # Flexoki Dark, same values as ghostty, neovim and noctalia.
       bg = "#100f0f";
@@ -149,39 +120,17 @@
                 --replace-fail 'ScreenWidth="1920"' 'ScreenWidth=""' \
                 --replace-fail 'ScreenHeight="1080"' 'ScreenHeight=""' \
                 --replace-fail 'FontSize="12"' 'FontSize=""'
+              # 85, not the theme's 80: the base font drives every field height,
+              # spacing and margin in the theme, and the login inputs read a
+              # little large at 80.
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
-                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 70)' \
-                --replace-fail ${lib.escapeShellArg mainOld} ${lib.escapeShellArg mainNew}
-              # Sizes stay in POINTS, as multiples of root.font.pointSize.
-              #
-              # An earlier attempt moved the clock to font.pixelSize to escape
-              # DPI scaling. That cannot work here: the root Pane sets
-              # font.pointSize, QML inherits that down the tree, and a QFont
-              # holds either a point size or a pixel size — never both — so an
-              # inherited pointSize and a child pixelSize fight and the result
-              # is not reliably the child's. The theme also uses
-              # root.font.pointSize as its LAYOUT unit (field heights, spacings,
-              # margins, icon sizes, ~20 bindings), so points cannot be
-              # abandoned without rescaling all of them. Do not reintroduce
-              # pixelSize for one label.
-              #
-              # The date rule spans two lines so it can unbold that label alone
-              # without a second pass — the time label's bold line is identical,
-              # and only the preceding size line tells them apart. Bold reads as
-              # chunky at the date's size; set it back to true to undo.
-              #
-              # Ordering: date before time, because '* 2' is a prefix of any
-              # '* 2.x' the time rule could otherwise write.
-              substituteInPlace "$clock" \
-                --replace-fail ${lib.escapeShellArg dateOld} ${lib.escapeShellArg dateNew} \
-                --replace-fail ${lib.escapeShellArg timeOld} ${lib.escapeShellArg timeNew}
+                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 85)'
 
-              # Read back with:
-              #   journalctl -b -u display-manager | grep GREETER-METRICS
               substituteInPlace "$clock" \
                 --replace-fail ${lib.escapeShellArg importOld} ${lib.escapeShellArg importNew} \
-                --replace-fail ${lib.escapeShellArg logOld} ${lib.escapeShellArg logNew}
+                --replace-fail ${lib.escapeShellArg dateOld} ${lib.escapeShellArg dateNew} \
+                --replace-fail ${lib.escapeShellArg timeOld} ${lib.escapeShellArg timeNew}
             '';
           });
     in
@@ -218,6 +167,22 @@
           until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done
         '';
         serviceConfig.TimeoutStartSec = "60s";
+
+        # Qt caches compiled QML under ~/.cache/sddm-greeter-qt6/qmlcache and
+        # decides the cache is still current by comparing the source file's path
+        # and mtime. On NixOS neither can ever change: the greeter loads the
+        # theme through /run/current-system/sw/..., which is identical in every
+        # generation, and every store file's mtime is the epoch. So the cache
+        # never invalidates and the greeter renders whichever QML it happened to
+        # compile first, discarding every later edit — silently, with no error
+        # and no fallback. Theme *config* changes still applied, because SDDM
+        # reads those in C++ rather than through QML, which is what made this
+        # look like the QML edits were landing somewhere unrelated.
+        #
+        # Compiling the theme afresh each start costs milliseconds. Do not
+        # remove this without giving the greeter some other way to notice that
+        # its QML changed.
+        environment.QML_DISABLE_DISK_CACHE = "1";
       };
 
       services.gnome.gnome-keyring.enable = true;
