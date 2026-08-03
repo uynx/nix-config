@@ -1,15 +1,10 @@
 {
-  # AI tooling. The three CLIs are pinned derivations in _ai-clis.nix, bumped
-  # from each vendor's own release feed by `update-ai-clis` — read those two for
-  # the pattern before adding another AI app.
-  #
-  # `agy` is the one exception to the pinning above, and it is deliberate: it
-  # has its own `update` subcommand, which `update` calls. Pinning it is not
-  # possible anyway — its updater service exposes the current version but builds
-  # the download URL at runtime from split Go constants, so there is no URL to
-  # fetch. Installing on a new machine is a manual download.
-  #
-  # The Antigravity GUI was removed 2026-07-26; only the CLI remains.
+  # claude, codex and grok are pinned derivations in _ai-clis.nix, bumped by
+  # `update-ai-clis`. claude also ships its own updater, which would reinstall
+  # into ~/.local and shadow the pin, so it is switched off via
+  # DISABLE_AUTOUPDATER in ~/.claude/settings.json — the pin only wins while
+  # that stays set. `agy` is unpinnable (it builds its download URL at runtime)
+  # and updates itself on purpose.
   flake.homeModules.aiTools =
     {
       config,
@@ -143,10 +138,9 @@
         aiClis.grok
       ];
 
-      # ~/.grok/bin is gone with the vendor installer. ~/.local/bin stays only
-      # for `agy`; note it is PREPENDED, so any leftover binary there shadows
-      # the packaged one — the old claude/codex/grok copies had to be deleted.
-      home.sessionPath = [ "${home}/.local/bin" ];
+      # Appended, not home.sessionPath: that prepends, letting a self-installed
+      # binary here silently outrank its pinned version.
+      home.sessionVariables.PATH = "$PATH:${home}/.local/bin";
 
       # The only things left pointing outside the store, deliberately: the agent
       # skills and AGENTS.md are rewritten by the memory workflow constantly, so
