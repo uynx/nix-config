@@ -439,10 +439,10 @@
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-stable": "nixpkgs-stable",
         "nvf": "nvf",
-        "wrappers": "wrappers"
+        "wrapper-modules": "wrapper-modules"
       }
     },
-    "wrappers": {
+    "wrapper-modules": {
       "inputs": {
         "nixpkgs": [
           "nixpkgs"

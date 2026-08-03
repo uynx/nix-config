@@ -9,7 +9,7 @@
     inputs.nix-darwin.flakeModules.default
 
     # Declares flake.wrappers. Wrapped programs also appear as packages.*.<name>.
-    inputs.wrappers.flakeModules.wrappers
+    inputs.wrapper-modules.flakeModules.wrappers
   ];
 
   # Architectures perSystem blocks get evaluated for. This is about package
