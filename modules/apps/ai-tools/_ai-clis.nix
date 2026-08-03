@@ -20,6 +20,7 @@
 # keep this one-line-per-tool layout exactly as it is.
 let
   pins = {
+    claude-code = { version = "2.1.220"; hash = "sha256-FZ5KUdeW878UZ3V3EA9++4RWEbHOrwwwy9jUZQ2UIYU="; };
     codex = { version = "0.146.0"; hash = "sha256-l1uskVYqvu3rj3ljbVGoZkmzHzSp3mo7ywWVZbbPH4c="; };
     grok = { version = "0.2.118"; hash = "sha256-VAEOM1qs5rXe3QIlOeznvIPzglPoY2qvB5ZWKu7LLmc="; };
   };
@@ -32,6 +33,28 @@ let
   };
 in
 {
+  # Bare binary, dynamically linked. Deliberately NOT autoPatchelf'd: it is a
+  # Bun single-file executable with its payload appended after the ELF, and
+  # rewriting the ELF shifts that payload out of reach — the binary then
+  # silently degrades into the plain Bun runtime and `claude --version` reports
+  # Bun's version instead. nix-ld already supplies /lib/ld-linux-aarch64.so.1,
+  # so it runs unmodified.
+  claude-code = stdenvNoCC.mkDerivation {
+    pname = "claude-code";
+    inherit (pins.claude-code) version;
+    src = fetchurl {
+      url = "https://downloads.claude.ai/claude-code-releases/${pins.claude-code.version}/linux-arm64/claude";
+      inherit (pins.claude-code) hash;
+    };
+    dontUnpack = true;
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 "$src" "$out/bin/claude"
+      runHook postInstall
+    '';
+    meta = meta "https://code.claude.com" "Anthropic's Claude Code CLI" // { mainProgram = "claude"; };
+  };
+
   # Tarball containing a single statically-linked musl binary.
   codex = stdenvNoCC.mkDerivation {
     pname = "codex";
