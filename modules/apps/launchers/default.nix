@@ -1,12 +1,7 @@
 {
-  # App-launch shortcuts for Mod+P / Mod+N / Mod+M, previously loose shell
-  # scripts in ~/dotfiles. Both were still querying `hyprctl`, which has not
-  # existed since the move to niri, so neither had worked since the switch.
-  #
-  # These are niri-only. The old scripts also carried an aerospace branch for
-  # macOS; that half is in the dotfiles repo's git history and should come back
-  # as a darwin variant of this module when that host actually exists, rather
-  # than sitting here untested.
+  # Mod+P / Mod+N / Mod+M launchers. niri-only; the old scripts' macOS aerospace
+  # branch is in dotfiles git history, to return as a darwin variant if that host
+  # ever exists.
   flake.homeModules.launchers =
     { pkgs, lib, ... }:
     let
@@ -15,14 +10,8 @@
     in
     {
       home.packages = [
-        # Focus the ghostty on this workspace, or open one attached to that
-        # workspace's own tmux session. `new-session -A` is attach-or-create, so
-        # the whole thing is idempotent and there is no state to keep in sync.
-        #
-        # Keyed on the niri workspace id, which is stable for as long as the
-        # workspace exists but is not reused across reboots — a deliberate
-        # trade for keeping niri's dynamic workspaces rather than pinning six
-        # named ones to outputs.
+        # Focus this workspace's ghostty, or open one on its own tmux session.
+        # Keyed on niri's workspace id, which is not reused across reboots.
         (pkgs.writeShellApplication {
           name = "ghostty-activation";
           runtimeInputs = [
@@ -72,19 +61,12 @@
         })
       ];
 
-      # Anything that opens a link — xdg-open, a chat client, a mail app — runs
-      # brave-origin.desktop, whose packaged Exec carries no --user-data-dir and
-      # so lands in ~/.config/BraveSoftware/Brave-Origin: a third, empty profile
-      # with none of the logins, and a separate singleton lock, which is why it
-      # also spawns its own window instead of a tab in the running browser.
+      # Shadows the packaged brave-origin.desktop, whose Exec has no
+      # --user-data-dir and so opens an empty third profile in its own window.
+      # Same filename fixes every consumer without touching mimeapps.
       #
-      # Same entry name as the package's, so this copy in ~/.local/share
-      # shadows it and every consumer is fixed without touching mimeapps.
-      #
-      # home.file rather than xdg.desktopEntries: the latter routes through
-      # xdg.dataFile, which is gated on `xdg.enable`, and that is false here —
-      # so it writes nothing at all. (The same silence applies to the existing
-      # xdg.desktopEntries.steam, which the Steam module's generator covers.)
+      # home.file, not xdg.desktopEntries: that routes through xdg.dataFile,
+      # which is gated on xdg.enable — false here, so it writes nothing.
       home.file.".local/share/applications/brave-origin.desktop".text = ''
         [Desktop Entry]
         Type=Application
