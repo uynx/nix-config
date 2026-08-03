@@ -2,6 +2,7 @@
   lib,
   stdenvNoCC,
   fetchurl,
+  cursor-cli,
 }:
 
 # Vendor-distributed AI CLIs, pinned by hash and bumped by `update-ai-clis`.
@@ -23,6 +24,7 @@ let
     claude-code = { version = "2.1.220"; hash = "sha256-FZ5KUdeW878UZ3V3EA9++4RWEbHOrwwwy9jUZQ2UIYU="; };
     codex = { version = "0.146.0"; hash = "sha256-l1uskVYqvu3rj3ljbVGoZkmzHzSp3mo7ywWVZbbPH4c="; };
     grok = { version = "0.2.118"; hash = "sha256-VAEOM1qs5rXe3QIlOeznvIPzglPoY2qvB5ZWKu7LLmc="; };
+    cursor-agent = { version = "2026.07.23-e383d2b"; hash = "sha256-9AuZZHyyTg2ohel2IKIEgDTx/olhkQ1XPYJ9d8TSbcs="; };
   };
 
   meta = homepage: desc: {
@@ -88,4 +90,15 @@ in
     '';
     meta = meta "https://x.ai/cli" "x.ai's official Grok CLI" // { mainProgram = "grok"; };
   };
+
+  # Not built here: nixpkgs already handles the node wrapper and native-module
+  # patching, and only its source lags. Overriding src keeps that work and
+  # tracks today's release without a flake update.
+  cursor-agent = cursor-cli.overrideAttrs (_: {
+    inherit (pins.cursor-agent) version;
+    src = fetchurl {
+      url = "https://downloads.cursor.com/lab/${pins.cursor-agent.version}/linux/arm64/agent-cli-package.tar.gz";
+      inherit (pins.cursor-agent) hash;
+    };
+  });
 }
