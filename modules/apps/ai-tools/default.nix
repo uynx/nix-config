@@ -1,15 +1,7 @@
 {
-  # AI tooling. The three CLIs are pinned derivations in _ai-clis.nix, bumped
-  # from each vendor's own release feed by `update-ai-clis` — read those two for
-  # the pattern before adding another AI app.
-  #
-  # `agy` is the one exception to the pinning above, and it is deliberate: it
-  # has its own `update` subcommand, which `update` calls. Pinning it is not
-  # possible anyway — its updater service exposes the current version but builds
-  # the download URL at runtime from split Go constants, so there is no URL to
-  # fetch. Installing on a new machine is a manual download.
-  #
-  # The Antigravity GUI was removed 2026-07-26; only the CLI remains.
+  # codex and grok are pinned derivations in _ai-clis.nix, bumped by
+  # `update-ai-clis`. `agy` and `claude` are deliberately NOT pinned: both ship
+  # their own updater and reinstall into ~/.local, so a pin only loses a race.
   flake.homeModules.aiTools =
     {
       config,
@@ -55,10 +47,6 @@
             sed -i "s|^    $name = { version = \"[^\"]*\"; hash = \"[^\"]*\"; };|    $name = { version = \"$latest\"; hash = \"$hash\"; };|" "$file"
             printf '%-12s %s -> %s\n' "$name" "$current" "$latest"
           }
-
-          claude=$(curl -fsSL https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]')
-          bump claude-code "$claude" \
-            "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude"
 
           codex=$(curl -fsSL https://api.github.com/repos/openai/codex/releases/latest \
             | jq -r '.tag_name | ltrimstr("rust-v")')
@@ -138,14 +126,13 @@
 
         # Listed one by one rather than attrValues: callPackage wraps the set
         # with `override` helpers, which are not packages.
-        aiClis.claude-code
         aiClis.codex
         aiClis.grok
       ];
 
-      # ~/.grok/bin is gone with the vendor installer. ~/.local/bin stays only
-      # for `agy`; note it is PREPENDED, so any leftover binary there shadows
-      # the packaged one — the old claude/codex/grok copies had to be deleted.
+      # PREPENDED, so anything here shadows a packaged binary of the same name.
+      # That is intended for `agy` and `claude`, which own their own updates;
+      # a stray npm codex hid the pinned one here for a week (fixed 2026-08-03).
       home.sessionPath = [ "${home}/.local/bin" ];
 
       # The only things left pointing outside the store, deliberately: the agent
