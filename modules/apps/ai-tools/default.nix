@@ -62,6 +62,13 @@
 
           grok=$(curl -fsSL https://x.ai/cli/stable | tr -d '[:space:]')
           bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
+
+          # Cursor publishes no version feed; its install script hardcodes the
+          # current build id in the download URL, so read it back out of that.
+          cursor=$(curl -fsSL https://cursor.com/install \
+            | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1)
+          bump cursor-agent "$cursor" \
+            "https://downloads.cursor.com/lab/$cursor/linux/arm64/agent-cli-package.tar.gz"
         '';
       };
 
@@ -136,6 +143,8 @@
         aiClis.claude-code
         aiClis.codex
         aiClis.grok
+
+        aiClis.cursor-agent
       ];
 
       # Appended, not home.sessionPath: that prepends, letting a self-installed
