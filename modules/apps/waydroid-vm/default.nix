@@ -1,36 +1,24 @@
 { inputs, ... }:
 {
-  # A guest whose only job is to be a 4 KiB-page machine.
-  #
-  # Waydroid runs Android as an LXC container on the *host* kernel, and this
-  # laptop's Asahi kernel is 16 KiB pages, which Android cannot use — see
-  # waydroid#577, closed as not planned. Stock nixpkgs aarch64 kernels default
-  # to 4 KiB and already set ANDROID_BINDER_IPC + ANDROID_BINDERFS, so simply
-  # not using the Asahi kernel is the entire fix. No custom kernel, no DKMS.
-  #
-  # Run it with:
+  # A guest whose only job is to be a 4 KiB-page machine: Waydroid runs Android
+  # on the *host* kernel, and Asahi's is 16 KiB (waydroid#577, wontfix). Stock
+  # nixpkgs aarch64 is already 4 KiB with binder on, so that is the whole fix.
+  # Google Play Services never worked here and is not being pursued.
   #   nix run .#nixosConfigurations.waydroid.config.system.build.vm
-  # The qcow2 it creates in $PWD is where the Android image and apps live.
   flake.nixosConfigurations.waydroid = inputs.nixpkgs.lib.nixosSystem {
     system = "aarch64-linux";
     modules = [
       (
         { modulesPath, pkgs, lib, ... }:
         let
-          # show-full-ui races the container service on a cold boot, and on
-          # first boot it also waits behind the image download.
-          #
-          # Wait on the *container unit*, not on "waydroid status | grep
-          # RUNNING": the session only reaches RUNNING because show-full-ui
-          # starts it, so waiting for RUNNING first deadlocks.
+          # Wait on the container unit, not "status | grep RUNNING": the session
+          # only reaches RUNNING because show-full-ui starts it, so that deadlocks.
           launch = pkgs.writeShellScriptBin "launch-waydroid" ''
             until systemctl is-active --quiet waydroid-container; do
               sleep 2
             done
 
-            # Android doze suspends background network, which stalls WhatsApp's
-            # initial companion-mode sync partway through. There is no battery
-            # here to save, so turn it off every boot rather than by hand.
+            # Doze stalls WhatsApp's companion sync; no battery here to save.
             {
               until ${pkgs.waydroid}/bin/waydroid status 2>/dev/null \
                 | grep -q 'Session:[[:space:]]*RUNNING'; do
@@ -39,13 +27,9 @@
               sudo ${pkgs.waydroid}/bin/waydroid shell -- dumpsys deviceidle disable
               sudo ${pkgs.waydroid}/bin/waydroid shell -- svc power stayon true
 
-              # There used to be a TCP MSS clamp here, working around qemu's
-              # user-mode networking being unable to carry full-size segments
-              # (waydroid#105). passt replaced that uplink and does not need
-              # it — worse, the clamp took its size from the route MTU, and
-              # passt's route MTU is 65520, so the rule started rewriting MSS
-              # *up* to ~65480 instead of down to ~1460. Removing it restored
-              # 5.5 MB/s bulk transfer and 8/8 parallel connections.
+              # Do not re-add a TCP MSS clamp here. It existed for SLIRP; under
+              # passt the route MTU is 65520, so it clamped MSS *up* and killed
+              # throughput. Removing it restored 5.5 MB/s.
             } &
 
             exec ${pkgs.waydroid}/bin/waydroid show-full-ui
@@ -54,22 +38,15 @@
         {
           imports = [ "${modulesPath}/virtualisation/qemu-vm.nix" ];
 
-          # Android's netd builds all of its per-app networking on iptables
-          # chains (bw_* for bandwidth, fw_* for the per-app firewall). nixpkgs
-          # ships kernels with NETFILTER_XTABLES_LEGACY off, so those tables do
-          # not exist, netd installs zero chains, and every app's traffic
-          # half-works while a root shell — which bypasses the chains — looks
-          # perfectly healthy. That mismatch is why the network measured fine
-          # from ssh while the browser and WhatsApp stalled.
-          #
-          # This forces a full kernel rebuild, which is slow but is the only
-          # real fix: waydroid#105's usual workaround needs these same tables.
+          # netd builds per-app networking on legacy iptables chains, which
+          # nixpkgs kernels omit — so netd installs none, apps half-work, and a
+          # root shell (which bypasses the chains) still measures healthy. Costs
+          # a full kernel rebuild; there is no lighter fix.
           boot.kernelPatches = [
             {
               name = "iptables-legacy-for-android-netd";
               patch = null;
-              # The IP_NF_* ones only offer module-or-off, so asking for `yes`
-              # makes the config generator loop and fail.
+              # IP_NF_* are module-or-off; asking for `yes` loops the generator.
               structuredExtraConfig = with lib.kernel; {
                 NETFILTER_XTABLES_LEGACY = yes;
                 IP_NF_IPTABLES_LEGACY = module;
@@ -78,8 +55,7 @@
             }
           ];
 
-          # Load them up front rather than relying on the container to do it:
-          # netd runs early and gives no useful error when a table is missing.
+          # Load up front: netd runs early and errors uselessly on a missing table.
           boot.kernelModules = [
             "ip_tables"
             "iptable_filter"
@@ -91,52 +67,33 @@
 
           virtualisation = {
             waydroid.enable = true;
-            # 4096 was not enough. Chromium spawns a process per renderer and
-            # is happy to use a gigabyte on a heavy page; sharing that with
-            # Android, Play Services and Waydroid meant complex sites froze
-            # while video, which needs far less, played fine. The host has
-            # 15 GB.
+            # 4096 froze heavy pages: Chromium is a process per renderer. Host has 15 GB.
             memorySize = 8192;
             cores = 4;
             diskSize = 16384; # Android system image plus apps
             graphics = true;
 
-            # qemu's default uplink is SLIRP, a TCP/IP stack reimplemented in
-            # userspace. It is fine for one transfer at a time — which is
-            # exactly what every measurement here used, and why the network
-            # kept "measuring healthy" — but it is a known-weak point for what
-            # apps actually do: many parallel connections and long-lived ones.
-            # passt is the modern replacement, still unprivileged, but with a
-            # far more correct stack. qemu >= 9.2 spawns it itself.
-            #
-            # This replaces networkingOptions wholesale, so
-            # virtualisation.forwardPorts no longer applies — the ssh forward
-            # that keeps this guest debuggable moves to passt's tcp-ports.
-            # mkForce because qemu-vm.nix *defines* this list rather than only
-            # defaulting it, so a plain assignment concatenates and the guest
-            # ends up with both uplinks.
+            # passt instead of qemu's SLIRP, which is fine for one transfer at a
+            # time (why the network kept measuring healthy) but poor at the many
+            # parallel connections apps use. Replaces the list wholesale, so
+            # forwardPorts no longer applies and ssh moves to tcp-ports; mkForce
+            # because qemu-vm.nix defines rather than defaults it.
             qemu.networkingOptions = lib.mkForce [
               "-netdev passt,id=net0,path=${pkgs.passt}/bin/passt,tcp-ports=2222:22"
               "-device virtio-net-pci,netdev=net0"
             ];
             qemu.options = [
-              # qemu's aarch64 "virt" machine has no default display adapter and
-              # the NixOS VM module does not add one, so without this the guest
-              # has no /dev/dri at all and every compositor dies on startup.
-              # No display device here on purpose. The screen size has to match
-              # the monitor the window actually lands on, in *logical* pixels,
-              # or every pointer coordinate is scaled and clicks land off
-              # target. That is only knowable at launch, so the `android` fish
-              # function computes it and passes the GPU and display through
-              # QEMU_OPTS. This is the same rule the Steam launcher follows for
-              # Wine's virtual desktop.
-              # Lets pointer events be injected at exact coordinates, which is
-              # the only way to measure what Android actually receives versus
-              # what was sent. Guessing at the mapping wasted several reboots.
+              # No GPU/display device here on purpose: aarch64 "virt" has no
+              # default adapter, but the size must match the monitor the window
+              # lands on in *logical* pixels or clicks land off target. Only
+              # knowable at launch, so the `android` fish function passes both
+              # through QEMU_OPTS.
+              #
+              # QMP allows injecting pointer events at exact coordinates, the
+              # only way to compare what Android receives against what was sent.
               "-qmp unix:/tmp/waydroid-qmp.sock,server=on,wait=off"
 
-              # hda-duplex is the whole point: a call needs mic in, not just
-              # audio out. Everything else here is incidental.
+              # hda-duplex is the point: a call needs mic in, not just audio out.
               "-audiodev pipewire,id=snd0"
               "-device intel-hda"
               "-device hda-duplex,audiodev=snd0"
