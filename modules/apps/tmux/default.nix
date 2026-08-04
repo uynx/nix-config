@@ -22,11 +22,13 @@
             dir=$(zoxide query -l | fzf --reverse --height 40%) || exit 0
             name=$(basename "$dir" | tr '.:' '__')
 
-            # Restore must run before any session exists, and the restore script
-            # path only resolves once start-server has loaded the plugins.
+            # Not `start-server`: a server with no sessions exits immediately,
+            # and resurrect's restore.sh finds its socket by reading $TMUX, so
+            # it only works from inside a session. Hence the throwaway one.
             if ! tmux has-session 2>/dev/null; then
-              tmux start-server
+              tmux new-session -d -s resurrect-boot
               tmux run-shell "$(tmux show -gv @resurrect-restore-script-path)"
+              tmux kill-session -t resurrect-boot
             fi
 
             tmux new-session -d -A -s "$name" -c "$dir"
