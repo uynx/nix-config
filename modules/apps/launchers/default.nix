@@ -26,6 +26,16 @@
               exec ${niri} msg action focus-window --id "$existing"
             fi
 
+            # tmux-continuum only auto-restores when it decides the server just
+            # came up clean, and `new-session -A` creating ws$ws is exactly what
+            # makes that check fail — hence "resurrect never restores". Start the
+            # server first (which loads the plugins, hence the option below) and
+            # restore explicitly before any session exists.
+            if ! tmux has-session 2>/dev/null; then
+              tmux start-server
+              tmux run-shell "$(tmux show -gv @resurrect-restore-script-path)"
+            fi
+
             exec ghostty -e tmux new-session -A -s "ws$ws"
           '';
         })
