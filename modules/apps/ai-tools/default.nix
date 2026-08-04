@@ -211,12 +211,31 @@
         PATH = "$PATH:${home}/.local/bin";
       };
 
-      # Deliberately outside the store: the memory workflow rewrites these
-      # constantly and a read-only store symlink would break it.
-      home.file = {
-        ".agents/skills".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
-        ".agents/AGENTS.md".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
-      };
+      # One set of skills and one AGENTS.md, wired to wherever each CLI expects
+      # to find them. Deliberately outside the store: the memory workflow
+      # rewrites both constantly and a read-only store symlink would break it.
+      #
+      # kimi-code and openclaw read ~/.agents directly and so need nothing here.
+      # cursor-agent has no user-level path at all — it reads AGENTS.md from a
+      # project root only. codex keeps its own ~/.codex/skills of vendor skills,
+      # so only its instruction file is linked.
+      home.file =
+        lib.genAttrs
+          [
+            ".agents/AGENTS.md"
+            ".claude/CLAUDE.md"
+            ".codex/AGENTS.md"
+            ".grok/AGENTS.md"
+            ".config/opencode/AGENTS.md"
+          ]
+          (_: { source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md"; })
+        // lib.genAttrs
+          [
+            ".agents/skills"
+            ".claude/skills"
+            ".grok/skills"
+          ]
+          (_: { source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills"; });
 
       home.activation.createRequiredDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         mkdir -p \
@@ -224,6 +243,17 @@
           "${home}/ai_memory/journal" \
           "${home}/dotfiles" \
           "${home}/nixos-config"
+      '';
+
+      # hermes finds extra skills through a config key rather than a path, and
+      # writes that config itself, so it cannot be a store symlink. Appending is
+      # safe only while it has no `skills:` block of its own; if it grows one,
+      # the key has to be merged in by hand instead.
+      home.activation.hermesSharedSkills = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        cfg="${home}/.hermes/config.yaml"
+        if [ -f "$cfg" ] && ! grep -qE '^skills:|external_dirs' "$cfg"; then
+          printf '\nskills:\n  external_dirs:\n    - %s\n' "${home}/.agents/skills" >>"$cfg"
+        fi
       '';
 
       # agy, openclaw, t3 and hermes cannot be pinned, so a fresh machine would
