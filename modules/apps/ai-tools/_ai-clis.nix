@@ -12,7 +12,7 @@ let
     claude-code = { version = "2.1.221"; hash = "sha256-08Wda8xK3PTNhavKO8E/oRMaNMsy+YK98DDYOjsR5wA="; };
     codex = { version = "0.146.0"; hash = "sha256-l1uskVYqvu3rj3ljbVGoZkmzHzSp3mo7ywWVZbbPH4c="; };
     grok = { version = "0.2.118"; hash = "sha256-VAEOM1qs5rXe3QIlOeznvIPzglPoY2qvB5ZWKu7LLmc="; };
-    kimi = { version = "1.49.0"; hash = "sha256-WsVMq84W7eJ7nSBpubiO3uJVKGRue7W++pmAocpx/rs="; };
+    kimi = { version = "0.31.1"; hash = "sha256-QL3gBq8pxVl6mEV+218lAA54qP4zp1qxnnJMEJLMzKA="; };
     opencode = { version = "1.18.12"; hash = "sha256-grnFFXt64QrLX+rO2wfJCpttzpTvs7cGDIY7BzpiKtA="; };
     cursor-agent = { version = "2026.07.23-e383d2b"; hash = "sha256-9AuZZHyyTg2ohel2IKIEgDTx/olhkQ1XPYJ9d8TSbcs="; };
   };
@@ -75,20 +75,25 @@ in
     meta = meta "https://x.ai/cli" "x.ai's official Grok CLI" // { mainProgram = "grok"; };
   };
 
+  # Kimi Code, the rebuilt successor to the Python kimi-cli. Its own installer
+  # renames the first `kimi` on PATH to `kimi-legacy` and deletes later
+  # duplicates, which would maul the store path — pin it here instead and never
+  # run `/upgrade`. Versions come from code.kimi.com, not GitHub, which is still
+  # publishing the old 1.x line.
   kimi = stdenvNoCC.mkDerivation {
     pname = "kimi";
     inherit (pins.kimi) version;
     src = fetchurl {
-      url = "https://github.com/MoonshotAI/kimi-cli/releases/download/${pins.kimi.version}/kimi-${pins.kimi.version}-aarch64-unknown-linux-gnu.tar.gz";
+      url = "https://code.kimi.com/kimi-code/binaries/${pins.kimi.version}/kimi-code-linux-arm64";
       inherit (pins.kimi) hash;
     };
-    sourceRoot = ".";
+    dontUnpack = true;
     installPhase = ''
       runHook preInstall
-      install -Dm755 kimi "$out/bin/kimi"
+      install -Dm755 "$src" "$out/bin/kimi"
       runHook postInstall
     '';
-    meta = meta "https://github.com/MoonshotAI/kimi-cli" "Moonshot's Kimi CLI" // { mainProgram = "kimi"; };
+    meta = meta "https://code.kimi.com" "Moonshot's Kimi Code CLI" // { mainProgram = "kimi"; };
   };
 
   # Bun-compiled like claude-code, so the same no-autoPatchelf rule applies.
