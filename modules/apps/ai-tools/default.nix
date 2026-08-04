@@ -219,6 +219,11 @@
         # Appended, not home.sessionPath: that prepends, letting a self-installed
         # binary here silently outrank its pinned version.
         PATH = "$PATH:${home}/.local/bin";
+
+        # hermes' browser tool otherwise makes Playwright fetch its own Ubuntu
+        # Chromium, which will not run unpatched here. Reuses the brave-origin
+        # already built for this host rather than adding 3.2 GB of pkgs.chromium.
+        AGENT_BROWSER_EXECUTABLE_PATH = "${config.programs.chromium.package}/bin/brave-origin";
       };
 
       # One set of skills and one AGENTS.md, wired to wherever each CLI expects
