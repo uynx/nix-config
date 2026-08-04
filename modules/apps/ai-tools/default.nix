@@ -1,10 +1,9 @@
 {
-  # claude, codex and grok are pinned derivations in _ai-clis.nix, bumped by
-  # `update-ai-clis`. claude also ships its own updater, which would reinstall
-  # into ~/.local and shadow the pin, so it is switched off via
-  # DISABLE_AUTOUPDATER in ~/.claude/settings.json — the pin only wins while
-  # that stays set. `agy` is unpinnable (it builds its download URL at runtime)
-  # and updates itself on purpose.
+  # claude, codex, grok and kimi are pinned by hash in _ai-clis.nix and bumped
+  # by `update-ai-clis`. Everything else AI (agy, cursor-agent, opencode,
+  # openclaw, t3code, hermes) publishes no pinnable artifact, so it self-installs
+  # into ~/.local/bin and rolls. claude's own updater is off via
+  # DISABLE_AUTOUPDATER so the pin wins.
   flake.homeModules.aiTools =
     {
       config,
@@ -19,13 +18,6 @@
 
       aiClis = pkgs.callPackage ./_ai-clis.nix { };
 
-      # Bumps the pins in _ai-clis.nix from each vendor's own release feed, so a
-      # rebuild ships today's CLI without dragging the rest of nixpkgs forward.
-      # Run by the `update` alias alongside update-brave-origin.
-      #
-      # Each tool needs two things: where to ask for the latest version, and how
-      # to build the download URL from it. Adding a tool means one more `bump`
-      # call here plus a matching entry in _ai-clis.nix.
       update-ai-clis = pkgs.writeShellApplication {
         name = "update-ai-clis";
         runtimeInputs = with pkgs; [
@@ -63,12 +55,12 @@
           grok=$(curl -fsSL https://x.ai/cli/stable | tr -d '[:space:]')
           bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
 
-          # Cursor publishes no version feed; its install script hardcodes the
-          # current build id in the download URL, so read it back out of that.
-          cursor=$(curl -fsSL https://cursor.com/install \
-            | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1)
-          bump cursor-agent "$cursor" \
-            "https://downloads.cursor.com/lab/$cursor/linux/arm64/agent-cli-package.tar.gz"
+
+          kimi=$(curl -fsSL https://api.github.com/repos/MoonshotAI/kimi-cli/releases/latest \
+            | jq -r .tag_name)
+          bump kimi "$kimi" \
+            "https://github.com/MoonshotAI/kimi-cli/releases/download/$kimi/kimi-$kimi-aarch64-unknown-linux-gnu.tar.gz"
+
         '';
       };
 
@@ -138,14 +130,13 @@
         dictate
         update-ai-clis
 
-        # Listed one by one rather than attrValues: callPackage wraps the set
-        # with `override` helpers, which are not packages.
         aiClis.claude-code
         aiClis.codex
         aiClis.grok
 
-        aiClis.cursor-agent
+        aiClis.kimi
       ];
+
 
       # Appended, not home.sessionPath: that prepends, letting a self-installed
       # binary here silently outrank its pinned version.
