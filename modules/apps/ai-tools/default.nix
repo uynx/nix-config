@@ -15,6 +15,15 @@
 
       aiClis = pkgs.callPackage ./_ai-clis.nix { };
 
+      skillsDir = "${home}/dotfiles/skills";
+      sharedSkills =
+        if builtins.pathExists skillsDir then
+          builtins.attrNames (
+            lib.filterAttrs (n: t: t == "directory" && !lib.hasPrefix "." n) (builtins.readDir skillsDir)
+          )
+        else
+          [ ];
+
       update-ai-clis = pkgs.writeShellApplication {
         name = "update-ai-clis";
         runtimeInputs = with pkgs; [
@@ -109,6 +118,7 @@
           roll agy      agy update
           roll openclaw npm install -g --prefix "${home}/.local" openclaw
           roll t3       npm install -g --prefix "${home}/.local" t3
+          roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
           # Vendor installer, not `uv tool install`: upstream marks every pypi
           # install unsupported. It brings its own node and uv under ~/.hermes,
           # so it costs minutes and is only worth running when hermes is absent.
@@ -215,10 +225,8 @@
       # to find them. Deliberately outside the store: the memory workflow
       # rewrites both constantly and a read-only store symlink would break it.
       #
-      # kimi-code and openclaw read ~/.agents directly and so need nothing here.
-      # cursor-agent has no user-level path at all — it reads AGENTS.md from a
-      # project root only. codex keeps its own ~/.codex/skills of vendor skills,
-      # so only its instruction file is linked.
+      # Cursor is the one tool that gets skills but not instructions: its user
+      # rules are .mdc files with frontmatter, which a plain AGENTS.md is not.
       home.file =
         lib.genAttrs
           [
@@ -226,6 +234,9 @@
             ".claude/CLAUDE.md"
             ".codex/AGENTS.md"
             ".grok/AGENTS.md"
+            ".kimi-code/AGENTS.md"
+            ".openclaw/AGENTS.md"
+            ".qwen/QWEN.md"
             ".config/opencode/AGENTS.md"
           ]
           (_: { source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md"; })
@@ -234,8 +245,24 @@
             ".agents/skills"
             ".claude/skills"
             ".grok/skills"
+            ".cursor/skills"
+            ".kimi-code/skills"
+            ".openclaw/skills"
+            ".qwen/skills"
+            ".config/opencode/skills"
           ]
-          (_: { source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills"; });
+          (_: { source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills"; })
+        # codex is the exception: ~/.codex/skills already holds its own vendor
+        # skills under .system, and a directory symlink would displace them. So
+        # each skill is linked individually alongside them. Read impurely
+        # because the source is a working copy, not a flake input; a machine
+        # without the dotfiles clone simply gets none.
+        // lib.listToAttrs (
+          map (skill: {
+            name = ".codex/skills/${skill}";
+            value.source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills/${skill}";
+          }) sharedSkills
+        );
 
       home.activation.createRequiredDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         mkdir -p \
