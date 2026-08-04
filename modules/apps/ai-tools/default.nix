@@ -1,8 +1,8 @@
 {
-  # `update-ai-clis` is the only entry point for every AI CLI. Anything shipping
-  # an aarch64-linux artifact is pinned in _ai-clis.nix and the script rewrites
-  # the pin (needs `reb` after). agy, openclaw, t3code and hermes ship none, so
-  # the same script runs their own installers into ~/.local/bin.
+  # `update-ai-clis` is the only entry point for every AI CLI. Tools shipping an
+  # aarch64-linux artifact are pinned in _ai-clis.nix and the script rewrites
+  # the pin (needs `reb` after); the rest get their vendor installer run into
+  # ~/.local/bin.
   flake.homeModules.aiTools =
     {
       config,
@@ -12,8 +12,6 @@
     }:
     let
       home = "/home/uynx";
-      N = "${lib.getExe pkgs.niri}";
-      J = "${lib.getExe pkgs.jq}";
 
       aiClis = pkgs.callPackage ./_ai-clis.nix { };
 
@@ -27,8 +25,8 @@
           nodejs
           uv
 
-          # t3code pulls node-pty, which ships no linux-arm64 prebuild and so
-          # compiles on install. Without these npm dies on `c++: not found`.
+          # t3 pulls node-pty, which has no linux-arm64 prebuild and compiles on
+          # install. Without these npm dies on `c++: not found`.
           python3
           gnumake
           gcc
@@ -80,8 +78,8 @@
           echo
           echo 'rolling (takes effect now, no rebuild):'
 
-          # Keep stderr: a swallowed failure here reads exactly like a success,
-          # which is how this ended up installing nothing at all.
+          # Keep stderr: a swallowed failure here reads exactly like success,
+          # which is how this once installed nothing at all.
           roll() {
             printf '  %-12s ' "$1"
             shift
@@ -95,21 +93,19 @@
 
           roll agy      agy update
           roll openclaw npm install -g --prefix "$HOME/.local" openclaw
-          roll t3code   npm install -g --prefix "$HOME/.local" t3
+          roll t3       npm install -g --prefix "$HOME/.local" t3
           roll hermes   uv tool install --upgrade hermes-agent
         '';
       };
 
-      # 140 MB, pinned by hash instead of curl'd on first run into
-      # ~/.local/share, so dictation works on a fresh machine with no network.
+      # Pinned rather than fetched on first run, so dictation works offline.
       whisperModel = pkgs.fetchurl {
         url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
         hash = "sha256-oDd5yG3zMjB19eeWyyzlAp8A7Ihp7uP9+4l6/jbG0AI=";
       };
 
       # Push-to-talk dictation: first press records, second transcribes and
-      # types the result. Was a loose script in ~/dotfiles pointing at an
-      # imperatively-installed whisper binary; both are now store paths.
+      # types the result.
       dictate = pkgs.writeShellApplication {
         name = "dictate";
         runtimeInputs = with pkgs; [
@@ -135,9 +131,8 @@
             [ -f "$audio" ] || exit 0
             notify-send "Whisper Dictation" "Transcribing..." -i microphone-sensitivity-high-symbolic || true
 
-            # writeShellApplication turns on errexit and pipefail, so without the
-            # `|| true` a non-zero whisper-cli aborts here and the "no speech"
-            # branch below can never run.
+            # writeShellApplication sets errexit and pipefail, so without
+            # `|| true` the "no speech" branch below can never run.
             text=$(whisper-cli -m "$model" -f "$audio" --no-timestamps -nt 2>/dev/null \
               | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
             rm -f "$audio"
@@ -160,7 +155,6 @@
     in
     {
       home.packages = with pkgs; [
-        wl-clipboard
         wtype
         sox
         dictate
@@ -175,8 +169,8 @@
       ];
 
       home.sessionVariables = {
-        # Every CLI here that has a self-updater. Without these it fetches a
-        # newer build into ~/.local and the pin stops being what actually runs.
+        # Without these a self-updater fetches a newer build into ~/.local and
+        # the pin stops being what actually runs.
         DISABLE_AUTOUPDATER = "1";
         GROK_DISABLE_AUTOUPDATER = "1";
         OPENCODE_DISABLE_AUTOUPDATE = "1";
@@ -187,10 +181,8 @@
         PATH = "$PATH:${home}/.local/bin";
       };
 
-      # The only things left pointing outside the store, deliberately: the agent
-      # skills and AGENTS.md are rewritten by the memory workflow constantly, so
-      # a read-only store symlink would break it. Reproducible via their own git
-      # repo, just not pinned to a system generation.
+      # Deliberately outside the store: the memory workflow rewrites these
+      # constantly and a read-only store symlink would break it.
       home.file = {
         ".agents/skills".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
         ".agents/AGENTS.md".source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
@@ -203,7 +195,5 @@
           "${home}/dotfiles" \
           "${home}/nixos-config"
       '';
-
-
     };
 }

@@ -1,7 +1,7 @@
 { inputs, self, ... }:
 {
-  # _config.nix is underscore-prefixed so import-tree does not try to evaluate
-  # it as a flake-parts module.
+  # _config.nix is underscore-prefixed so import-tree skips it — it is not a
+  # flake-parts module.
   perSystem =
     { pkgs, ... }:
     {

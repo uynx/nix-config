@@ -1,7 +1,7 @@
 { self, inputs, ... }:
 {
-  # STUB. Not installable until a real hardware-configuration.nix is generated
-  # on the machine and dropped in beside this file, then uncommented below.
+  # STUB. Generate hardware-configuration.nix on the machine, drop it in beside
+  # this file, and uncomment the import below.
   flake.nixosConfigurations.x86 = inputs.nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
     specialArgs = { inherit inputs; };

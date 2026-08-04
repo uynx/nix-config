@@ -6,15 +6,10 @@
         set -g fish_greeting ""
         fish_vi_key_bindings
       '';
-      # Start the Android virtual machine, sized to the monitor it opens on.
-      #
-      # The screen has to be the monitor's *logical* size. niri already reports
-      # logical pixels (1512x945 on the laptop panel, not 3024x1890), so it is
-      # used as-is — dividing by the scale again would halve it. Getting this
-      # wrong does not just letterbox the picture: qemu maps pointer position
-      # by proportion, so any mismatch scales every click and buttons stop
-      # responding where they are pressed. Same rule as Wine's virtual desktop
-      # in the Steam launcher.
+      # Android VM, sized to the monitor it opens on. Must be the *logical*
+      # size, used as niri reports it — do not divide by the scale again. A
+      # mismatch does not letterbox the picture, it scales every click, since
+      # qemu maps pointer position by proportion.
       functions.android.body = ''
         set -l state ~/.local/share/waydroid-vm
 
@@ -32,8 +27,8 @@
             return 1
         end
 
-        # The disk image lives in the working directory, so running this
-        # anywhere else would start a blank Android and re-download 1.6 GB.
+        # The disk image lives in the working directory; running this anywhere
+        # else starts a blank Android and re-downloads 1.6 GB.
         mkdir -p $state
         cd $state
         or return 1
@@ -46,16 +41,14 @@
         set -l repo ~/nixos-config
         if test (count $argv) -gt 0; set target $argv[1]; end
 
-        # Stage before building: a flake build cannot see untracked files, so a
-        # newly written module is silently skipped unless it is at least staged.
+        # A flake build cannot see untracked files, so an unstaged new module is
+        # silently skipped.
         git -C $repo add -A
 
-        # nh wraps nixos-rebuild with a live build monitor and prints an nvd diff
-        # of what changed afterwards. It elevates itself, so no sudo here.
+        # nh elevates itself, so no sudo here.
         if nh os switch $repo -H $target -- --impure
-            # Commit only on success, so a broken config never becomes a commit.
-            # This is a checkpoint for rolling back, not a substitute for real
-            # commit messages — amend or reword it if the change deserves one.
+            # Checkpoint commit for rollback, not a real message — reword if the
+            # change deserves one.
             if not git -C $repo diff --cached --quiet
                 git -C $repo commit -q -m "rebuild "(date '+%Y-%m-%d %H:%M:%S')
                 echo "Committed as "(git -C $repo rev-parse --short HEAD)

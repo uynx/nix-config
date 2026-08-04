@@ -20,16 +20,12 @@
       swi-prolog
       mermaid-cli
 
-      # Per-project dev shells. devenv reads devenv.nix from the project
-      # directory, so nothing about it is configured here -- it just needs to
-      # be on PATH. secretspec keeps secret *names* in a committed
-      # secretspec.toml and the values in the system keyring, which is why it
-      # pairs with devenv rather than duplicating it.
+      # Per-project: devenv reads devenv.nix from the project directory,
+      # secretspec keeps secret names in secretspec.toml and values in the
+      # keyring. Neither is configured here; both just need to be on PATH.
       devenv
       secretspec
 
-      # Nix tooling on the CLI. Neovim gets its own copies through nvf, but
-      # these are wanted outside the editor too.
       nixfmt
       statix
     ];

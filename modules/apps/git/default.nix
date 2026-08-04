@@ -25,9 +25,8 @@
         navigate = true;
         side-by-side = true;
         line-numbers = true;
-        # Was Nord, which matched nothing else on the machine. No Flexoki
-        # .tmTheme exists, so syntax highlighting keeps bat's default and only
-        # delta's own decorations are recoloured.
+        # No Flexoki .tmTheme exists, so syntax highlighting keeps bat's default
+        # and only delta's own decorations are recoloured.
         plus-style = "syntax #1e2b18";
         minus-style = "syntax #33201d";
         plus-emph-style = "syntax #2f4523";
