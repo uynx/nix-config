@@ -24,6 +24,7 @@
           jq
           nodejs
           uv
+          git # hermes' installer clones its own repo
 
           # t3 pulls node-pty, which has no linux-arm64 prebuild and compiles on
           # install. Without these npm dies on `c++: not found`.
@@ -34,6 +35,15 @@
         ];
         text = ''
           file=${home}/nixos-config/modules/apps/ai-tools/_ai-clis.nix
+
+          # Home Manager activation calls this with --missing-only to make a
+          # fresh machine self-populate. $HOME is /homeless-shelter there, so
+          # every path below is the literal home instead.
+          missingOnly=
+          if [ "''${1:-}" = --missing-only ]; then
+            missingOnly=1
+          fi
+          export PATH="$PATH:${home}/.local/bin:${home}/.hermes/bin"
 
           # bump <name> <latest-version> <download-url>
           bump() {
@@ -49,6 +59,7 @@
             printf '%-12s %s -> %s\n' "$name" "$current" "$latest"
           }
 
+          if [ -z "$missingOnly" ]; then
           claude=$(curl -fsSL https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]')
           bump claude-code "$claude" \
             "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude"
@@ -61,10 +72,9 @@
           grok=$(curl -fsSL https://x.ai/cli/stable | tr -d '[:space:]')
           bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
 
-          kimi=$(curl -fsSL https://api.github.com/repos/MoonshotAI/kimi-cli/releases/latest \
-            | jq -r .tag_name)
+          kimi=$(curl -fsSL https://code.kimi.com/kimi-code/latest | tr -d '[:space:]')
           bump kimi "$kimi" \
-            "https://github.com/MoonshotAI/kimi-cli/releases/download/$kimi/kimi-$kimi-aarch64-unknown-linux-gnu.tar.gz"
+            "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-arm64"
 
           opencode=$(curl -fsSL https://api.github.com/repos/sst/opencode/releases/latest \
             | jq -r '.tag_name | ltrimstr("v")')
@@ -77,12 +87,17 @@
 
           echo
           echo 'rolling (takes effect now, no rebuild):'
+          fi
 
           # Keep stderr: a swallowed failure here reads exactly like success,
           # which is how this once installed nothing at all.
           roll() {
-            printf '  %-12s ' "$1"
+            name=$1
             shift
+            if [ -n "$missingOnly" ] && command -v "$name" >/dev/null 2>&1; then
+              return
+            fi
+            printf '  %-12s ' "$name"
             if err=$("$@" 2>&1); then
               echo ok
             else
@@ -92,9 +107,12 @@
           }
 
           roll agy      agy update
-          roll openclaw npm install -g --prefix "$HOME/.local" openclaw
-          roll t3       npm install -g --prefix "$HOME/.local" t3
-          roll hermes   uv tool install --upgrade hermes-agent
+          roll openclaw npm install -g --prefix "${home}/.local" openclaw
+          roll t3       npm install -g --prefix "${home}/.local" t3
+          # Vendor installer, not `uv tool install`: upstream marks every pypi
+          # install unsupported. It brings its own node and uv under ~/.hermes.
+          roll hermes   sh -c 'curl -fsSL https://hermes-agent.nousresearch.com/install.sh \
+            | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
         '';
       };
 
@@ -194,6 +212,14 @@
           "${home}/ai_memory/journal" \
           "${home}/dotfiles" \
           "${home}/nixos-config"
+      '';
+
+      # agy, openclaw, t3 and hermes cannot be pinned, so a fresh machine would
+      # otherwise have six of the ten CLIs. This installs only what is absent,
+      # making every later rebuild a no-op, and never fails the activation —
+      # an offline rebuild must still succeed.
+      home.activation.installRollingAiClis = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        ${update-ai-clis}/bin/update-ai-clis --missing-only || true
       '';
     };
 }
