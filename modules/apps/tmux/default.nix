@@ -5,7 +5,38 @@
       plugin = name: "${pkgs.tmuxPlugins.${name}}/share/tmux-plugins/${name}/${name}.tmux";
     in
     {
-      home.packages = [ pkgs.tmux ];
+      home.packages = [
+        pkgs.tmux
+
+        # Sessions are named after the project directory, never after a niri
+        # workspace: workspace ids are a compositor counter that drifts and
+        # resets, which made every restored session name meaningless.
+        (pkgs.writeShellApplication {
+          name = "tmux-sessionizer";
+          runtimeInputs = [
+            pkgs.tmux
+            pkgs.fzf
+            pkgs.zoxide
+          ];
+          text = ''
+            dir=$(zoxide query -l | fzf --reverse --height 40%) || exit 0
+            name=$(basename "$dir" | tr '.:' '__')
+
+            # Restore must run before any session exists, and the restore script
+            # path only resolves once start-server has loaded the plugins.
+            if ! tmux has-session 2>/dev/null; then
+              tmux start-server
+              tmux run-shell "$(tmux show -gv @resurrect-restore-script-path)"
+            fi
+
+            tmux new-session -d -A -s "$name" -c "$dir"
+            if [ -n "''${TMUX:-}" ]; then
+              exec tmux switch-client -t "$name"
+            fi
+            exec tmux attach -t "$name"
+          '';
+        })
+      ];
 
       home.file.".config/tmux/tmux.conf".text = ''
         set -g prefix C-a
@@ -52,8 +83,10 @@
         # destructive command caught mid-run at save time re-runs on restore.
         set -g @resurrect-processes ':all:'
         run-shell ${plugin "resurrect"}
-        # Deliberately no @continuum-restore: ghostty-activation restores
-        # explicitly, because continuum's clean-start check never passes here.
+        # Deliberately no @continuum-restore: continuum restores in the
+        # background after a 1s sleep, and only inside a 10s window and a
+        # process-count check that any second tmux client silently fails.
+        # tmux-sessionizer above restores synchronously instead.
         set -g @continuum-save-interval '10'
         run-shell ${plugin "continuum"}
       '';
