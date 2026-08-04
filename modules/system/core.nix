@@ -5,6 +5,7 @@
       nixSettings
       locale
       networking
+      security
       audio
       bluetooth
       fonts
