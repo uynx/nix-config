@@ -180,7 +180,6 @@
             if [ -n "$text" ]; then
               printf '%s' "$text" | wl-copy
               wtype "$text" 2>/dev/null || true
-              notify-send "Dictation" "$text" -i edit-paste-symbolic || true
             else
               notify-send "Dictation" "No speech detected" -i dialog-warning-symbolic || true
             fi
