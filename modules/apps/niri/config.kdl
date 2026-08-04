@@ -104,7 +104,8 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // Apps
-    Mod+P { spawn "ghostty-activation"; }
+    Mod+P { spawn "ghostty"; }
+    Mod+Shift+P { spawn "ghostty" "-e" "tmux-sessionizer"; }
     Mod+Shift+Escape { spawn "ghostty" "-e" "btop"; }
     Mod+N { spawn "brave-activation" "Personal"; }
     Mod+M { spawn "brave-activation" "School"; }

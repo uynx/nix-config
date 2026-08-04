@@ -1,45 +1,10 @@
 {
-  # Mod+P / Mod+N / Mod+M launchers. niri-only; the old aerospace branch is in
+  # Mod+N / Mod+M launchers. niri-only; the old aerospace branch is in
   # dotfiles history if a darwin host ever needs it.
   flake.homeModules.launchers =
-    { pkgs, lib, ... }:
-    let
-      niri = lib.getExe pkgs.niri;
-      jq = lib.getExe pkgs.jq;
-    in
+    { pkgs, ... }:
     {
       home.packages = [
-        # Focus this workspace's ghostty, or open one on its own tmux session.
-        (pkgs.writeShellApplication {
-          name = "ghostty-activation";
-          runtimeInputs = [
-            pkgs.ghostty
-            pkgs.tmux
-          ];
-          text = ''
-            ws=$(${niri} msg -j workspaces | ${jq} -r 'first(.[] | select(.is_focused) | .id)')
-
-            existing=$(${niri} msg -j windows | ${jq} -r --argjson ws "$ws" \
-              'first(.[] | select(.app_id == "com.mitchellh.ghostty" and .workspace_id == $ws) | .id) // empty')
-
-            if [ -n "$existing" ]; then
-              exec ${niri} msg action focus-window --id "$existing"
-            fi
-
-            # tmux-continuum only auto-restores when it decides the server just
-            # came up clean, and `new-session -A` creating ws$ws is exactly what
-            # makes that check fail — hence "resurrect never restores". Start the
-            # server first (which loads the plugins, hence the option below) and
-            # restore explicitly before any session exists.
-            if ! tmux has-session 2>/dev/null; then
-              tmux start-server
-              tmux run-shell "$(tmux show -gv @resurrect-restore-script-path)"
-            fi
-
-            exec ghostty -e tmux new-session -A -s "ws$ws"
-          '';
-        })
-
         # A separate --user-data-dir per profile is what keeps the two
         # independent; --profile-directory alone shares one browser process.
         (pkgs.writeShellApplication {
