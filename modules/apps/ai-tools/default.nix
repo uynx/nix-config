@@ -1,9 +1,8 @@
 {
-  # claude, codex, grok and kimi are pinned by hash in _ai-clis.nix and bumped
-  # by `update-ai-clis`. Everything else AI (agy, cursor-agent, opencode,
-  # openclaw, t3code, hermes) publishes no pinnable artifact, so it self-installs
-  # into ~/.local/bin and rolls. claude's own updater is off via
-  # DISABLE_AUTOUPDATER so the pin wins.
+  # `update-ai-clis` is the only entry point for every AI CLI. Anything shipping
+  # an aarch64-linux artifact is pinned in _ai-clis.nix and the script rewrites
+  # the pin (needs `reb` after). agy, openclaw, t3code and hermes ship none, so
+  # the same script runs their own installers into ~/.local/bin.
   flake.homeModules.aiTools =
     {
       config,
@@ -25,6 +24,15 @@
           nix
           gnused
           jq
+          nodejs
+          uv
+
+          # t3code pulls node-pty, which ships no linux-arm64 prebuild and so
+          # compiles on install. Without these npm dies on `c++: not found`.
+          python3
+          gnumake
+          gcc
+          binutils
         ];
         text = ''
           file=${home}/nixos-config/modules/apps/ai-tools/_ai-clis.nix
@@ -55,12 +63,40 @@
           grok=$(curl -fsSL https://x.ai/cli/stable | tr -d '[:space:]')
           bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
 
-
           kimi=$(curl -fsSL https://api.github.com/repos/MoonshotAI/kimi-cli/releases/latest \
             | jq -r .tag_name)
           bump kimi "$kimi" \
             "https://github.com/MoonshotAI/kimi-cli/releases/download/$kimi/kimi-$kimi-aarch64-unknown-linux-gnu.tar.gz"
 
+          opencode=$(curl -fsSL https://api.github.com/repos/sst/opencode/releases/latest \
+            | jq -r '.tag_name | ltrimstr("v")')
+          bump opencode "$opencode" \
+            "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-arm64.tar.gz"
+
+          cursor=$(curl -fsSL https://cursor.com/install | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1)
+          bump cursor-agent "$cursor" \
+            "https://downloads.cursor.com/lab/$cursor/linux/arm64/agent-cli-package.tar.gz"
+
+          echo
+          echo 'rolling (takes effect now, no rebuild):'
+
+          # Keep stderr: a swallowed failure here reads exactly like a success,
+          # which is how this ended up installing nothing at all.
+          roll() {
+            printf '  %-12s ' "$1"
+            shift
+            if err=$("$@" 2>&1); then
+              echo ok
+            else
+              echo FAILED
+              printf '%s\n' "$err" | tail -3 | sed 's/^/               /'
+            fi
+          }
+
+          roll agy      agy update
+          roll openclaw npm install -g --prefix "$HOME/.local" openclaw
+          roll t3code   npm install -g --prefix "$HOME/.local" t3
+          roll hermes   uv tool install --upgrade hermes-agent
         '';
       };
 
@@ -133,14 +169,23 @@
         aiClis.claude-code
         aiClis.codex
         aiClis.grok
-
         aiClis.kimi
+        aiClis.opencode
+        aiClis.cursor-agent
       ];
 
+      home.sessionVariables = {
+        # Every CLI here that has a self-updater. Without these it fetches a
+        # newer build into ~/.local and the pin stops being what actually runs.
+        DISABLE_AUTOUPDATER = "1";
+        GROK_DISABLE_AUTOUPDATER = "1";
+        OPENCODE_DISABLE_AUTOUPDATE = "1";
+        AGY_CLI_DISABLE_AUTO_UPDATE = "1";
 
-      # Appended, not home.sessionPath: that prepends, letting a self-installed
-      # binary here silently outrank its pinned version.
-      home.sessionVariables.PATH = "$PATH:${home}/.local/bin";
+        # Appended, not home.sessionPath: that prepends, letting a self-installed
+        # binary here silently outrank its pinned version.
+        PATH = "$PATH:${home}/.local/bin";
+      };
 
       # The only things left pointing outside the store, deliberately: the agent
       # skills and AGENTS.md are rewritten by the memory workflow constantly, so
