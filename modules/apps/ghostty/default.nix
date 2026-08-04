@@ -1,8 +1,6 @@
 {
-  # Config lives here as text rather than an include of ~/dotfiles/ghostty_config,
-  # so a fresh machine gets the full terminal from this repo alone. The macos-*
-  # keys are kept: ghostty ignores them on Linux, and this module is the tier
-  # meant to be shared with the future darwin host.
+  # macos-* keys are kept deliberately: ghostty ignores them on Linux, and this
+  # tier is the one shared with a future darwin host.
   flake.homeModules.ghostty = {
     programs.ghostty.enable = true;
 

@@ -1,16 +1,15 @@
 { lib, ... }:
 {
-  # settings.json is generated so home-dir paths become store paths. Side effect:
-  # the GUI can no longer save. To tune in the GUI, rm the file, restart, tune,
-  # then copy it back here.
+  # Generating settings.json makes home-dir paths store paths, at the cost of
+  # the GUI no longer saving. To tune in the GUI: rm the file, restart, tune,
+  # copy it back here.
   flake.homeModules.noctalia =
     { pkgs, ... }:
     let
       saved = builtins.fromJSON (builtins.readFile ./settings.json);
 
-      # Templates all off: the ghostty one spams "Unknown color" every login
-      # (Flexoki omits its terminal_normal_* keys), and the rest write into
-      # ~/.config for apps Nix does not manage. Theming belongs in Nix.
+      # All off: the ghostty one spams "Unknown color" every login (Flexoki
+      # omits its terminal_normal_* keys) and theming belongs in Nix anyway.
       disableTemplates = map (t: t // { enabled = false; });
 
       settings = lib.recursiveUpdate saved {
@@ -21,14 +20,13 @@
     {
       home.packages = [ pkgs.noctalia-shell ];
 
-      # force: noctalia rewrites this at runtime, and the resulting .bak collision
-      # aborts the entire activation, leaving no managed file linked at all.
+      # force: noctalia rewrites this at runtime, and the .bak collision aborts
+      # the whole activation.
       home.file.".config/noctalia/settings.json" = {
         text = builtins.toJSON settings;
         force = true;
       };
 
-      # Flexoki, matching ghostty's "Flexoki Dark" and the neovim colorscheme.
       home.file.".config/noctalia/colorschemes/Flexoki/Flexoki.json".source = ./Flexoki.json;
     };
 }

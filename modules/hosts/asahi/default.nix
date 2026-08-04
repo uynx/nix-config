@@ -22,13 +22,7 @@
           useGlobalPkgs = true;
           useUserPackages = true;
           backupFileExtension = "bak";
-          extraSpecialArgs = {
-            inherit inputs;
-            pkgs-stable = import inputs.nixpkgs-stable {
-              system = "aarch64-linux";
-              config.allowUnfree = true;
-            };
-          };
+          extraSpecialArgs = { inherit inputs; };
           users.uynx.imports = with self.homeModules; [
             ./_home.nix
             desktopHome

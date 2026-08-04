@@ -1,6 +1,5 @@
 {
-  # Generic aarch64 machine — plain ARM, not Apple Silicon.
-  # Asahi-specific firmware and boot handling live in hardware/asahi.nix.
+  # Plain aarch64, not Apple Silicon (that is hardware/asahi.nix).
   # STUB: no such machine exists yet. Adjust bootloader before first install.
   flake.nixosModules.hardwareArm = {
     boot.loader = {

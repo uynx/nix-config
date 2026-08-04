@@ -1,12 +1,10 @@
 {
-  # Apple Silicon (Asahi). Specialized ARM.
   flake.nixosModules.hardwareAsahi = {
     hardware.asahi = {
       enable = true;
-      # Must stay a real path, not a store string: the asahi module reads
-      # firmware.cpio out of this at BUILD time, so it has to be a derivation
-      # input. A context-free string is invisible inside the build sandbox.
-      # This is why rebuilds need --impure.
+      # Keep as a real path. The module reads firmware.cpio out of this at build
+      # time, and a context-free string is invisible inside the sandbox. This is
+      # why rebuilds need --impure.
       peripheralFirmwareDirectory = /boot/vendorfw;
     };
 

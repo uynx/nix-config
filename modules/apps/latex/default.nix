@@ -1,8 +1,7 @@
 { inputs, ... }:
 {
-  # texlive comes from the stable channel to avoid constant recompiles.
-  # Imported here rather than taken from a host-provided extraSpecialArg, so
-  # this feature works on any host and any architecture on its own.
+  # Stable texlive, to avoid constant recompiles. Imported here rather than
+  # taken from a host extraSpecialArg, so this works on any host.
   flake.homeModules.latex =
     { pkgs, ... }:
     let

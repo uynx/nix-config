@@ -10,6 +10,5 @@
       whatsapp-electron
     ];
     home.sessionVariables.PROTON_PASS_KEY_PROVIDER = "fs";
-
   };
 }

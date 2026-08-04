@@ -19,7 +19,7 @@
     };
 
     # nvf has no flexoki theme and flexoki-neovim is not in nixpkgs. Values are
-    # ghostty's "Flexoki Dark" verbatim -- do not invent replacements.
+    # ghostty's "Flexoki Dark" verbatim — do not invent replacements.
     theme = {
       enable = true;
       name = "base16";
@@ -121,8 +121,7 @@
     # No nvf module for this one.
     extraPlugins.vim-tmux-navigator.package = tmuxNavigator;
 
-    # autoread only reloads when Neovim actually checks, hence the polling. It
-    # cannot handle deletion at all, so that case only warns.
+    # autoread only reloads when Neovim actually checks, hence the polling.
     luaConfigRC.checktime = ''
       vim.api.nvim_create_autocmd(
         { "FocusGained", "BufEnter", "CursorHold", "CursorHoldI", "TermClose", "TermLeave" },

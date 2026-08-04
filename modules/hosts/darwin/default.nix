@@ -1,10 +1,8 @@
 { self, inputs, ... }:
 {
-  # macOS on the same physical MacBook that dual-boots the `asahi` host.
-  # Separate module system: nix-darwin has no boot.loader, systemd, or
-  # services.greetd, so nothing under modules/system applies here. Only
-  # homeModules cross the boundary.
-  #
+  # macOS on the same MacBook that dual-boots `asahi`. nix-darwin is a separate
+  # module system with no boot.loader or systemd, so nothing under
+  # modules/system applies — only homeModules cross the boundary.
   # STUB: cannot be built from aarch64-linux. Evaluates only.
   flake.darwinConfigurations.darwin = inputs.nix-darwin.lib.darwinSystem {
     system = "aarch64-darwin";

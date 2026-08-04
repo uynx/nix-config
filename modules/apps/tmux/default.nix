@@ -1,8 +1,4 @@
 {
-  # Config lives here as text rather than a symlink out to ~/dotfiles, so a
-  # fresh machine gets a working tmux from this repo alone. Plugin paths are
-  # store paths, which also removes the old dependency on ~/.nix-profile
-  # having been populated first.
   flake.homeModules.tmux =
     { pkgs, ... }:
     let
@@ -12,15 +8,11 @@
       home.packages = [ pkgs.tmux ];
 
       home.file.".config/tmux/tmux.conf".text = ''
-        # Prefix Key (Ctrl-a)
         set -g prefix C-a
         unbind C-b
         bind C-a send-prefix
 
-        # Vi Mode Keys
         setw -g mode-keys vi
-
-        # Copy Mode & Clipboard Integration
         bind-key -T copy-mode-vi v send-keys -X begin-selection
         bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
 

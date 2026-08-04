@@ -2,10 +2,8 @@
   flake.homeModules.theme = { pkgs, ... }: {
     gtk =
       let
-        # No Flexoki GTK theme package exists, and building one is far more work
-        # than it is worth. Overriding libadwaita's named colours gets most of
-        # the way there: GTK4/libadwaita apps pick these up directly. Older GTK3
-        # apps that ship their own stylesheet will still look Adwaita-dark.
+        # No Flexoki GTK theme exists, so override libadwaita's named colours
+        # instead. GTK3 apps shipping their own stylesheet stay Adwaita-dark.
         flexoki = ''
           @define-color accent_color #d0a215;
           @define-color accent_bg_color #d0a215;

@@ -4,8 +4,9 @@
   fetchurl,
 }:
 
-# Vendor CLIs pinned by hash, bumped by `update-ai-clis`. One line per tool:
-# the pins are rewritten by sed, so keep that layout.
+# Vendor CLIs pinned by hash, bumped by `update-ai-clis`. Its sed matches one
+# line per tool, so do NOT run nixfmt on this file — it splits them and the
+# bump silently stops working.
 let
   pins = {
     claude-code = { version = "2.1.221"; hash = "sha256-08Wda8xK3PTNhavKO8E/oRMaNMsy+YK98DDYOjsR5wA="; };
@@ -15,7 +16,6 @@ let
     opencode = { version = "1.18.12"; hash = "sha256-grnFFXt64QrLX+rO2wfJCpttzpTvs7cGDIY7BzpiKtA="; };
     cursor-agent = { version = "2026.07.23-e383d2b"; hash = "sha256-9AuZZHyyTg2ohel2IKIEgDTx/olhkQ1XPYJ9d8TSbcs="; };
   };
-
 
   meta = homepage: desc: {
     inherit homepage;
@@ -127,6 +127,5 @@ in
     '';
     meta = meta "https://cursor.com/cli" "Cursor's agent CLI" // { mainProgram = "cursor-agent"; };
   };
-
 
 }

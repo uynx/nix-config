@@ -1,7 +1,6 @@
 {
-  # Mod+P / Mod+N / Mod+M launchers. niri-only; the old scripts' macOS aerospace
-  # branch is in dotfiles git history, to return as a darwin variant if that host
-  # ever exists.
+  # Mod+P / Mod+N / Mod+M launchers. niri-only; the old aerospace branch is in
+  # dotfiles history if a darwin host ever needs it.
   flake.homeModules.launchers =
     { pkgs, lib, ... }:
     let
@@ -11,7 +10,6 @@
     {
       home.packages = [
         # Focus this workspace's ghostty, or open one on its own tmux session.
-        # Keyed on niri's workspace id, which is not reused across reboots.
         (pkgs.writeShellApplication {
           name = "ghostty-activation";
           runtimeInputs = [
@@ -32,9 +30,8 @@
           '';
         })
 
-        # Launch a Brave profile. Separate --user-data-dir per profile is what
-        # keeps the two genuinely independent; --profile-directory alone shares
-        # one browser process between them.
+        # A separate --user-data-dir per profile is what keeps the two
+        # independent; --profile-directory alone shares one browser process.
         (pkgs.writeShellApplication {
           name = "brave-activation";
           text = ''
@@ -61,12 +58,9 @@
         })
       ];
 
-      # Shadows the packaged brave-origin.desktop, whose Exec has no
-      # --user-data-dir and so opens an empty third profile in its own window.
-      # Same filename fixes every consumer without touching mimeapps.
-      #
-      # home.file, not xdg.desktopEntries: that routes through xdg.dataFile,
-      # which is gated on xdg.enable — false here, so it writes nothing.
+      # Same filename shadows the packaged brave-origin.desktop, whose Exec has
+      # no --user-data-dir and opens an empty third profile. home.file, not
+      # xdg.desktopEntries: that is gated on xdg.enable, false here.
       home.file.".local/share/applications/brave-origin.desktop".text = ''
         [Desktop Entry]
         Type=Application

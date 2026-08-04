@@ -2,12 +2,11 @@
   flake.nixosModules.sddm =
     { pkgs, lib, ... }:
     let
-      # Patterns are out here because a Nix '' block strips leading indentation,
-      # which silently breaks a multi-line match.
+      # Plain strings, not '' blocks: those strip leading indentation and
+      # silently break a multi-line match.
       importOld = "import QtQuick.Controls 2.15";
       importNew = "import QtQuick.Controls 2.15\nimport QtQuick.Window 2.15";
 
-      # Two lines so only the date's bold changes; the time's line is identical.
       dateOld = "font.pointSize: root.font.pointSize * 2\n        font.bold: true";
       dateNew = "font.pixelSize: Screen.height * 0.022\n        font.bold: false";
       timeOld = "font.pointSize: root.font.pointSize * 9";
@@ -26,24 +25,20 @@
           # Emitted as Themes/hyprland_kath.conf.user, which SDDM merges over the
           # bundled .conf — only the keys below change.
           themeConfig = {
-            # Empty means "follow the actual panel". The bundled theme hardcodes
-            # 1920x1080, which renders the whole greeter into a 1920x1080 box on
-            # this 3024x1890 display. See the Main.qml fix below.
+            # Empty means "follow the actual panel"; the theme hardcodes
+            # 1920x1080. Needs the Main.qml fix below to work.
             ScreenWidth = "";
             ScreenHeight = "";
-            # Hack is the coding font (ghostty, nvim) and looks wrong as UI
-            # chrome. Cantarell is already in fonts.packages and is a UI sans.
+            # Hack is the coding font and looks wrong as UI chrome.
             Font = "Cantarell";
             FontSize = "";
             HourFormat = "h:mm AP";
 
-            # Store path, not ~/dotfiles: /home/uynx is 0700, so the greeter user
-            # could never read the wallpaper ReGreet was pointed at. Shared with
-            # noctalia, which scans the same directory.
+            # Store path, not ~/dotfiles: /home/uynx is 0700 and the greeter
+            # runs as its own user.
             Background = "${../../wallpapers}/wallpaper.png";
             BackgroundPlaceholder = "";
-            # Crop rather than stretch: the wallpaper is 1813x1080 (1.68) and the
-            # panel is 1.60, so a fit would letterbox and a fill would distort.
+            # Wallpaper is 1.68, panel is 1.60: a fit letterboxes, a fill distorts.
             CropBackground = "true";
             DimBackground = "0.15";
 
@@ -88,10 +83,10 @@
             HideSystemButtons = "false";
           };
         }).overrideAttrs
-          (old: {
+          (_: {
             # Upstream typo: Screen.ScreenWidth does not exist, so an empty
-            # ScreenWidth collapses the root Pane. Fixing it lets both dimensions
-            # stay unset, which is what makes the theme correct on any output.
+            # ScreenWidth collapses the root Pane. Fixing it is what lets both
+            # dimensions stay unset and the theme fit any output.
             postInstall = ''
               main=$out/share/sddm/themes/sddm-astronaut-theme/Main.qml
               clock=$out/share/sddm/themes/sddm-astronaut-theme/Components/Clock.qml
@@ -122,8 +117,7 @@
         # qt5compat supplies QtQuick.Effects, which the theme QML imports.
         extraPackages = theme.propagatedBuildInputs ++ [ pkgs.kdePackages.qt5compat ];
         settings.Theme.CursorTheme = "capitaine-cursors";
-        # The greeter does not inherit the service's environment; this is SDDM's
-        # own channel for it. Redundant with the preStart wipe, both are free.
+        # The greeter does not inherit the service's environment.
         settings.General.GreeterEnvironment = "QML_DISABLE_DISK_CACHE=1";
       };
 
@@ -137,16 +131,14 @@
       services.displayManager.sessionPackages = [ pkgs.niri ];
 
       # Weston grabs the lowest-numbered DRM card, which before apple-drm binds
-      # is U-Boot's simpledrm on card0 — the very node binding tears down. The
+      # is U-Boot's simpledrm on card0 — the node that binding tears down. The
       # greeter then dies on drmModeGetResources and SDDM logs it as success.
-      # Waiting for the real node means card0 is already gone.
       systemd.services.display-manager = {
         preStart = ''
           until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done
 
-          # Qt reuses compiled QML whenever source path and mtime match, and on
-          # NixOS both are frozen, so the cache never expires and every theme
-          # edit is silently ignored. Deleting it beats hoping an env var lands.
+          # Qt reuses compiled QML when source path and mtime match, and on
+          # NixOS both are frozen — so every theme edit is silently ignored.
           rm -rf /var/lib/sddm/.cache
         '';
         serviceConfig.TimeoutStartSec = "60s";

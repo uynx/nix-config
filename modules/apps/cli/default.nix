@@ -1,14 +1,11 @@
 { inputs, ... }:
 {
   flake.homeModules.cli = { pkgs, ... }: {
-    # comma needs programs.nix-index-database, which only exists once this
-    # module is loaded. Declare it here rather than relying on the host adding
-    # it to sharedModules, or this feature silently breaks on any other host.
+    # comma's option only exists once this module is loaded; importing it here
+    # rather than via the host keeps the feature working on any host.
     imports = [ inputs.nix-index-database.homeModules.nix-index ];
 
     home.packages = with pkgs; [
-      coreutils
-      wget
       dust
       duf
       procs
@@ -29,10 +26,6 @@
 
     programs = {
       bat.enable = true;
-
-      # btop is not here any more: it is a wrapped package now, and its config
-      # and Flexoki theme are baked into the derivation. See apps/btop/.
-
       jq.enable = true;
       zoxide.enable = true;
       atuin.enable = true;
@@ -74,7 +67,6 @@
           sort_by = "modified";
           sort_dir_first = true;
         };
-        # Same story as btop's theme: lifted out of ~/.config into this repo.
         flavors.flexoki = ./flexoki.yazi;
         theme.flavor = {
           dark = "flexoki";
@@ -120,8 +112,7 @@
         settings = {
           add_newline = false;
           command_timeout = 3000;
-          # Redefining the standard colour names in a palette retints every
-          # module at once, without having to restyle each one individually.
+          # Redefining the standard colour names retints every module at once.
           palette = "flexoki";
           palettes.flexoki = {
             black = "#100f0f";
