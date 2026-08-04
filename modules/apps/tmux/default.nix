@@ -46,6 +46,11 @@
         run-shell ${plugin "sensible"}
         run-shell ${plugin "vim-tmux-navigator"}
         set -g @resurrect-strategy-nvim 'session'
+        set -g @resurrect-capture-pane-contents 'on'
+        # Only panes running something other than a shell carry a command, so
+        # this is a no-op for most of them. The cost is that a build or a
+        # destructive command caught mid-run at save time re-runs on restore.
+        set -g @resurrect-processes ':all:'
         run-shell ${plugin "resurrect"}
         # Deliberately no @continuum-restore: ghostty-activation restores
         # explicitly, because continuum's clean-start check never passes here.
