@@ -15,6 +15,10 @@
       settings = lib.recursiveUpdate saved {
         wallpaper.directory = "${../../wallpapers}";
         templates.activeTemplates = disableTemplates saved.templates.activeTemplates;
+
+        # Nothing else on this host claims org.freedesktop.Notifications, so
+        # with this off every notify-send in the config silently no-ops.
+        notifications.enabled = true;
       };
     in
     {
