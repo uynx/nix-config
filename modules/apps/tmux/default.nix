@@ -47,7 +47,8 @@
         run-shell ${plugin "vim-tmux-navigator"}
         set -g @resurrect-strategy-nvim 'session'
         run-shell ${plugin "resurrect"}
-        set -g @continuum-restore 'on'
+        # Deliberately no @continuum-restore: ghostty-activation restores
+        # explicitly, because continuum's clean-start check never passes here.
         set -g @continuum-save-interval '10'
         run-shell ${plugin "continuum"}
       '';
