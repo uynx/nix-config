@@ -33,9 +33,17 @@
   # and wpctl's @DEFAULT_AUDIO_SINK@ is literal KDL syntax, not a placeholder.
   flake.homeModules.niri =
     { pkgs, lib, ... }:
-    {
-      home.file.".config/niri/config.kdl".text =
+    let
+      rendered =
         builtins.replaceStrings [ "@xwaylandSatellite@" ] [ (lib.getExe pkgs.xwayland-satellite) ]
           (builtins.readFile ./config.kdl);
+    in
+    {
+      # Validated at build time, so a KDL mistake fails `reb` instead of leaving
+      # a compositor that will not start at the next login.
+      home.file.".config/niri/config.kdl".source = pkgs.runCommand "niri-config.kdl" { } ''
+        cp ${pkgs.writeText "niri-config-unchecked.kdl" rendered} $out
+        ${lib.getExe pkgs.niri} validate -c $out
+      '';
     };
 }
