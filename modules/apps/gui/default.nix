@@ -5,7 +5,6 @@
       libreoffice
       qbittorrent
       wireshark
-      proton-vpn
       proton-pass-cli
       whatsapp-electron
     ];
