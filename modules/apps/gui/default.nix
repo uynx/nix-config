@@ -13,7 +13,8 @@
         pkgs.wireshark
         pkgs.proton-pass-cli
         pkgs.whatsapp-electron
-        pkgs.cryptomator
+        pkgs.rclone
+        pkgs.gocryptfs
         mullvad-browser
         tor-browser
       ];
