@@ -110,7 +110,19 @@ stdenv.mkDerivation rec {
       fi
     done
 
-    makeWrapper $out/lib/tor-browser/firefox.real $out/bin/tor-browser \
+    cat <<'EOF' > $out/bin/tor-browser
+#!/bin/sh
+PROFILE_DIR="$HOME/.local/share/tor-browser/profile.default"
+mkdir -p "$PROFILE_DIR"
+BASE_DIR="$(dirname $(readlink -f $0))/../lib/tor-browser"
+if [ ! -f "$PROFILE_DIR/prefs.js" ] && [ -d "$BASE_DIR/TorBrowser/Data/Browser/profile.default" ]; then
+  cp -rn "$BASE_DIR/TorBrowser/Data/Browser/profile.default/"* "$PROFILE_DIR/" 2>/dev/null || true
+fi
+exec "$BASE_DIR/firefox.real" --profile "$PROFILE_DIR" "$@"
+EOF
+    chmod +x $out/bin/tor-browser
+
+    wrapProgram $out/bin/tor-browser \
       --prefix LD_LIBRARY_PATH : "$out/lib/tor-browser:${libPath}"
 
     runHook postInstall
