@@ -72,9 +72,9 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/mullvad-browser $out/bin
     cp -r Browser/* $out/lib/mullvad-browser/
 
-    cat <<EOF > $out/bin/mullvad-browser
+    cat <<'EOF' > $out/bin/mullvad-browser
     #!/bin/sh
-    exec $out/lib/mullvad-browser/mullvadbrowser.real "$@"
+    exec $(dirname $0)/../lib/mullvad-browser/mullvadbrowser.real "$@"
     EOF
     chmod +x $out/bin/mullvad-browser
     runHook postInstall

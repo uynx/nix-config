@@ -72,9 +72,9 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/tor-browser $out/bin
     cp -r Browser/* $out/lib/tor-browser/
 
-    cat <<EOF > $out/bin/tor-browser
+    cat <<'EOF' > $out/bin/tor-browser
     #!/bin/sh
-    exec $out/lib/tor-browser/firefox "$@"
+    exec $(dirname $0)/../lib/tor-browser/firefox "$@"
     EOF
     chmod +x $out/bin/tor-browser
     runHook postInstall
