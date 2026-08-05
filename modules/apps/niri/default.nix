@@ -2,6 +2,14 @@
   flake.nixosModules.niri =
     { pkgs, ... }:
     {
+      nixpkgs.overlays = [
+        (final: prev: {
+          niri = prev.niri.overrideAttrs (old: {
+            buildInputs = (old.buildInputs or [ ]) ++ [ prev.libdisplay-info_0_2 ];
+          });
+        })
+      ];
+
       programs.niri.enable = true;
 
       # noctalia's battery widget reads UPower and silently hides itself when
