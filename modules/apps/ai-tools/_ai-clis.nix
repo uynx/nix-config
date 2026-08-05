@@ -10,11 +10,11 @@
 let
   pins = {
     claude-code = { version = "2.1.222"; hash = "sha256-oEvgqNf+AllXGrdBHVHYVljXGkomzmK2DJCCkDcuYBY="; };
-    codex = { version = "0.146.0"; hash = "sha256-l1uskVYqvu3rj3ljbVGoZkmzHzSp3mo7ywWVZbbPH4c="; };
+    codex = { version = "0.146.1"; hash = "sha256-Bd5l7ntr0CA45yDMMTlB1exnlHGOQmG9KP2DuT/jTUM="; };
     grok = { version = "0.2.118"; hash = "sha256-VAEOM1qs5rXe3QIlOeznvIPzglPoY2qvB5ZWKu7LLmc="; };
-    kimi = { version = "0.32.0"; hash = "sha256-WbcTTZPrxGwxGUdTrlv2EN3pUx8ikDRZFZE1Ja9q0w0="; };
-    opencode = { version = "1.18.13"; hash = "sha256-3UrIwhZ6gzjK8pawAslVFB1SounJXuCpX0rpk5wpOrA="; };
-    cursor-agent = { version = "2026.07.23-e383d2b"; hash = "sha256-9AuZZHyyTg2ohel2IKIEgDTx/olhkQ1XPYJ9d8TSbcs="; };
+    kimi = { version = "0.33.0"; hash = "sha256-Y8Qrvwm/p59YF3X0nxYyg5MR8V41flWB6JrQl3/F8YA="; };
+    opencode = { version = "1.18.14"; hash = "sha256-J+3nqiCAACRZ2MlwpAAWu+9JzRO7RnMCd32mdGfxYC0="; };
+    cursor-agent = { version = "2026.08.04-aaa8809"; hash = "sha256-1RliiSkqZgtZgHrFCMmsNuweGhp+RpevPvaCT96phO4="; };
   };
 
   meta = homepage: desc: {
