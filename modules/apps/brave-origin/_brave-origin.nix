@@ -49,7 +49,7 @@
 }:
 
 let
-  version = "1.93.129";
+  version = "1.93.132";
 
   arch =
     if stdenv.hostPlatform.system == "aarch64-linux" then
@@ -61,7 +61,7 @@ let
 
   hash =
     if arch == "arm64" then
-      "sha256-29NLuWH3TAUGkiiY00J+e+IGaqfIZ/g2vLI1aDXacVw="
+      "sha256-H1rOjiqKSPxLJ1FzswOIKLeEsPTbNJ6GapZsXLFBaxI="
     else
       "sha256-F5d660t4t52L27gt8SF9n/54lmK+CeqZeqlbS84wjvU=";
 
