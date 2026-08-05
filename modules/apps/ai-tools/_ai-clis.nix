@@ -9,11 +9,11 @@
 # bump silently stops working.
 let
   pins = {
-    claude-code = { version = "2.1.221"; hash = "sha256-08Wda8xK3PTNhavKO8E/oRMaNMsy+YK98DDYOjsR5wA="; };
+    claude-code = { version = "2.1.222"; hash = "sha256-oEvgqNf+AllXGrdBHVHYVljXGkomzmK2DJCCkDcuYBY="; };
     codex = { version = "0.146.0"; hash = "sha256-l1uskVYqvu3rj3ljbVGoZkmzHzSp3mo7ywWVZbbPH4c="; };
     grok = { version = "0.2.118"; hash = "sha256-VAEOM1qs5rXe3QIlOeznvIPzglPoY2qvB5ZWKu7LLmc="; };
-    kimi = { version = "0.31.1"; hash = "sha256-QL3gBq8pxVl6mEV+218lAA54qP4zp1qxnnJMEJLMzKA="; };
-    opencode = { version = "1.18.12"; hash = "sha256-grnFFXt64QrLX+rO2wfJCpttzpTvs7cGDIY7BzpiKtA="; };
+    kimi = { version = "0.32.0"; hash = "sha256-WbcTTZPrxGwxGUdTrlv2EN3pUx8ikDRZFZE1Ja9q0w0="; };
+    opencode = { version = "1.18.13"; hash = "sha256-3UrIwhZ6gzjK8pawAslVFB1SounJXuCpX0rpk5wpOrA="; };
     cursor-agent = { version = "2026.07.23-e383d2b"; hash = "sha256-9AuZZHyyTg2ohel2IKIEgDTx/olhkQ1XPYJ9d8TSbcs="; };
   };
 
