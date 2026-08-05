@@ -7,9 +7,16 @@
   makeDesktopItem,
   copyDesktopItems,
   alsa-lib,
+  atk,
+  at-spi2-atk,
+  at-spi2-core,
+  cairo,
+  cups,
   dbus,
+  expat,
   fontconfig,
   freetype,
+  gdk-pixbuf,
   glib,
   gtk3,
   libdrm,
@@ -25,18 +32,31 @@
   libXrandr,
   libXrender,
   libxkbcommon,
+  libxshmfence,
   nspr,
   nss,
   pango,
+  pciutils,
+  pipewire,
+  udev,
+  vulkan-loader,
+  wayland,
 }:
 
 let
   libPath = lib.makeLibraryPath [
     stdenv.cc.cc.lib
     alsa-lib
+    atk
+    at-spi2-atk
+    at-spi2-core
+    cairo
+    cups
     dbus
+    expat
     fontconfig
     freetype
+    gdk-pixbuf
     glib
     gtk3
     libdrm
@@ -52,9 +72,15 @@ let
     libXrandr
     libXrender
     libxkbcommon
+    libxshmfence
     nspr
     nss
     pango
+    pciutils
+    pipewire
+    udev
+    vulkan-loader
+    wayland
   ];
 in
 stdenv.mkDerivation rec {
@@ -78,7 +104,11 @@ stdenv.mkDerivation rec {
     cp -r Browser/* $out/lib/tor-browser/
 
     interpreter=$(cat ${stdenv.cc}/nix-support/dynamic-linker)
-    patchelf --set-interpreter "$interpreter" $out/lib/tor-browser/firefox.real
+    for b in firefox.real glxtest vaapitest vulkantest abicheck updater; do
+      if [ -f "$out/lib/tor-browser/$b" ]; then
+        patchelf --set-interpreter "$interpreter" "$out/lib/tor-browser/$b" 2>/dev/null || true
+      fi
+    done
 
     makeWrapper $out/lib/tor-browser/firefox.real $out/bin/tor-browser \
       --prefix LD_LIBRARY_PATH : "$out/lib/tor-browser:${libPath}"
