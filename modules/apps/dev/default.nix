@@ -20,9 +20,6 @@
       swi-prolog
       mermaid-cli
 
-      # Per-project: devenv reads devenv.nix from the project directory,
-      # secretspec keeps secret names in secretspec.toml and values in the
-      # keyring. Neither is configured here; both just need to be on PATH.
       devenv
       secretspec
 
