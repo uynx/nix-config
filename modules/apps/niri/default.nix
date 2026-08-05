@@ -5,7 +5,9 @@
       nixpkgs.overlays = [
         (final: prev: {
           niri = prev.niri.overrideAttrs (old: {
-            buildInputs = (old.buildInputs or [ ]) ++ [ prev.libdisplay-info_0_2 ];
+            nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+              (prev.libdisplay-info_0_2.dev or prev.libdisplay-info_0_2)
+            ];
           });
         })
       ];
