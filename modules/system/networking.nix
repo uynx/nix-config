@@ -11,15 +11,21 @@
       ethernet.macAddress = "random";
 
       # Defaults to yes; a constant option-12 hostname tracks better than the
-      # MAC it would otherwise undo.
-      settings.connection."ipv4.dhcp-send-hostname" = false;
+      # MAC it would otherwise undo. Enforce RFC 8981 temporary IPv6 privacy addresses.
+      settings.connection = {
+        "ipv4.dhcp-send-hostname" = false;
+        "ipv6.ip6-privacy" = 2;
+      };
     };
 
     # "network" keeps the MAC distinct per SSID so two venues can never
     # correlate. "nic" preserves Apple vendor OUI to avoid synthetic OUI flags.
-    networking.wireless.iwd.settings.General = {
-      AddressRandomization = "network";
-      AddressRandomizationRange = "nic";
+    networking.wireless.iwd.settings = {
+      General = {
+        AddressRandomization = "network";
+        AddressRandomizationRange = "nic";
+      };
+      Scan.DisablePeriodicScan = true;
     };
 
     # Per-SSID alone still gives a venue a stable pseudonym across visits.
