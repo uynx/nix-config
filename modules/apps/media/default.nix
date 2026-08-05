@@ -1,7 +1,7 @@
 {
   flake.homeModules.media = { pkgs, ... }: {
     home.packages = with pkgs; [
-      obs-studio
+      (obs-studio.override { browserSupport = false; })
       vesktop
       mpv
       v4l-utils
