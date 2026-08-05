@@ -1,7 +1,9 @@
 {
+  lib,
   stdenv,
   fetchurl,
-  autoPatchelfHook,
+  patchelf,
+  makeWrapper,
   makeDesktopItem,
   copyDesktopItems,
   alsa-lib,
@@ -28,21 +30,8 @@
   pango,
 }:
 
-stdenv.mkDerivation rec {
-  pname = "tor-browser";
-  version = "16.0a9";
-
-  src = fetchurl {
-    url = "https://dist.torproject.org/torbrowser/${version}/tor-browser-linux-aarch64-${version}.tar.xz";
-    hash = "sha256-/7CYkO6QSB/6fbWGU2ru9dkfcQZcowOLoLFSVqQb2u0=";
-  };
-
-  nativeBuildInputs = [
-    autoPatchelfHook
-    copyDesktopItems
-  ];
-
-  buildInputs = [
+let
+  libPath = lib.makeLibraryPath [
     alsa-lib
     dbus
     fontconfig
@@ -66,17 +55,33 @@ stdenv.mkDerivation rec {
     nss
     pango
   ];
+in
+stdenv.mkDerivation rec {
+  pname = "tor-browser";
+  version = "16.0a9";
+
+  src = fetchurl {
+    url = "https://dist.torproject.org/torbrowser/${version}/tor-browser-linux-aarch64-${version}.tar.xz";
+    hash = "sha256-/7CYkO6QSB/6fbWGU2ru9dkfcQZcowOLoLFSVqQb2u0=";
+  };
+
+  nativeBuildInputs = [
+    patchelf
+    makeWrapper
+    copyDesktopItems
+  ];
 
   installPhase = ''
     runHook preInstall
     mkdir -p $out/lib/tor-browser $out/bin
     cp -r Browser/* $out/lib/tor-browser/
 
-    cat <<'EOF' > $out/bin/tor-browser
-    #!/bin/sh
-    exec $(dirname $0)/../lib/tor-browser/firefox "$@"
-    EOF
-    chmod +x $out/bin/tor-browser
+    interpreter=$(cat ${stdenv.cc}/nix-support/dynamic-linker)
+    patchelf --set-interpreter "$interpreter" $out/lib/tor-browser/firefox
+
+    makeWrapper $out/lib/tor-browser/firefox $out/bin/tor-browser \
+      --prefix LD_LIBRARY_PATH : "$out/lib/tor-browser:${libPath}"
+
     runHook postInstall
   '';
 
