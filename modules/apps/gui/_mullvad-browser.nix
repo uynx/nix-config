@@ -110,7 +110,19 @@ stdenv.mkDerivation rec {
       fi
     done
 
-    makeWrapper $out/lib/mullvad-browser/mullvadbrowser.real $out/bin/mullvad-browser \
+    cat <<'EOF' > $out/bin/mullvad-browser
+#!/bin/sh
+PROFILE_DIR="$HOME/.local/share/mullvad-browser/profile.default"
+mkdir -p "$PROFILE_DIR"
+BASE_DIR="$(dirname $(readlink -f $0))/../lib/mullvad-browser"
+if [ ! -f "$PROFILE_DIR/prefs.js" ] && [ -d "$BASE_DIR/MullvadBrowser/Data/Browser/profile.default" ]; then
+  cp -rn "$BASE_DIR/MullvadBrowser/Data/Browser/profile.default/"* "$PROFILE_DIR/" 2>/dev/null || true
+fi
+exec "$BASE_DIR/mullvadbrowser.real" --profile "$PROFILE_DIR" "$@"
+EOF
+    chmod +x $out/bin/mullvad-browser
+
+    wrapProgram $out/bin/mullvad-browser \
       --prefix LD_LIBRARY_PATH : "$out/lib/mullvad-browser:${libPath}"
 
     runHook postInstall
