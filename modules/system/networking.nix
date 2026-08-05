@@ -27,16 +27,14 @@
     # AlwaysRandomizeAddress re-rolls it every connection, and only works under
     # AddressRandomization="network". It is per-network state under /var/lib/iwd
     # with no NixOS option and no global equivalent, hence patching at boot.
-    # Home is excluded so its DHCP lease stays put.
     systemd.services.iwd-randomize-known-networks = {
-      description = "Force per-connection MAC randomization on non-home networks";
+      description = "Force per-connection MAC randomization on every known network";
       wantedBy = [ "multi-user.target" ];
       after = [ "iwd.service" ];
       serviceConfig.Type = "oneshot";
       script = ''
         shopt -s nullglob
         for f in /var/lib/iwd/*.psk /var/lib/iwd/*.open /var/lib/iwd/*.8021x; do
-          case "''${f##*/}" in Alexander22.*) continue ;; esac
           grep -q '^AlwaysRandomizeAddress' "$f" && continue
           # Append-only/insert-only: never rewrite the file, it holds the PSK.
           if grep -q '^\[Settings\]' "$f"; then
