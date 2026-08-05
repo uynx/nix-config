@@ -2,10 +2,8 @@
   flake.homeModules.gui =
     { pkgs, ... }:
     let
-      pkgsX86 = import pkgs.path {
-        system = "x86_64-linux";
-        config.allowUnfree = true;
-      };
+      tor-browser = pkgs.callPackage ./_tor-browser.nix { };
+      mullvad-browser = pkgs.callPackage ./_mullvad-browser.nix { };
     in
     {
       home.packages = [
@@ -15,8 +13,8 @@
         pkgs.wireshark
         pkgs.proton-pass-cli
         pkgs.whatsapp-electron
-        pkgsX86.mullvad-browser
-        pkgsX86.tor-browser
+        mullvad-browser
+        tor-browser
       ];
       home.sessionVariables.PROTON_PASS_KEY_PROVIDER = "fs";
     };

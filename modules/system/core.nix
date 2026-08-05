@@ -25,8 +25,6 @@
       flatpak
     ];
 
-    boot.binfmt.emulatedSystems = [ "x86_64-linux" ];
-
     system.stateVersion = "26.05";
   };
 }
