@@ -41,6 +41,7 @@
   udev,
   vulkan-loader,
   wayland,
+  zlib,
 }:
 
 let
@@ -81,6 +82,7 @@ let
     udev
     vulkan-loader
     wayland
+    zlib
   ];
 in
 stdenv.mkDerivation rec {
@@ -103,6 +105,11 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/tor-browser $out/bin
     cp -r Browser/* $out/lib/tor-browser/
 
+    # Without this marker the bundle runs in portable mode and keeps its profile
+    # next to the binary, i.e. in the read-only store. With it, state goes to
+    # ~/.config/"tor project".
+    touch $out/lib/tor-browser/is-packaged-app
+
     interpreter=$(cat ${stdenv.cc}/nix-support/dynamic-linker)
     for b in firefox.real glxtest vaapitest vulkantest abicheck updater TorBrowser/Tor/tor; do
       if [ -f "$out/lib/tor-browser/$b" ]; then
@@ -110,20 +117,17 @@ stdenv.mkDerivation rec {
       fi
     done
 
-    cat <<'EOF' > $out/bin/tor-browser
-#!/bin/sh
-PROFILE_DIR="$HOME/.local/share/tor-browser/profile.default"
-mkdir -p "$PROFILE_DIR"
-BASE_DIR="$(dirname $(readlink -f $0))/../lib/tor-browser"
-if [ ! -f "$PROFILE_DIR/prefs.js" ] && [ -d "$BASE_DIR/TorBrowser/Data/Browser/profile.default" ]; then
-  cp -rn "$BASE_DIR/TorBrowser/Data/Browser/profile.default/"* "$PROFILE_DIR/" 2>/dev/null || true
-fi
-exec "$BASE_DIR/firefox.real" --profile "$PROFILE_DIR" "$@"
-EOF
-    chmod +x $out/bin/tor-browser
+    substituteInPlace $out/lib/tor-browser/TorBrowser/Tor/torrc-defaults \
+      --replace-fail './TorBrowser' "$out/lib/tor-browser/TorBrowser"
 
-    wrapProgram $out/bin/tor-browser \
-      --prefix LD_LIBRARY_PATH : "$out/lib/tor-browser:$out/lib/tor-browser/TorBrowser/Tor:${libPath}"
+    fullLibPath="$out/lib/tor-browser:$out/lib/tor-browser/TorBrowser/Tor:${libPath}"
+
+    makeWrapper $out/lib/tor-browser/firefox $out/bin/tor-browser \
+      --prefix LD_LIBRARY_PATH : "$fullLibPath"
+
+    # The browser spawns tor itself and reports only "unable to connect" if it
+    # dies, so a missing library here is invisible at runtime.
+    LD_LIBRARY_PATH="$fullLibPath" $out/lib/tor-browser/TorBrowser/Tor/tor --version > /dev/null
 
     runHook postInstall
   '';
