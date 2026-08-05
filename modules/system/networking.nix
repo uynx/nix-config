@@ -16,17 +16,16 @@
     };
 
     # "network" keeps the MAC distinct per SSID so two venues can never
-    # correlate. "full" randomizes all 6 octets and sets the locally-
-    # administered bit, which is what every phone's private address looks like.
+    # correlate. "nic" preserves Apple vendor OUI to avoid synthetic OUI flags.
     networking.wireless.iwd.settings.General = {
       AddressRandomization = "network";
-      AddressRandomizationRange = "full";
+      AddressRandomizationRange = "nic";
     };
 
     # Per-SSID alone still gives a venue a stable pseudonym across visits.
     # AlwaysRandomizeAddress re-rolls it every connection, and only works under
     # AddressRandomization="network". It is per-network state under /var/lib/iwd
-    # with no NixOS option and no global equivalent, hence patching at boot.
+    # with no NixOS option and no global equivalent, hence patching at boot & on change.
     systemd.services.iwd-randomize-known-networks = {
       description = "Force per-connection MAC randomization on every known network";
       wantedBy = [ "multi-user.target" ];
@@ -44,6 +43,15 @@
           fi
         done
       '';
+    };
+
+    systemd.paths.iwd-randomize-known-networks = {
+      description = "Watch /var/lib/iwd for new network profiles";
+      wantedBy = [ "multi-user.target" ];
+      pathConfig = {
+        PathModified = "/var/lib/iwd";
+        Unit = "iwd-randomize-known-networks.service";
+      };
     };
   };
 }
