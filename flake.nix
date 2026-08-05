@@ -2,7 +2,6 @@
   description = "Asahi NixOS — uynx";
 
   inputs = {
-    # System
     nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-weekly/*";
     nixpkgs-stable.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-26.05-chilled/*";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
@@ -35,7 +34,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Neovim configured through Nix options instead of Lua.
     nvf = {
       url = "github:NotAShelf/nvf";
       inputs.nixpkgs.follows = "nixpkgs";

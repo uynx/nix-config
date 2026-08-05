@@ -14,14 +14,12 @@
       # niri calls Hyprland's `class` `app_id` and its `address` `id`, and
       # returns outputs as an object keyed by name rather than a list.
       shellHelpers = ''
-        # Id of the first window whose app_id matches $1, or empty.
         window_id() {
           ${N} msg -j windows 2>/dev/null | ${J} -r --arg app "$1" \
             '[.[] | select(((.app_id // "") | ascii_downcase) == $app) | .id][0] // empty' \
             2>/dev/null || true
         }
 
-        # True while any Steam, CS2 or Steam-game window is still open.
         any_steam_window() {
           ${N} msg -j windows 2>/dev/null | ${J} -e '
             any(.[]; ((.app_id // "") | ascii_downcase) as $c
@@ -319,7 +317,6 @@
             temporary.replace(config)
       '';
 
-      # Forward a command to the already-running client.
       steam-asahi-remote = pkgs.writeShellScriptBin "steam-asahi-remote" ''
         set -eu
 
