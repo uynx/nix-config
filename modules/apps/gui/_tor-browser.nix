@@ -32,6 +32,7 @@
 
 let
   libPath = lib.makeLibraryPath [
+    stdenv.cc.cc.lib
     alsa-lib
     dbus
     fontconfig
@@ -77,9 +78,9 @@ stdenv.mkDerivation rec {
     cp -r Browser/* $out/lib/tor-browser/
 
     interpreter=$(cat ${stdenv.cc}/nix-support/dynamic-linker)
-    patchelf --set-interpreter "$interpreter" $out/lib/tor-browser/firefox
+    patchelf --set-interpreter "$interpreter" $out/lib/tor-browser/firefox.real
 
-    makeWrapper $out/lib/tor-browser/firefox $out/bin/tor-browser \
+    makeWrapper $out/lib/tor-browser/firefox.real $out/bin/tor-browser \
       --prefix LD_LIBRARY_PATH : "$out/lib/tor-browser:${libPath}"
 
     runHook postInstall
