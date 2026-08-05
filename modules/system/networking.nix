@@ -9,6 +9,10 @@
       # iwd owns the interface MAC and NetworkManager's cloned-mac-address is
       # a no-op. This line only covers wired.
       ethernet.macAddress = "random";
+
+      # Defaults to yes; a constant option-12 hostname tracks better than the
+      # MAC it would otherwise undo.
+      settings.connection."ipv4.dhcp-send-hostname" = false;
     };
 
     # "network" derives the MAC from SSID + permanent address, so it is stable
