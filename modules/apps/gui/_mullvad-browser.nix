@@ -32,6 +32,7 @@
 
 let
   libPath = lib.makeLibraryPath [
+    stdenv.cc.cc.lib
     alsa-lib
     dbus
     fontconfig
