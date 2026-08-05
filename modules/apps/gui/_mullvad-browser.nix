@@ -103,6 +103,11 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/mullvad-browser $out/bin
     cp -r Browser/* $out/lib/mullvad-browser/
 
+    # Without this marker the bundle runs in portable mode and keeps its profile
+    # next to the binary, i.e. in the read-only store. With it, state goes to
+    # ~/.config/mullvad.
+    touch $out/lib/mullvad-browser/is-packaged-app
+
     interpreter=$(cat ${stdenv.cc}/nix-support/dynamic-linker)
     for b in mullvadbrowser.real glxtest vaapitest vulkantest abicheck updater; do
       if [ -f "$out/lib/mullvad-browser/$b" ]; then
@@ -110,19 +115,7 @@ stdenv.mkDerivation rec {
       fi
     done
 
-    cat <<'EOF' > $out/bin/mullvad-browser
-#!/bin/sh
-PROFILE_DIR="$HOME/.local/share/mullvad-browser/profile.default"
-mkdir -p "$PROFILE_DIR"
-BASE_DIR="$(dirname $(readlink -f $0))/../lib/mullvad-browser"
-if [ ! -f "$PROFILE_DIR/prefs.js" ] && [ -d "$BASE_DIR/MullvadBrowser/Data/Browser/profile.default" ]; then
-  cp -rn "$BASE_DIR/MullvadBrowser/Data/Browser/profile.default/"* "$PROFILE_DIR/" 2>/dev/null || true
-fi
-exec "$BASE_DIR/mullvadbrowser.real" --profile "$PROFILE_DIR" "$@"
-EOF
-    chmod +x $out/bin/mullvad-browser
-
-    wrapProgram $out/bin/mullvad-browser \
+    makeWrapper $out/lib/mullvad-browser/mullvadbrowser $out/bin/mullvad-browser \
       --prefix LD_LIBRARY_PATH : "$out/lib/mullvad-browser:${libPath}"
 
     runHook postInstall
