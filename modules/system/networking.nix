@@ -5,13 +5,18 @@
       enable = true;
       wifi.backend = "iwd";
 
-      # NetworkManager owns the MAC even under the iwd backend, so randomize
-      # here and leave iwd's own AddressRandomization alone — two randomizers
-      # fight over the same interface. "random" is a fresh MAC per connect;
-      # drop to "stable" if a router's DHCP reservation or a captive portal
-      # starts breaking on reconnect.
-      wifi.macAddress = "random";
+      # Wifi randomization lives in iwd below, not here: under the iwd backend
+      # iwd owns the interface MAC and NetworkManager's cloned-mac-address is
+      # a no-op. This line only covers wired.
       ethernet.macAddress = "random";
+    };
+
+    # "network" derives the MAC from SSID + permanent address, so it is stable
+    # per-network — DHCP reservations and captive portals keep working. Use
+    # "once" for a fresh MAC each iwd start; iwd has no per-connect option.
+    networking.wireless.iwd.settings.General = {
+      AddressRandomization = "network";
+      AddressRandomizationRange = "full";
     };
   };
 }
