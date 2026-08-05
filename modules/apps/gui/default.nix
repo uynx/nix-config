@@ -12,6 +12,8 @@
         pkgs.qbittorrent
         pkgs.wireshark
         pkgs.proton-pass-cli
+        pkgs.bitwarden-desktop
+        pkgs.bitwarden-cli
         pkgs.whatsapp-electron
         pkgs.rclone
         pkgs.gocryptfs
