@@ -11,6 +11,7 @@
       tmux
       media
       gui
+      rclone
       screenUtils
       aiTools
       braveOrigin

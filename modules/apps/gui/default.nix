@@ -15,8 +15,6 @@
         pkgs.bitwarden-desktop
         pkgs.bitwarden-cli
         pkgs.whatsapp-electron
-        pkgs.rclone
-        pkgs.gocryptfs
         mullvad-browser
         tor-browser
       ];
