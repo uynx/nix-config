@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.homeModules.cli = { pkgs, ... }: {
+  flake.homeModules.cli = { pkgs, config, ... }: {
     # comma's option only exists once this module is loaded; importing it here
     # rather than via the host keeps the feature working on any host.
     imports = [ inputs.nix-index-database.homeModules.nix-index ];
@@ -22,7 +22,7 @@
     ];
 
     # nh reads this instead of taking a flake path on every invocation.
-    home.sessionVariables.NH_FLAKE = "/home/uynx/nixos-config";
+    home.sessionVariables.NH_FLAKE = "${config.home.homeDirectory}/nixos-config";
 
     programs = {
       bat.enable = true;

@@ -4,6 +4,7 @@
       pkgs,
       lib,
       inputs,
+      config,
       ...
     }:
 
@@ -80,7 +81,7 @@
       steam-asahi-bootstrap = pkgs.writeShellScriptBin "steam-asahi-bootstrap" ''
         set -eu
 
-        SOURCE=/home/uynx/nixos-config/steam-asahi
+        SOURCE=${config.home.homeDirectory}/nixos-config/steam-asahi
         IMAGE=localhost/steam-asahi:44
         CONTAINER=steam-asahi
         LABEL=io.uynx.steam-asahi.config
@@ -188,7 +189,7 @@
           "$RUNTIME_DIR/krun" \
           "$RUNTIME_DIR/muvm.lock"
         rm -f \
-          /home/uynx/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
+          ${config.home.homeDirectory}/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
       '';
 
       # Distrobox's xdg-open forwarding cannot cross muvm's VM boundary, so web
@@ -196,7 +197,7 @@
       steam-guest-open = pkgs.writeShellScript "steam-guest-open" ''
         set -eu
 
-        FIFO=/home/uynx/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
+        FIFO=${config.home.homeDirectory}/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
         [ "$#" = 1 ] || exit 2
         case "$1" in
           http://* | https://*) ;;
@@ -226,7 +227,7 @@
         from pathlib import Path
 
         config = Path(
-            "/home/uynx/.local/share/steam-asahi/home/"
+            "${config.home.homeDirectory}/.local/share/steam-asahi/home/"
             ".local/share/Steam/config/config.vdf"
         )
         app_id, tool = sys.argv[1:3]
@@ -333,7 +334,7 @@
             ;;
         esac
 
-        STEAM_HOME=/home/uynx/.local/share/steam-asahi/home/.steam
+        STEAM_HOME=${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam
         STEAM_BIN="$STEAM_HOME/root/steamrtarm64/steam"
         [ -p "$STEAM_HOME/steam.pipe" ] && [ -x "$STEAM_BIN" ]
 
@@ -356,11 +357,11 @@
         ${steam-compat-config}/bin/steam-compat-config 674940 box64_stickfight
         ${steam-compat-config}/bin/steam-compat-config 990080 proton_10
 
-        STEAM_ROOT=/home/uynx/.local/share/steam-asahi/home/.local/share/Steam
-        STEAM_HOME=/home/uynx/.local/share/steam-asahi/home/.steam
+        STEAM_ROOT=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam
+        STEAM_HOME=${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam
         STEAM_BIN="$STEAM_ROOT/steamrtarm64/steam"
-        GUEST_BIN=/home/uynx/.local/share/steam-asahi/home/.local/bin
-        URL_FIFO=/home/uynx/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
+        GUEST_BIN=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/bin
+        URL_FIFO=${config.home.homeDirectory}/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
 
         mkdir -p "$GUEST_BIN" "$(dirname "$URL_FIFO")"
         install -m 0755 ${steam-guest-open} "$GUEST_BIN/xdg-open"
@@ -426,7 +427,7 @@
 
         if [ "$(${pkgs.docker}/bin/docker container inspect \
           --format '{{.State.Running}}' steam-asahi 2>/dev/null || true)" = true ] && \
-           [ -p /home/uynx/.local/share/steam-asahi/home/.steam/steam.pipe ]; then
+           [ -p ${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam/steam.pipe ]; then
           ${steam-asahi-remote}/bin/steam-asahi-remote ui || true
           for _ in $(${pkgs.coreutils}/bin/seq 1 50); do
             STEAM_ID=$(window_id steam)
@@ -548,7 +549,7 @@
         HEIGHT=''${RESOLUTION#*x}
 
         if [ "$APP_ID" = 730 ]; then
-          CS2_VIDEO=/home/uynx/.local/share/steam-asahi/home/.local/share/Steam/userdata/483670283/730/local/cfg/cs2_video.txt
+          CS2_VIDEO=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam/userdata/483670283/730/local/cfg/cs2_video.txt
           # CS2 indexes monitors in X's enumeration order, i.e. left to right.
           CS2_MONITOR=$(${N} msg -j outputs 2>/dev/null | ${J} -r \
             --arg name "$(printf '%s' "$OUTPUT" | ${J} -r '.name')" '
@@ -571,7 +572,7 @@
           fi
         fi
 
-        COMPAT="/home/uynx/.local/share/steam-asahi/home/.local/share/Steam/steamapps/compatdata"
+        COMPAT="${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam/steamapps/compatdata"
         PREFIX="$COMPAT/''${APP_ID}/pfx"
         REG_FILE="$PREFIX/user.reg"
         if [ "$APP_ID" = 3540 ] && [ -f "$REG_FILE" ]; then
@@ -630,10 +631,10 @@
           --format '{{.State.Running}}' steam-asahi 2>/dev/null || true)
         if [ "$CONTAINER_RUNNING" = true ]; then
           for _ in $(${pkgs.coreutils}/bin/seq 1 100); do
-            [ -p /home/uynx/.local/share/steam-asahi/home/.steam/steam.pipe ] && break
+            [ -p ${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam/steam.pipe ] && break
             sleep 0.1
           done
-          if [ -p /home/uynx/.local/share/steam-asahi/home/.steam/steam.pipe ]; then
+          if [ -p ${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam/steam.pipe ]; then
             ${steam-asahi-remote}/bin/steam-asahi-remote "$APP_ID"
             exit 0
           fi
@@ -653,7 +654,7 @@
       steam-game-entries = pkgs.writeShellScriptBin "steam-game-entries" ''
         set -eu
 
-        STEAM_ROOT=/home/uynx/.local/share/steam-asahi/home/.local/share/Steam
+        STEAM_ROOT=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam
         APPLICATIONS="''${XDG_DATA_HOME:-$HOME/.local/share}/applications"
         MANIFESTS=$(mktemp)
         GENERATED=$(mktemp -d)
@@ -806,8 +807,8 @@
             GAME=$1
             export MESA_LOADER_DRIVER_OVERRIDE=zink
             export VK_DRIVER_FILES=/usr/share/vulkan/icd.d/virtio_icd.aarch64.json
-            PROTON=/home/uynx/.local/share/steam-asahi/home/.local/share/Steam/steamapps/common/Proton\ 10.0/files
-            export WINEPREFIX=/home/uynx/.local/share/steam-asahi/home/.local/share/Steam/steamapps/compatdata/674940/pfx
+            PROTON=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam/steamapps/common/Proton\ 10.0/files
+            export WINEPREFIX=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam/steamapps/compatdata/674940/pfx
             export WINEDEBUG=-all
             export WINEDLLPATH="$PROTON/lib/vkd3d:$PROTON/lib/wine"
             export LD_LIBRARY_PATH="$PROTON/lib/x86_64-linux-gnu:$PROTON/lib/i386-linux-gnu:${x86-libgcc}/lib:/usr/lib64:/usr/lib:''${LD_LIBRARY_PATH:-}"

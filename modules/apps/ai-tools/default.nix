@@ -11,7 +11,7 @@
       ...
     }:
     let
-      home = "/home/uynx";
+      home = config.home.homeDirectory;
 
       aiClis = pkgs.callPackage ./_ai-clis.nix { };
 
