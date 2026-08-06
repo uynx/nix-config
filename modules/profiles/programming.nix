@@ -8,6 +8,7 @@
       cli
       btop
       gpg
+      sops
       latex
       starship
       yazi
