@@ -1,4 +1,4 @@
-{ inputs, self, ... }:
+{ inputs, moduleWithSystem, ... }:
 {
   # _config.nix is underscore-prefixed so import-tree skips it — it is not a
   # flake-parts module.
@@ -14,9 +14,10 @@
         }).neovim;
     };
 
-  flake.homeModules.nvim =
-    { pkgs, ... }:
+  flake.homeModules.nvim = moduleWithSystem (
+    { self', ... }:
     {
-      home.packages = [ self.packages.${pkgs.stdenv.hostPlatform.system}.nvim ];
-    };
+      home.packages = [ self'.packages.nvim ];
+    }
+  );
 }

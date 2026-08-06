@@ -1,9 +1,10 @@
-{ inputs, ... }:
+{ inputs, moduleWithSystem, ... }:
 {
-  flake.nixosModules.obscura =
+  flake.nixosModules.obscura = moduleWithSystem (
+    { inputs', ... }:
     { pkgs, lib, ... }:
     let
-      upstream = inputs.obscuravpn.packages.${pkgs.stdenv.hostPlatform.system};
+      upstream = inputs'.obscuravpn.packages;
       obscura-gui = upstream.rust-gui-bin;
 
       # Upstream sets OBSCURA_VERSION on rust-gui-bin but not on rust-cli-bin, so the
@@ -63,5 +64,6 @@
       };
 
       users.groups.obscura = { };
-    };
+    }
+  );
 }
