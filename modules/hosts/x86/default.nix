@@ -8,20 +8,14 @@
     modules = with self.nixosModules; [
       core
       hardwareX86
+      homeManagerBase
 
       # ./_hardware-configuration.nix
       inputs.determinate.nixosModules.default
-      inputs.home-manager.nixosModules.home-manager
 
       { networking.hostName = "x86"; }
       {
-        home-manager = {
-          useGlobalPkgs = true;
-          useUserPackages = true;
-          backupFileExtension = "bak";
-          extraSpecialArgs = { inherit inputs; };
-          users.uynx.imports = with self.homeModules; [ programming ];
-        };
+        home-manager.users.${self.lib.user.name}.imports = with self.homeModules; [ programming ];
       }
     ];
   };

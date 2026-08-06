@@ -3,12 +3,13 @@
   # macOS on the same MacBook that dual-boots `asahi`. nix-darwin is a separate
   # module system with no boot.loader or systemd, so nothing under
   # modules/system applies — only homeModules cross the boundary.
-  # STUB: cannot be built from aarch64-linux. Evaluates only.
+  # STUB: cannot be built from aarch64-linux. Evaluates only. The real macOS
+  # config still lives in ~/nix-darwin-config and is folded in here later.
   flake.darwinConfigurations.darwin = inputs.nix-darwin.lib.darwinSystem {
     system = "aarch64-darwin";
     specialArgs = { inherit inputs; };
     modules = [
-      inputs.home-manager.darwinModules.home-manager
+      self.darwinModules.homeManagerBase
 
       {
         networking.hostName = "darwin";
@@ -16,20 +17,14 @@
         nixpkgs.hostPlatform = "aarch64-darwin";
       }
       {
-        home-manager = {
-          useGlobalPkgs = true;
-          useUserPackages = true;
-          backupFileExtension = "bak";
-          extraSpecialArgs = { inherit inputs; };
-          users.uynx.imports = with self.homeModules; [
-            programming
-            {
-              home.username = "uynx";
-              home.homeDirectory = "/Users/uynx";
-              home.stateVersion = "26.05";
-            }
-          ];
-        };
+        home-manager.users.${self.lib.user.name}.imports = with self.homeModules; [
+          programming
+          {
+            home.username = self.lib.user.name;
+            home.homeDirectory = self.lib.user.darwinHome;
+            home.stateVersion = "26.05";
+          }
+        ];
       }
     ];
   };
