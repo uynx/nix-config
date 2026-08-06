@@ -15,7 +15,6 @@
         pkgs.bitwarden-desktop
         pkgs.bitwarden-cli
         pkgs.whatsapp-electron
-        pkgs.rustdesk
         mullvad-browser
         tor-browser
       ];
