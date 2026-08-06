@@ -25,7 +25,6 @@
     home.sessionVariables.NH_FLAKE = "${config.home.homeDirectory}/nixos-config";
 
     programs = {
-      bat.enable = true;
       jq.enable = true;
       zoxide.enable = true;
       atuin.enable = true;
