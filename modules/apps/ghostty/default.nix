@@ -11,18 +11,23 @@
       package = pkgs.ghostty;
       flagSeparator = "=";
       flags."--config-file" = ./config;
+
+      # The default only patches .desktop files. Ghostty's entry is
+      # DBusActivatable, so the launcher goes through the D-Bus service — which
+      # in turn names a SystemdService, and that takes precedence over its own
+      # Exec line. All three have to be patched or the launcher silently starts
+      # the inner binary with none of the config above.
+      filesToPatch = [
+        "share/applications/*.desktop"
+        "share/dbus-1/services/*.service"
+        "share/systemd/user/*.service"
+      ];
     };
 
-  # Still Home Manager's module, only with the wrapped build: its desktop entry
-  # is DBusActivatable, so the launcher needs the D-Bus and systemd units that
-  # this module generates and a bare home.packages entry does not.
   flake.homeModules.ghostty = moduleWithSystem (
     { self', ... }:
     {
-      programs.ghostty = {
-        enable = true;
-        package = self'.packages.ghostty;
-      };
+      home.packages = [ self'.packages.ghostty ];
     }
   );
 }
