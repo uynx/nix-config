@@ -11,26 +11,31 @@
       screenUtils
       steamAsahi
       obscura
+      homeManagerBase
 
       ./_hardware-configuration.nix
       inputs.determinate.nixosModules.default
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
-      inputs.home-manager.nixosModules.home-manager
 
       { networking.hostName = "asahi"; }
       {
-        home-manager = {
-          useGlobalPkgs = true;
-          useUserPackages = true;
-          backupFileExtension = "bak";
-          extraSpecialArgs = { inherit inputs; };
-          users.uynx.imports = with self.homeModules; [
-            ./_home.nix
-            desktopHome
-            programming
-            steamAsahi
-          ];
-        };
+        home-manager.users.${self.lib.user.name}.imports = with self.homeModules; [
+          desktopHome
+          programming
+          steamAsahi
+          {
+            home = {
+              username = self.lib.user.name;
+              homeDirectory = self.lib.user.home;
+              stateVersion = "26.05";
+              sessionVariables = {
+                EDITOR = "nvim";
+                VISUAL = "nvim";
+                GSK_RENDERER = "gl";
+              };
+            };
+          }
+        ];
       }
     ];
   };
