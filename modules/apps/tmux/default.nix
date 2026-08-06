@@ -1,46 +1,30 @@
+{ moduleWithSystem, ... }:
 {
-  flake.homeModules.tmux =
-    { pkgs, ... }:
+  # Config kept verbatim in configAfter rather than re-expressed as the
+  # wrapper's typed options: plugin settings only take effect if they are set
+  # before that plugin's run-shell, and the typed options give no control over
+  # where they land relative to these lines.
+  flake.wrappers.tmux =
+    { wlib, pkgs, ... }:
     let
       plugin = name: "${pkgs.tmuxPlugins.${name}}/share/tmux-plugins/${name}/${name}.tmux";
     in
     {
-      home.packages = [
-        pkgs.tmux
+      imports = [ wlib.wrapperModules.tmux ];
 
-        # Sessions are named after the project directory, never after a niri
-        # workspace: workspace ids are a compositor counter that drifts and
-        # resets, which made every restored session name meaningless.
-        (pkgs.writeShellApplication {
-          name = "tmux-sessionizer";
-          runtimeInputs = [
-            pkgs.tmux
-            pkgs.fzf
-            pkgs.zoxide
-          ];
-          text = ''
-            dir=$(zoxide query -l | fzf --reverse --height 40%) || exit 0
-            name=$(basename "$dir" | tr '.:' '__')
+      sourceSensible = false;
 
-            # Not `start-server`: a server with no sessions exits immediately,
-            # and resurrect's restore.sh finds its socket by reading $TMUX, so
-            # it only works from inside a session. Hence the throwaway one.
-            if ! tmux has-session 2>/dev/null; then
-              tmux new-session -d -s resurrect-boot
-              tmux run-shell "$(tmux show -gv @resurrect-restore-script-path)"
-              tmux kill-session -t resurrect-boot
-            fi
+      # The wrapper's own defaults differ from bare tmux, which is what this
+      # config ran on before. These four keep the previous behaviour: & and x
+      # still ask before killing, the clock stays 12-hour, and passthrough
+      # stays off. prefix is set here only so the default C-b binding block is
+      # never emitted to fight the one below.
+      prefix = "C-a";
+      clock24 = false;
+      disableConfirmationPrompt = false;
+      allowPassthrough = false;
 
-            tmux new-session -d -A -s "$name" -c "$dir"
-            if [ -n "''${TMUX:-}" ]; then
-              exec tmux switch-client -t "$name"
-            fi
-            exec tmux attach -t "$name"
-          '';
-        })
-      ];
-
-      home.file.".config/tmux/tmux.conf".text = ''
+      configAfter = ''
         set -g prefix C-a
         unbind C-b
         bind C-a send-prefix
@@ -93,4 +77,45 @@
         run-shell ${plugin "continuum"}
       '';
     };
+
+  flake.homeModules.tmux = moduleWithSystem (
+    { self', ... }:
+    { pkgs, ... }:
+    {
+      home.packages = [
+        self'.packages.tmux
+
+        # Sessions are named after the project directory, never after a niri
+        # workspace: workspace ids are a compositor counter that drifts and
+        # resets, which made every restored session name meaningless.
+        (pkgs.writeShellApplication {
+          name = "tmux-sessionizer";
+          runtimeInputs = [
+            self'.packages.tmux
+            pkgs.fzf
+            pkgs.zoxide
+          ];
+          text = ''
+            dir=$(zoxide query -l | fzf --reverse --height 40%) || exit 0
+            name=$(basename "$dir" | tr '.:' '__')
+
+            # Not `start-server`: a server with no sessions exits immediately,
+            # and resurrect's restore.sh finds its socket by reading $TMUX, so
+            # it only works from inside a session. Hence the throwaway one.
+            if ! tmux has-session 2>/dev/null; then
+              tmux new-session -d -s resurrect-boot
+              tmux run-shell "$(tmux show -gv @resurrect-restore-script-path)"
+              tmux kill-session -t resurrect-boot
+            fi
+
+            tmux new-session -d -A -s "$name" -c "$dir"
+            if [ -n "''${TMUX:-}" ]; then
+              exec tmux switch-client -t "$name"
+            fi
+            exec tmux attach -t "$name"
+          '';
+        })
+      ];
+    }
+  );
 }
