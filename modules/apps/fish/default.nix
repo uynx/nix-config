@@ -10,6 +10,13 @@
     {
       imports = [ wlib.wrapperModules.fish ];
 
+      # The wrapper defaults to --no-config, which makes fish skip
+      # ~/.config/fish/config.fish altogether. That file is where atuin,
+      # direnv, zoxide, fzf, ghostty, starship and the generated completions
+      # all install themselves, so leaving it on silently removes every one of
+      # them and drops the prompt back to fish's default.
+      flags."--no-config" = false;
+
       plugins = [ { src = pkgs.fishPlugins.plugin-sudope; } ];
 
       # niri is deliberately not referenced by store path: perSystem's nixpkgs
