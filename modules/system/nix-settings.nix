@@ -1,9 +1,19 @@
-{ self, ... }:
+{ self, inputs, ... }:
 {
   flake.nixosModules.nixSettings = {
     determinate.enable = true;
     nixpkgs.config.allowUnfree = true;
     nix = {
+      # Without this, `nix-shell -p` and `nix repl '<nixpkgs>'` resolve against
+      # a channel this config never sets, so they disagree with the flake.
+      nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+
+      # `nix run uynx#btop` from any directory, no flake path needed.
+      registry.${self.lib.user.name}.to = {
+        type = "git";
+        url = "file://${self.lib.user.home}/nixos-config";
+      };
+
       gc = {
         automatic = true;
         dates = "weekly";
