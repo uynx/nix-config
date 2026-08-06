@@ -10,6 +10,7 @@
       sddm
       screenUtils
       steamAsahi
+      obscura
 
       ./_hardware-configuration.nix
       inputs.determinate.nixosModules.default

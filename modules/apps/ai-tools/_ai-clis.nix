@@ -9,7 +9,7 @@
 # bump silently stops working.
 let
   pins = {
-    claude-code = { version = "2.1.222"; hash = "sha256-oEvgqNf+AllXGrdBHVHYVljXGkomzmK2DJCCkDcuYBY="; };
+    claude-code = { version = "2.1.223"; hash = "sha256-YOg9jbDolNDlRBPl59qiVtGA22YPUeE5pRthT8MM86w="; };
     codex = { version = "0.146.1"; hash = "sha256-Bd5l7ntr0CA45yDMMTlB1exnlHGOQmG9KP2DuT/jTUM="; };
     grok = { version = "0.2.118"; hash = "sha256-VAEOM1qs5rXe3QIlOeznvIPzglPoY2qvB5ZWKu7LLmc="; };
     kimi = { version = "0.33.0"; hash = "sha256-Y8Qrvwm/p59YF3X0nxYyg5MR8V41flWB6JrQl3/F8YA="; };

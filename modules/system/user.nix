@@ -10,6 +10,7 @@
         "audio"
         "docker"
         "kvm"
+        "obscura"
       ];
       shell = pkgs.fish;
     };
