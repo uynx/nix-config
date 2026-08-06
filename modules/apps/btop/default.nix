@@ -1,4 +1,4 @@
-{ self, ... }:
+{ moduleWithSystem, ... }:
 {
   # Config is baked into the derivation, so changing a setting means a rebuild.
   flake.wrappers.btop =
@@ -9,11 +9,10 @@
       themes.flexoki = ./flexoki.theme;
     };
 
-  # Indexed by evaluating system rather than self' so this stays a plain home
-  # module any host can import.
-  flake.homeModules.btop =
-    { pkgs, ... }:
+  flake.homeModules.btop = moduleWithSystem (
+    { self', ... }:
     {
-      home.packages = [ self.packages.${pkgs.stdenv.hostPlatform.system}.btop ];
-    };
+      home.packages = [ self'.packages.btop ];
+    }
+  );
 }
