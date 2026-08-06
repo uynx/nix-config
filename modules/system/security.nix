@@ -46,12 +46,5 @@
         protectKernelImage = true;
         sudo.execWheelOnly = true;
       };
-
-      # Replaced proton-vpn 2026-08-04. The daemon installs its own firewall
-      # rules, so never run a second VPN client alongside it.
-      services.mullvad-vpn = {
-        enable = true;
-        package = pkgs.mullvad-vpn;
-      };
     };
 }
