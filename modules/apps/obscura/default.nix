@@ -3,8 +3,15 @@
   flake.nixosModules.obscura =
     { pkgs, lib, ... }:
     let
-      obscura = inputs.obscuravpn.packages.${pkgs.stdenv.hostPlatform.system}.rust-cli-bin;
-      obscura-gui = inputs.obscuravpn.packages.${pkgs.stdenv.hostPlatform.system}.rust-gui-bin;
+      upstream = inputs.obscuravpn.packages.${pkgs.stdenv.hostPlatform.system};
+      obscura-gui = upstream.rust-gui-bin;
+
+      # Upstream sets OBSCURA_VERSION on rust-gui-bin but not on rust-cli-bin, so the
+      # daemon compiles with version.rs's "v0.0.0-dev" fallback and the GUI refuses to
+      # talk to it. upstream.version is the exact string the GUI was stamped with.
+      obscura = upstream.rust-cli-bin.overrideAttrs (_: {
+        OBSCURA_VERSION = builtins.readFile upstream.version;
+      });
 
       # rust-gui-bin is only the binary; upstream keeps the launcher and icons in
       # its distro packaging directory, so pull them straight off the flake source.
