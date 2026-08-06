@@ -4,9 +4,25 @@
     { pkgs, lib, ... }:
     let
       obscura = inputs.obscuravpn.packages.${pkgs.stdenv.hostPlatform.system}.rust-cli-bin;
+      obscura-gui = inputs.obscuravpn.packages.${pkgs.stdenv.hostPlatform.system}.rust-gui-bin;
+
+      # rust-gui-bin is only the binary; upstream keeps the launcher and icons in
+      # its distro packaging directory, so pull them straight off the flake source.
+      obscura-gui-desktop = pkgs.runCommand "obscura-gui-desktop" { } ''
+        install -Dm444 ${inputs.obscuravpn}/linux/common/net.obscura.vpn.gui.desktop \
+          $out/share/applications/net.obscura.vpn.gui.desktop
+        for px in 128 256; do
+          install -Dm444 ${inputs.obscuravpn}/linux/common/icons/net.obscura.vpn.gui-$px.png \
+            $out/share/icons/hicolor/''${px}x''${px}/apps/net.obscura.vpn.gui.png
+        done
+      '';
     in
     {
-      environment.systemPackages = [ obscura ];
+      environment.systemPackages = [
+        obscura
+        obscura-gui
+        obscura-gui-desktop
+      ];
 
       # The CLI asks systemd over D-Bus for a unit called exactly "obscura.service"
       # to report status, so renaming this makes it report "not installed".
