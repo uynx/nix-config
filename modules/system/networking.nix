@@ -1,6 +1,10 @@
 {
   # hostName is per-host, set in modules/hosts/<name>/default.nix
   flake.nixosModules.networking = {
+    # Boot otherwise blocks on this unit until it times out whenever Wi-Fi is
+    # slow to associate, and nothing here needs the network that early.
+    systemd.services.NetworkManager-wait-online.enable = false;
+
     networking.networkmanager = {
       enable = true;
       wifi.backend = "iwd";
