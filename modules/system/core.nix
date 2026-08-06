@@ -13,8 +13,6 @@
       nixLd
     ];
 
-    services.flatpak.enable = true;
-
     environment.systemPackages = with pkgs; [
       git
       vim
@@ -22,7 +20,6 @@
       curl
       ghostty
       brightnessctl
-      flatpak
     ];
 
     system.stateVersion = "26.05";
