@@ -59,21 +59,6 @@
         settings.updates.auto_update = true;
       };
 
-      yazi = {
-        enable = true;
-        shellWrapperName = "y";
-        settings.manager = {
-          show_hidden = true;
-          sort_by = "modified";
-          sort_dir_first = true;
-        };
-        flavors.flexoki = ./flexoki.yazi;
-        theme.flavor = {
-          dark = "flexoki";
-          light = "flexoki";
-        };
-      };
-
       fzf = {
         enable = true;
         changeDirWidget.command = "fd --type d --hidden --strip-cwd-prefix --exclude .git";
@@ -105,26 +90,6 @@
           "--glob=!.git/*"
           "--smart-case"
         ];
-      };
-
-      starship = {
-        enable = true;
-        settings = {
-          add_newline = false;
-          command_timeout = 3000;
-          # Redefining the standard colour names retints every module at once.
-          palette = "flexoki";
-          palettes.flexoki = {
-            black = "#100f0f";
-            red = "#d14d41";
-            green = "#879a39";
-            yellow = "#d0a215";
-            blue = "#4385be";
-            purple = "#ce5d97";
-            cyan = "#3aa99f";
-            white = "#cecdc3";
-          };
-        };
       };
 
       direnv = {
