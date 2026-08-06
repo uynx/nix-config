@@ -9,6 +9,8 @@
       btop
       gpg
       latex
+      starship
+      yazi
     ];
   };
 }
