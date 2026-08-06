@@ -1,0 +1,8 @@
+keys:
+  - &brandon 8FEDC528770DC48853B2658D81DE261A67E8BB3C
+
+creation_rules:
+  - path_regex: secrets/[^/]+\.yaml$
+    key_groups:
+      - pgp:
+          - *brandon
