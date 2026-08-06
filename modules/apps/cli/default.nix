@@ -25,6 +25,11 @@
     home.sessionVariables.NH_FLAKE = "${config.home.homeDirectory}/nixos-config";
 
     programs = {
+      # Not wrapped, for the same reason as git: a devshell's bat should still
+      # see these. Note bat 0.26.1 ignores --map-syntax from its config file,
+      # so the ghostty mapping Home Manager used to add here never worked.
+      bat.enable = true;
+
       jq.enable = true;
       zoxide.enable = true;
       atuin.enable = true;

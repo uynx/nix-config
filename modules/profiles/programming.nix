@@ -11,7 +11,6 @@
       latex
       starship
       yazi
-      bat
     ];
   };
 }
