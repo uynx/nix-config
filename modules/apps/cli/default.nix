@@ -26,9 +26,18 @@
 
     programs = {
       # Not wrapped, for the same reason as git: a devshell's bat should still
-      # see these. Note bat 0.26.1 ignores --map-syntax from its config file,
-      # so the ghostty mapping Home Manager used to add here never worked.
-      bat.enable = true;
+      # see this.
+      bat = {
+        enable = true;
+        # Ghostty ships the syntax but not the mapping. The glob needs `**` —
+        # `*` does not cross a `/`, which is why the mapping ghostty's own
+        # Home Manager module used to add never actually fired.
+        syntaxes.ghostty = {
+          src = "${pkgs.ghostty}/share/bat/syntaxes";
+          file = "ghostty.sublime-syntax";
+        };
+        config.map-syntax = [ "**/ghostty/config:Ghostty Config" ];
+      };
 
       jq.enable = true;
       zoxide.enable = true;
