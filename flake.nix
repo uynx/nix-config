@@ -38,6 +38,11 @@
       url = "github:NotAShelf/nvf";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # No nixpkgs.follows: the build pulls its Rust toolchain through crane and
+    # rust-overlay, and pointing those at our nixpkgs makes the toolchain fetch
+    # land as an unnamed file that the unpack phase then refuses.
+    obscuravpn.url = "github:Sovereign-Engineering/obscuravpn-client";
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
