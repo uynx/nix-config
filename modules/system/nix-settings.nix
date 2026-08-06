@@ -1,3 +1,4 @@
+{ self, ... }:
 {
   flake.nixosModules.nixSettings = {
     determinate.enable = true;
@@ -12,7 +13,7 @@
         auto-optimise-store = true;
         trusted-users = [
           "root"
-          "uynx"
+          self.lib.user.name
         ];
         substituters = [
           "https://nix-community.cachix.org"
