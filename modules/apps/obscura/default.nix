@@ -1,7 +1,7 @@
 { inputs, ... }:
 {
   flake.nixosModules.obscura =
-    { pkgs, ... }:
+    { pkgs, lib, ... }:
     let
       obscura = inputs.obscuravpn.packages.${pkgs.stdenv.hostPlatform.system}.rust-cli-bin;
     in
@@ -14,6 +14,18 @@
         description = "Obscura VPN";
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
+
+        # auto_connect is daemon-owned state with no CLI or service flag, and the
+        # daemon rewrites the whole file on shutdown, so it has to be re-asserted
+        # here on every start. Redirecting into the original path rather than
+        # renaming a temp file over it keeps the file's mode and owner.
+        preStart = ''
+          cfg=/var/lib/obscura/config.json
+          [ -e "$cfg" ] || exit 0
+          patched=$(${lib.getExe pkgs.jq} '.auto_connect = true' "$cfg") \
+            && printf '%s' "$patched" > "$cfg"
+        '';
+
         serviceConfig = {
           ExecStart = "${obscura}/bin/obscura service --dns network-manager";
           # The daemon binds /run/obscura.sock without chowning it, so the socket
