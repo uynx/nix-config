@@ -11,6 +11,9 @@
       fonts
       user
       nixLd
+      # user.nix makes fish the login shell, so the overlay that points
+      # pkgs.fish at the wrapped build has to be in reach of every host.
+      fish
     ];
 
     environment.systemPackages = with pkgs; [
