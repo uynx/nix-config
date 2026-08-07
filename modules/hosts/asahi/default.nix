@@ -24,15 +24,10 @@
           programming
           steamAsahi
           {
-            home = {
-              username = self.lib.user.name;
-              homeDirectory = self.lib.user.home;
-              stateVersion = "26.05";
-              sessionVariables = {
-                EDITOR = "nvim";
-                VISUAL = "nvim";
-                GSK_RENDERER = "gl";
-              };
+            home.sessionVariables = {
+              EDITOR = "nvim";
+              VISUAL = "nvim";
+              GSK_RENDERER = "gl";
             };
           }
         ];
