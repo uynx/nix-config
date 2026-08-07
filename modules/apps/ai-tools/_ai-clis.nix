@@ -57,9 +57,8 @@ in
       cat <<'EOF' > $out/bin/codex-code-mode-host
 #!/bin/sh
 dir="$(dirname "$0")"
-echo "$(date) :: $0 :: args count=$# :: args=$*" >> /tmp/codex-host-debug.log
 if [ "$#" -eq 0 ]; then
-  exec "$dir/codex" exec-server --listen stdio://
+  exec "$dir/codex" mcp-server "$@"
 else
   exec "$dir/codex" "$@"
 fi
