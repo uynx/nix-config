@@ -1,0 +1,26 @@
+{
+  "claude-code": {
+    "version": "2.1.224",
+    "hash": "sha256-PlCDbiJ4aHRic2U+D4EVz1/JyzSggYR8YEDIHYCBLDM="
+  },
+  "codex": {
+    "version": "0.147.0",
+    "hash": "sha256-TQm/AAWXdo36BwsOfGEvD8JYrH+rNk5XAQTqYl+RhUY="
+  },
+  "grok": {
+    "version": "1.0.0",
+    "hash": "sha256-u3xREWVkoiGfakmFCBUGD0FpGKxAfx8rqCxTwLDUOD8="
+  },
+  "kimi": {
+    "version": "0.34.0",
+    "hash": "sha256-25yI0PREIPEkXPdF6ttWneGOzYMBnsq4iLMCjt3zboc="
+  },
+  "opencode": {
+    "version": "1.18.15",
+    "hash": "sha256-UAYRgZ/4iRaxhWSZkFBam+dq0Tylu0uTI+Wr3Tmxxvs="
+  },
+  "cursor-agent": {
+    "version": "2026.08.04-aaa8809",
+    "hash": "sha256-1RliiSkqZgtZgHrFCMmsNuweGhp+RpevPvaCT96phO4="
+  }
+}

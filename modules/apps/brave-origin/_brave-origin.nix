@@ -1,61 +1,70 @@
-{ lib
-, stdenv
-, fetchurl
-, dpkg
-, alsa-lib
-, at-spi2-atk
-, at-spi2-core
-, atk
-, cairo
-, cups
-, dbus
-, expat
-, fontconfig
-, freetype
-, gdk-pixbuf
-, glib
-, gtk3
-, gtk4
-, libX11
-, libxscrnsaver
-, libXcomposite
-, libXcursor
-, libXdamage
-, libXext
-, libXfixes
-, libXi
-, libXrandr
-, libXrender
-, libXtst
-, libdrm
-, libuuid
-, libxkbcommon
-, libxshmfence
-, libgbm
-, nspr
-, nss
-, pango
-, pipewire
-, udev
-, wayland
-, xdg-utils
-, wrapGAppsHook3
-, makeShellWrapper
-, libGL
-, libpulseaudio
-, coreutils
-, libxcb
+{
+  lib,
+  stdenv,
+  fetchurl,
+  dpkg,
+  alsa-lib,
+  at-spi2-atk,
+  at-spi2-core,
+  atk,
+  cairo,
+  cups,
+  dbus,
+  expat,
+  fontconfig,
+  freetype,
+  gdk-pixbuf,
+  glib,
+  gtk3,
+  gtk4,
+  libX11,
+  libxscrnsaver,
+  libXcomposite,
+  libXcursor,
+  libXdamage,
+  libXext,
+  libXfixes,
+  libXi,
+  libXrandr,
+  libXrender,
+  libXtst,
+  libdrm,
+  libuuid,
+  libxkbcommon,
+  libxshmfence,
+  libgbm,
+  nspr,
+  nss,
+  pango,
+  pipewire,
+  udev,
+  wayland,
+  xdg-utils,
+  wrapGAppsHook3,
+  makeShellWrapper,
+  libGL,
+  libpulseaudio,
+  coreutils,
+  libxcb,
 }:
 
 let
-  version = "1.92.143";
+  # Rewritten by `update-brave-origin` with json.dump, so this file is ordinary
+  # Nix and safe to format. The hash keys are the Debian arch names, which is
+  # what lets `pins.${arch}` replace a second if-chain.
+  pins = builtins.fromJSON (builtins.readFile ./pins.json);
 
-  arch = if stdenv.hostPlatform.system == "aarch64-linux" then "arm64"
-         else if stdenv.hostPlatform.system == "x86_64-linux" then "amd64"
-         else throw "Unsupported platform: ${stdenv.hostPlatform.system}";
+  inherit (pins) version;
 
-  hash = if arch == "arm64" then "sha256-kGKyW4GOD4UO2Lp0sxesk8+XZJvK5q67gaJONPb3Fpg="
-         else "sha256-65453t8O/sCNfiM71ZwX6EDrEyTsvh1CGCsjh89XKg4=";
+  arch =
+    if stdenv.hostPlatform.system == "aarch64-linux" then
+      "arm64"
+    else if stdenv.hostPlatform.system == "x86_64-linux" then
+      "amd64"
+    else
+      throw "Unsupported platform: ${stdenv.hostPlatform.system}";
+
+  hash = pins.${arch};
 
   deps = [
     alsa-lib
@@ -103,7 +112,7 @@ let
   binpath = lib.makeBinPath deps;
 
 in
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   pname = "brave-origin";
   inherit version;
 
@@ -116,7 +125,11 @@ stdenv.mkDerivation rec {
   dontBuild = true;
   dontPatchELF = true;
 
-  nativeBuildInputs = [ dpkg wrapGAppsHook3 makeShellWrapper ];
+  nativeBuildInputs = [
+    dpkg
+    wrapGAppsHook3
+    makeShellWrapper
+  ];
 
   buildInputs = [
     glib
@@ -134,26 +147,22 @@ stdenv.mkDerivation rec {
 
     export BINARYWRAPPER=$out/opt/brave.com/brave-origin/brave-origin
 
-    # Fix path to bash in the launch wrapper
     substituteInPlace $BINARYWRAPPER \
         --replace "/bin/bash" "${stdenv.shell}" \
         --replace "CHROME_WRAPPER" "WRAPPER"
 
     ln -sf $BINARYWRAPPER $out/bin/brave-origin
 
-    # Patch ELF executables
     for exe in $out/opt/brave.com/brave-origin/{brave,chrome_crashpad_handler}; do
         patchelf \
             --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
             --set-rpath "${rpath}" $exe
     done
 
-    # Fix paths in desktop entries
     substituteInPlace $out/share/applications/{brave-origin,com.brave.Origin}.desktop \
         --replace "/usr/bin/brave-origin-stable" "$out/bin/brave-origin" \
         --replace "/usr/bin/brave-origin" "$out/bin/brave-origin"
 
-    # Replace xdg-settings and xdg-mime
     ln -sf ${xdg-utils}/bin/xdg-settings $out/opt/brave.com/brave-origin/xdg-settings
     ln -sf ${xdg-utils}/bin/xdg-mime $out/opt/brave.com/brave-origin/xdg-mime
 
@@ -164,7 +173,12 @@ stdenv.mkDerivation rec {
     gappsWrapperArgs+=(
       --prefix LD_LIBRARY_PATH : ${rpath}
       --prefix PATH : ${binpath}
-      --suffix PATH : ${lib.makeBinPath [ xdg-utils coreutils ]}
+      --suffix PATH : ${
+        lib.makeBinPath [
+          xdg-utils
+          coreutils
+        ]
+      }
       --set CHROME_WRAPPER brave-origin
       --add-flags "--ozone-platform-hint=auto"
     )
@@ -174,7 +188,10 @@ stdenv.mkDerivation rec {
     homepage = "https://brave.com/";
     description = "Brave Origin: Minimalist, adblock-focused version of Brave Browser";
     license = licenses.unfree;
-    platforms = [ "aarch64-linux" "x86_64-linux" ];
+    platforms = [
+      "aarch64-linux"
+      "x86_64-linux"
+    ];
     mainProgram = "brave-origin";
   };
 }
