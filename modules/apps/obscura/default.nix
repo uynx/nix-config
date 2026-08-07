@@ -5,7 +5,16 @@
     { pkgs, lib, ... }:
     let
       upstream = inputs'.obscuravpn.packages;
-      obscura-gui = upstream.rust-gui-bin;
+
+      # The sidebar icons are symbolic SVGs baked into the binary as a GResource, and
+      # GTK renders SVG through gdk-pixbuf's librsvg loader. rust-gui-bin ships
+      # unwrapped, so without this the whole sidebar falls back to "image-missing".
+      obscura-gui = pkgs.runCommand "obscura-gui" { nativeBuildInputs = [ pkgs.makeWrapper ]; } ''
+        mkdir -p $out/bin
+        makeWrapper ${upstream.rust-gui-bin}/bin/obscura-gui $out/bin/obscura-gui \
+          --set GDK_PIXBUF_MODULE_FILE \
+            "${pkgs.librsvg}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+      '';
 
       # Upstream sets OBSCURA_VERSION on rust-gui-bin but not on rust-cli-bin, so the
       # daemon compiles with version.rs's "v0.0.0-dev" fallback and the GUI refuses to
