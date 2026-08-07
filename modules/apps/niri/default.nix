@@ -45,6 +45,12 @@ in
       # rejects any package that does not declare which sessions it provides.
       passthru.providedSessions = [ "niri" ];
 
+      filesToPatch = [
+        "share/applications/*.desktop"
+        "share/wayland-sessions/*.desktop"
+        "share/systemd/user/*.service"
+      ];
+
       # NIRI_CONFIG, not a prepended --config flag: niri rejects the global
       # flag ahead of a subcommand, so flags."--config" breaks every
       # `niri msg` call — which the Steam module and fish's android function
