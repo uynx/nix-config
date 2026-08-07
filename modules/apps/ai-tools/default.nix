@@ -229,6 +229,7 @@
         sox
         dictate
         update-ai-clis
+        bubblewrap
 
         aiClis.claude-code
         aiClis.codex
