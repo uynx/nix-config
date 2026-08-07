@@ -43,7 +43,7 @@
           binutils
         ];
         text = ''
-          file=${home}/nixos-config/modules/apps/ai-tools/_ai-clis.nix
+          file=${home}/nixos-config/modules/apps/ai-tools/pins.json
 
           # Home Manager activation calls this with --missing-only to make a
           # fresh machine self-populate. $HOME is /homeless-shelter there, so
@@ -57,22 +57,26 @@
           # bump <name> <latest-version> <download-url>
           bump() {
             name=$1 latest=$2 url=$3
-            current=$(sed -n "s/^    $name = { version = \"\([^\"]*\)\".*/\1/p" "$file")
+
+            # Refuse to invent a key: `.[$n] = …` would happily create one, so a
+            # typo'd name would add a pin nothing reads instead of failing.
+            current=$(jq -r --arg n "$name" '.[$n].version // ""' "$file")
+            if [ -z "$current" ]; then
+              echo "$name: no such pin in $file" >&2
+              return 1
+            fi
             if [ "$current" = "$latest" ]; then
               printf '%-12s %s (up to date)\n' "$name" "$current"
               return
             fi
+
             hash=$(nix hash convert --hash-algo sha256 --to sri \
               "$(nix-prefetch-url --type sha256 "$url")")
-            sed -i "s|^    $name = { version = \"[^\"]*\"; hash = \"[^\"]*\"; };|    $name = { version = \"$latest\"; hash = \"$hash\"; };|" "$file"
 
-            # sed exits 0 on zero matches, so an unmatched pattern used to print a
-            # successful bump while leaving the old version and hash in place.
-            # Re-read instead of trusting it — same failure the Brave updater had.
-            if [ "$(sed -n "s/^    $name = { version = \"\([^\"]*\)\".*/\1/p" "$file")" != "$latest" ]; then
-              echo "$name: no line matched in $file — has it been reformatted?" >&2
-              return 1
-            fi
+            tmp=$(mktemp)
+            jq --arg n "$name" --arg v "$latest" --arg h "$hash" \
+              '.[$n] = { version: $v, hash: $h }' "$file" >"$tmp"
+            mv "$tmp" "$file"
 
             printf '%-12s %s -> %s\n' "$name" "$current" "$latest"
           }

@@ -4,18 +4,10 @@
   fetchurl,
 }:
 
-# Vendor CLIs pinned by hash, bumped by `update-ai-clis`. Its sed matches one
-# line per tool, so do NOT run nixfmt on this file — it splits them and the
-# bump silently stops working.
+# Vendor CLIs pinned by hash. `update-ai-clis` rewrites pins.json with jq, so
+# this file is ordinary Nix and safe to format.
 let
-  pins = {
-    claude-code = { version = "2.1.224"; hash = "sha256-PlCDbiJ4aHRic2U+D4EVz1/JyzSggYR8YEDIHYCBLDM="; };
-    codex = { version = "0.147.0"; hash = "sha256-TQm/AAWXdo36BwsOfGEvD8JYrH+rNk5XAQTqYl+RhUY="; };
-    grok = { version = "1.0.0"; hash = "sha256-u3xREWVkoiGfakmFCBUGD0FpGKxAfx8rqCxTwLDUOD8="; };
-    kimi = { version = "0.34.0"; hash = "sha256-25yI0PREIPEkXPdF6ttWneGOzYMBnsq4iLMCjt3zboc="; };
-    opencode = { version = "1.18.15"; hash = "sha256-UAYRgZ/4iRaxhWSZkFBam+dq0Tylu0uTI+Wr3Tmxxvs="; };
-    cursor-agent = { version = "2026.08.04-aaa8809"; hash = "sha256-1RliiSkqZgtZgHrFCMmsNuweGhp+RpevPvaCT96phO4="; };
-  };
+  pins = builtins.fromJSON (builtins.readFile ./pins.json);
 
   meta = homepage: desc: {
     inherit homepage;
@@ -40,7 +32,9 @@ in
       install -Dm755 "$src" "$out/bin/claude"
       runHook postInstall
     '';
-    meta = meta "https://code.claude.com" "Anthropic's Claude Code CLI" // { mainProgram = "claude"; };
+    meta = meta "https://code.claude.com" "Anthropic's Claude Code CLI" // {
+      mainProgram = "claude";
+    };
   };
 
   # Source is npm, not the GitHub release: that tarball ships `codex` alone,
@@ -61,7 +55,9 @@ in
       install -Dm755 bin/codex bin/codex-code-mode-host -t "$out/bin"
       runHook postInstall
     '';
-    meta = meta "https://github.com/openai/codex" "OpenAI's Codex CLI" // { mainProgram = "codex"; };
+    meta = meta "https://github.com/openai/codex" "OpenAI's Codex CLI" // {
+      mainProgram = "codex";
+    };
   };
 
   grok = stdenvNoCC.mkDerivation {
@@ -77,7 +73,9 @@ in
       install -Dm755 "$src" "$out/bin/grok"
       runHook postInstall
     '';
-    meta = meta "https://x.ai/cli" "x.ai's official Grok CLI" // { mainProgram = "grok"; };
+    meta = meta "https://x.ai/cli" "x.ai's official Grok CLI" // {
+      mainProgram = "grok";
+    };
   };
 
   # Kimi Code, the rebuilt successor to the Python kimi-cli. Its own installer
@@ -98,7 +96,9 @@ in
       install -Dm755 "$src" "$out/bin/kimi"
       runHook postInstall
     '';
-    meta = meta "https://code.kimi.com" "Moonshot's Kimi Code CLI" // { mainProgram = "kimi"; };
+    meta = meta "https://code.kimi.com" "Moonshot's Kimi Code CLI" // {
+      mainProgram = "kimi";
+    };
   };
 
   # Bun-compiled like claude-code, so the same no-autoPatchelf rule applies.
@@ -115,7 +115,9 @@ in
       install -Dm755 opencode "$out/bin/opencode"
       runHook postInstall
     '';
-    meta = meta "https://github.com/sst/opencode" "SST's OpenCode terminal agent" // { mainProgram = "opencode"; };
+    meta = meta "https://github.com/sst/opencode" "SST's OpenCode terminal agent" // {
+      mainProgram = "opencode";
+    };
   };
 
   # Ships its own node next to the launcher, so the tree moves whole and only
@@ -135,7 +137,9 @@ in
       ln -s "$out/libexec/cursor-agent/cursor-agent" "$out/bin/cursor-agent"
       runHook postInstall
     '';
-    meta = meta "https://cursor.com/cli" "Cursor's agent CLI" // { mainProgram = "cursor-agent"; };
+    meta = meta "https://cursor.com/cli" "Cursor's agent CLI" // {
+      mainProgram = "cursor-agent";
+    };
   };
 
 }
