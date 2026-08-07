@@ -27,6 +27,9 @@
           socat
           nh
           nvd
+          # Only as a POSIX interpreter to write scripts against. Do not point
+          # environment.binsh at it — third-party /bin/sh scripts use bashisms.
+          dash
         ]
         # fetch is Linux-only in nixpkgs, and this module reaches darwin too.
         ++ lib.optional stdenv.hostPlatform.isLinux fetch;
