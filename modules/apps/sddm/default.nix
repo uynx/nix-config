@@ -127,18 +127,10 @@
         pkgs.capitaine-cursors
       ];
 
-      # Weston grabs the lowest-numbered DRM card, which before apple-drm binds
-      # is U-Boot's simpledrm on card0 — the node that binding tears down. The
-      # greeter then dies on drmModeGetResources and SDDM logs it as success.
+      # Qt reuses compiled QML when source path and mtime match, and on NixOS
+      # both are frozen — so every theme edit is silently ignored.
       systemd.services.display-manager = {
-        preStart = ''
-          until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done
-
-          # Qt reuses compiled QML when source path and mtime match, and on
-          # NixOS both are frozen — so every theme edit is silently ignored.
-          rm -rf /var/lib/sddm/.cache
-        '';
-        serviceConfig.TimeoutStartSec = "60s";
+        preStart = "rm -rf /var/lib/sddm/.cache";
         environment.QML_DISABLE_DISK_CACHE = "1";
       };
 

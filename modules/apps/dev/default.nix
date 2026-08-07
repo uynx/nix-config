@@ -25,6 +25,8 @@
 
       nixfmt
       statix
+
+      wireshark
     ];
 
     programs = {

@@ -1,5 +1,13 @@
-{ inputs, ... }:
+{ inputs, lib, ... }:
 {
+  # Same reason as the imports below: `flake.lib` is not a declared option, so
+  # `modules/lib/user.nix` and `modules/lib/bundle.nix` would collide rather
+  # than merge. Declaring it makes it an ordinary mergeable attrset.
+  options.flake.lib = lib.mkOption {
+    type = lib.types.lazyAttrsOf lib.types.raw;
+    default = { };
+  };
+
   # Declare flake.homeModules, flake.darwinModules and flake.wrappers as real
   # flake-parts options. flake-parts declares nixosModules itself but not these,
   # and an undeclared flake output can only be defined once — a second module
