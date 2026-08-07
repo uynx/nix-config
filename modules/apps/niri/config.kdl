@@ -85,6 +85,12 @@ window-rule {
     default-column-width { proportion 0.33; }
 }
 
+window-rule {
+    match app-id="^pinentry"
+    match app-id="^org\\.gnupg\\.pinentry"
+    open-floating true
+}
+
 // Steam games open fullscreen. This replaces an imperative fullscreen toggle
 // that used to live in steam-game-watch: niri's IPC does not report whether a
 // window is already fullscreen, so a toggle would be a coin flip. Stick Fight

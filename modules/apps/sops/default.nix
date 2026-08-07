@@ -24,6 +24,7 @@
       systemd.user.services.sops-nix = {
         Unit.After = [ "graphical-session.target" ];
         Install.WantedBy = pkgs.lib.mkForce [ "graphical-session.target" ];
+        Service.ExecStartPre = "${pkgs.gnupg}/bin/gpg-connect-agent updatestartuptty /bye";
       };
     };
 }
