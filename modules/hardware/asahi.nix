@@ -24,6 +24,15 @@
       '';
     };
 
+    # A greeter grabs the lowest-numbered DRM card, which before apple-drm binds
+    # is U-Boot's simpledrm on card0 — the node that binding tears down. It then
+    # dies on drmModeGetResources and the display manager logs it as success.
+    # Hardware, not greeter config, so it applies whichever desktop is selected.
+    systemd.services.display-manager = {
+      preStart = "until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done";
+      serviceConfig.TimeoutStartSec = "60s";
+    };
+
     # Headroom for Hogwarts / muvm guest memory pressure.
     swapDevices = [
       {

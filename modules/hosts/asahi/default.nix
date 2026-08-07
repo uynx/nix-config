@@ -6,12 +6,23 @@
     modules = with self.nixosModules; [
       core
       hardwareAsahi
-      niri
-      sddm
-      screenUtils
-      steamAsahi
-      obscura
       homeManagerBase
+
+      # One line per component, both tiers each. Delete a line to drop the
+      # component entirely; swap desktopNiri for desktopKde to change desktop.
+      desktopNiri
+      shell
+      programming
+      ai
+      secrets
+      privacy
+      cloud
+      web
+      media
+      comms
+      office
+      latex
+      gaming
 
       ./_hardware-configuration.nix
       inputs.determinate.nixosModules.default
@@ -19,18 +30,11 @@
 
       { networking.hostName = "asahi"; }
       {
-        home-manager.users.${self.lib.user.name}.imports = with self.homeModules; [
-          desktopHome
-          programming
-          steamAsahi
-          {
-            home.sessionVariables = {
-              EDITOR = "nvim";
-              VISUAL = "nvim";
-              GSK_RENDERER = "gl";
-            };
-          }
-        ];
+        home-manager.users.${self.lib.user.name}.home.sessionVariables = {
+          EDITOR = "nvim";
+          VISUAL = "nvim";
+          GSK_RENDERER = "gl";
+        };
       }
     ];
   };

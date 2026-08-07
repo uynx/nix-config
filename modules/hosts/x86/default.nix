@@ -10,13 +10,13 @@
       hardwareX86
       homeManagerBase
 
+      shell
+      programming
+
       # ./_hardware-configuration.nix
       inputs.determinate.nixosModules.default
 
       { networking.hostName = "x86"; }
-      {
-        home-manager.users.${self.lib.user.name}.imports = with self.homeModules; [ programming ];
-      }
     ];
   };
 }
