@@ -65,6 +65,15 @@
             hash=$(nix hash convert --hash-algo sha256 --to sri \
               "$(nix-prefetch-url --type sha256 "$url")")
             sed -i "s|^    $name = { version = \"[^\"]*\"; hash = \"[^\"]*\"; };|    $name = { version = \"$latest\"; hash = \"$hash\"; };|" "$file"
+
+            # sed exits 0 on zero matches, so an unmatched pattern used to print a
+            # successful bump while leaving the old version and hash in place.
+            # Re-read instead of trusting it — same failure the Brave updater had.
+            if [ "$(sed -n "s/^    $name = { version = \"\([^\"]*\)\".*/\1/p" "$file")" != "$latest" ]; then
+              echo "$name: no line matched in $file — has it been reformatted?" >&2
+              return 1
+            fi
+
             printf '%-12s %s -> %s\n' "$name" "$current" "$latest"
           }
 
@@ -243,19 +252,24 @@
             ".qwen/QWEN.md"
             ".config/opencode/AGENTS.md"
           ]
-          (_: { source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md"; })
-        // lib.genAttrs
-          [
-            ".agents/skills"
-            ".claude/skills"
-            ".grok/skills"
-            ".cursor/skills"
-            ".kimi-code/skills"
-            ".openclaw/skills"
-            ".qwen/skills"
-            ".config/opencode/skills"
-          ]
-          (_: { source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills"; })
+          (_: {
+            source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
+          })
+        //
+          lib.genAttrs
+            [
+              ".agents/skills"
+              ".claude/skills"
+              ".grok/skills"
+              ".cursor/skills"
+              ".kimi-code/skills"
+              ".openclaw/skills"
+              ".qwen/skills"
+              ".config/opencode/skills"
+            ]
+            (_: {
+              source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
+            })
         # codex is the exception: ~/.codex/skills already holds its own vendor
         # skills under .system, and a directory symlink would displace them. So
         # each skill is linked individually alongside them. Read impurely
