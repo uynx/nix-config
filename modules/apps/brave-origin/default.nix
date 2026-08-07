@@ -46,11 +46,19 @@
             ).stdout.strip()
 
 
+        def sub(pat, repl, text):
+            text, n = re.subn(pat, repl, text, count=1)
+            if n != 1:
+                raise SystemExit(f"No match, refusing to write: {pat}")
+            return text
+
+
         arm, amd = h("arm64"), h("amd64")
-        text = re.sub(r'version = "[^"]+";', f'version = "{latest}";', text)
-        text = re.sub(
-            r'hash = if arch == "arm64" then "[^"]+"\s+else "[^"]+";',
-            f'hash = if arch == "arm64" then "{arm}"\n         else "{amd}";',
+        text = sub(r'version = "[^"]+";', f'version = "{latest}";', text)
+        # nixfmt reflows this block, so match its whitespace, don't impose it.
+        text = sub(
+            r'(arch == "arm64" then\s*)"[^"]+"(\s*else\s*)"[^"]+";',
+            r"\g<1>" + f'"{arm}"' + r"\g<2>" + f'"{amd}";',
             text,
         )
         open(path, "w").write(text)
