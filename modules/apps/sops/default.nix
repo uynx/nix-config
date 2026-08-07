@@ -21,10 +21,5 @@
         secrets.ssh-id-ed25519.path = "${config.home.homeDirectory}/.ssh/id_ed25519";
       };
 
-      systemd.user.services.sops-nix = {
-        Unit.After = [ "graphical-session.target" ];
-        Install.WantedBy = pkgs.lib.mkForce [ "graphical-session.target" ];
-        Service.ExecStartPre = "${pkgs.gnupg}/bin/gpg-connect-agent updatestartuptty /bye";
-      };
     };
 }
