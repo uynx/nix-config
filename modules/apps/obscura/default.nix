@@ -23,6 +23,46 @@
         OBSCURA_VERSION = builtins.readFile upstream.version;
       });
 
+      # Obscura's own kill switch is installed by the daemon and only exists while it
+      # holds a tunnel, so boot until first connect (~12 s here) has no egress filter
+      # at all. This table is ours, is up before the network is, and mirrors their
+      # allow-list. Escape hatch if it ever locks the machine out of the network:
+      # `systemctl stop obscura-lockdown`. Re-enabling Mullvad means allowing its
+      # interface and fwmark here too, or its daemon will never reach its API.
+      lockdown-rules = pkgs.writeText "obscura-lockdown.nft" ''
+        table inet obscura-lockdown
+        delete table inet obscura-lockdown
+
+        table inet obscura-lockdown {
+          chain egress {
+            type filter hook postrouting priority filter + 10; policy drop;
+
+            oifname "lo" accept
+
+            # The daemon marks its own API and relay sockets (rustlib/src/net.rs,
+            # FWMARK = b"obsc"), which is what lets it reach the network to bring
+            # the tunnel up without punching a general hole.
+            meta mark 0x6f627363 accept
+            oifname "obscuravpn" accept
+
+            # Without these the interface never gets an address in the first place.
+            ip daddr 255.255.255.255 udp sport 68 udp dport 67 accept
+            ip6 daddr ff02::1:2 udp sport 546 udp dport 547 accept
+            icmpv6 type { nd-router-solicit, nd-neighbor-solicit, nd-neighbor-advert } accept
+
+            # The daemon resolves v1.api.prod.obscura.net with getaddrinfo on an
+            # *unmarked* socket (rustlib/src/dns.rs), so dropping 53 deadlocks the
+            # tunnel on any network whose DHCP resolver is off-LAN. This is the one
+            # deliberate pre-tunnel leak left.
+            udp dport 53 accept
+            tcp dport 53 accept
+
+            ip daddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 224.0.0.0/24, 239.0.0.0/8, 255.255.255.255 } accept
+            ip6 daddr { fe80::/10, fc00::/7, ff01::/16, ff02::/16, ff03::/16, ff04::/16, ff05::/16 } accept
+          }
+        }
+      '';
+
       # rust-gui-bin is only the binary; upstream keeps the launcher and icons in
       # its distro packaging directory, so pull them straight off the flake source.
       obscura-gui-desktop = pkgs.runCommand "obscura-gui-desktop" { } ''
@@ -40,6 +80,29 @@
         obscura-gui
         obscura-gui-desktop
       ];
+
+      # Ordered like NixOS' own firewall unit: default-deny has to be in place
+      # before anything can put a packet on the wire.
+      systemd.services.obscura-lockdown = {
+        description = "Obscura egress lockdown";
+        wantedBy = [ "sysinit.target" ];
+        before = [
+          "network-pre.target"
+          "shutdown.target"
+        ];
+        wants = [ "network-pre.target" ];
+        conflicts = [ "shutdown.target" ];
+        unitConfig = {
+          DefaultDependencies = false;
+          ConditionCapability = "CAP_NET_ADMIN";
+        };
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.nftables}/bin/nft -f ${lockdown-rules}";
+          ExecStop = "${pkgs.nftables}/bin/nft destroy table inet obscura-lockdown";
+        };
+      };
 
       # The CLI asks systemd over D-Bus for a unit called exactly "obscura.service"
       # to report status, so renaming this makes it report "not installed".

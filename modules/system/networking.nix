@@ -20,6 +20,12 @@
         "ipv4.dhcp-send-hostname" = false;
         "ipv6.ip6-privacy" = 2;
       };
+
+      # Probes nmcheck.gnome.org on every association — before the VPN is up, so
+      # it hands the real IP to a third party on each boot. Interval 0 is NM's
+      # documented off switch; the egress lockdown would block it anyway and
+      # leave NM permanently reporting "limited".
+      settings.connectivity.interval = 0;
     };
 
     # "network" keeps the MAC distinct per SSID so two venues can never
