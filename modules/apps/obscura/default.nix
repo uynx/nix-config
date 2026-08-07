@@ -48,6 +48,11 @@
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
 
+        # The kill-switch nftables table is owner-flagged, so the kernel destroys it
+        # with the daemon — a daemon that gives up leaves the machine unfiltered, not
+        # fail-closed. Never stop retrying, matching upstream's unit.
+        startLimitIntervalSec = 0;
+
         # auto_connect is daemon-owned state with no CLI or service flag, and the
         # daemon rewrites the whole file on shutdown, so it has to be re-asserted
         # here on every start. Redirecting into the original path rather than
@@ -72,7 +77,18 @@
           StateDirectoryMode = "0700";
           LogsDirectory = "obscura";
           LogsDirectoryMode = "0700";
-          Restart = "on-failure";
+
+          # The daemon parks its nftables netlink socket in the fd store so the
+          # kill-switch table survives a restart instead of dying with the socket.
+          # It pushes the fd unconditionally, so without a non-zero store max that
+          # push is silently discarded and every restart reopens the window.
+          Type = "notify";
+          FileDescriptorStoreMax = 8;
+
+          Restart = "always";
+          RestartSec = 1;
+          RestartSteps = 5;
+          RestartMaxDelaySec = 30;
         };
       };
 
