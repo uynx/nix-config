@@ -127,9 +127,6 @@
         pkgs.capitaine-cursors
       ];
 
-      # Puts niri in the session picker.
-      services.displayManager.sessionPackages = [ pkgs.niri ];
-
       # Weston grabs the lowest-numbered DRM card, which before apple-drm binds
       # is U-Boot's simpledrm on card0 — the node that binding tears down. The
       # greeter then dies on drmModeGetResources and SDDM logs it as success.
