@@ -10,7 +10,7 @@
 let
   pins = {
     claude-code = { version = "2.1.224"; hash = "sha256-PlCDbiJ4aHRic2U+D4EVz1/JyzSggYR8YEDIHYCBLDM="; };
-    codex = { version = "0.147.0"; hash = "sha256-62d8gPZmsauLSx0IO2bo1hSxKB2WC7b5/Yypj1izi5A="; };
+    codex = { version = "0.147.0"; hash = "sha256-TQm/AAWXdo36BwsOfGEvD8JYrH+rNk5XAQTqYl+RhUY="; };
     grok = { version = "1.0.0"; hash = "sha256-u3xREWVkoiGfakmFCBUGD0FpGKxAfx8rqCxTwLDUOD8="; };
     kimi = { version = "0.34.0"; hash = "sha256-25yI0PREIPEkXPdF6ttWneGOzYMBnsq4iLMCjt3zboc="; };
     opencode = { version = "1.18.15"; hash = "sha256-UAYRgZ/4iRaxhWSZkFBam+dq0Tylu0uTI+Wr3Tmxxvs="; };
@@ -43,22 +43,22 @@ in
     meta = meta "https://code.claude.com" "Anthropic's Claude Code CLI" // { mainProgram = "claude"; };
   };
 
+  # Source is npm, not the GitHub release: that tarball ships `codex` alone,
+  # while every GPT-5.6 model is `tool_mode = code_mode_only` and routes all
+  # tool calls through a sibling `codex-code-mode-host` binary that only the
+  # npm platform package carries. Without it every call dies at "timed out
+  # negotiating with the code-mode host". The `codex` binaries are identical.
   codex = stdenvNoCC.mkDerivation {
     pname = "codex";
     inherit (pins.codex) version;
     src = fetchurl {
-      url = "https://github.com/openai/codex/releases/download/rust-v${pins.codex.version}/codex-aarch64-unknown-linux-musl.tar.gz";
+      url = "https://registry.npmjs.org/@openai/codex/-/codex-${pins.codex.version}-linux-arm64.tgz";
       inherit (pins.codex) hash;
     };
-    sourceRoot = ".";
+    sourceRoot = "package/vendor/aarch64-unknown-linux-musl";
     installPhase = ''
       runHook preInstall
-      install -Dm755 "$(find . -type f -name 'codex*' -perm -u+x | head -1)" "$out/bin/codex"
-      cat <<'WRAPPER' > $out/bin/codex-code-mode-host
-#!/bin/sh
-exec "$(dirname "$0")/codex" exec-server --listen stdio "$@"
-WRAPPER
-      chmod +x $out/bin/codex-code-mode-host
+      install -Dm755 bin/codex bin/codex-code-mode-host -t "$out/bin"
       runHook postInstall
     '';
     meta = meta "https://github.com/openai/codex" "OpenAI's Codex CLI" // { mainProgram = "codex"; };

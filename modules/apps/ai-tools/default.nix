@@ -82,10 +82,11 @@
           bump claude-code "$claude" \
             "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude"
 
-          codex=$(curl -fsSL https://api.github.com/repos/openai/codex/releases/latest \
-            | jq -r '.tag_name | ltrimstr("rust-v")')
+          # npm, not the GitHub feed — the GitHub tarball omits the code-mode
+          # host binary, so the feed has to match the source we actually fetch.
+          codex=$(curl -fsSL https://registry.npmjs.org/@openai/codex/latest | jq -r '.version')
           bump codex "$codex" \
-            "https://github.com/openai/codex/releases/download/rust-v$codex/codex-aarch64-unknown-linux-musl.tar.gz"
+            "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-arm64.tgz"
 
           grok=$(curl -fsSL https://x.ai/cli/stable | tr -d '[:space:]')
           bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
