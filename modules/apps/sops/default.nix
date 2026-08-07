@@ -20,5 +20,10 @@
         # copy in, so the plaintext key stops existing on disk.
         secrets.ssh-id-ed25519.path = "${config.home.homeDirectory}/.ssh/id_ed25519";
       };
+
+      systemd.user.services.sops-nix = {
+        Unit.After = [ "graphical-session.target" ];
+        Install.WantedBy = pkgs.lib.mkForce [ "graphical-session.target" ];
+      };
     };
 }
