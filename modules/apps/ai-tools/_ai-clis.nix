@@ -9,11 +9,11 @@
 # bump silently stops working.
 let
   pins = {
-    claude-code = { version = "2.1.223"; hash = "sha256-YOg9jbDolNDlRBPl59qiVtGA22YPUeE5pRthT8MM86w="; };
-    codex = { version = "0.146.1"; hash = "sha256-Bd5l7ntr0CA45yDMMTlB1exnlHGOQmG9KP2DuT/jTUM="; };
-    grok = { version = "0.2.118"; hash = "sha256-VAEOM1qs5rXe3QIlOeznvIPzglPoY2qvB5ZWKu7LLmc="; };
+    claude-code = { version = "2.1.224"; hash = "sha256-PlCDbiJ4aHRic2U+D4EVz1/JyzSggYR8YEDIHYCBLDM="; };
+    codex = { version = "0.147.0"; hash = "sha256-62d8gPZmsauLSx0IO2bo1hSxKB2WC7b5/Yypj1izi5A="; };
+    grok = { version = "1.0.0"; hash = "sha256-u3xREWVkoiGfakmFCBUGD0FpGKxAfx8rqCxTwLDUOD8="; };
     kimi = { version = "0.34.0"; hash = "sha256-25yI0PREIPEkXPdF6ttWneGOzYMBnsq4iLMCjt3zboc="; };
-    opencode = { version = "1.18.14"; hash = "sha256-J+3nqiCAACRZ2MlwpAAWu+9JzRO7RnMCd32mdGfxYC0="; };
+    opencode = { version = "1.18.15"; hash = "sha256-UAYRgZ/4iRaxhWSZkFBam+dq0Tylu0uTI+Wr3Tmxxvs="; };
     cursor-agent = { version = "2026.08.04-aaa8809"; hash = "sha256-1RliiSkqZgtZgHrFCMmsNuweGhp+RpevPvaCT96phO4="; };
   };
 
