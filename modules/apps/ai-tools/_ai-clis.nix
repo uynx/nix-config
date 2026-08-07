@@ -53,8 +53,7 @@ in
     sourceRoot = ".";
     installPhase = ''
       runHook preInstall
-      mkdir -p $out/bin
-      find . -type f -perm -u+x -exec cp {} $out/bin/ \;
+      install -Dm755 "$(find . -type f -name 'codex*' -perm -u+x | head -1)" "$out/bin/codex"
       runHook postInstall
     '';
     meta = meta "https://github.com/openai/codex" "OpenAI's Codex CLI" // { mainProgram = "codex"; };
