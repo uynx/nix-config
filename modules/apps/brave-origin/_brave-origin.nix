@@ -49,7 +49,12 @@
 }:
 
 let
-  version = "1.93.134";
+  # Rewritten by `update-brave-origin` with json.dump, so this file is ordinary
+  # Nix and safe to format. The hash keys are the Debian arch names, which is
+  # what lets `pins.${arch}` replace a second if-chain.
+  pins = builtins.fromJSON (builtins.readFile ./pins.json);
+
+  inherit (pins) version;
 
   arch =
     if stdenv.hostPlatform.system == "aarch64-linux" then
@@ -59,11 +64,7 @@ let
     else
       throw "Unsupported platform: ${stdenv.hostPlatform.system}";
 
-  hash =
-    if arch == "arm64" then
-      "sha256-tHrttpqcQM7CDc/DoZH0DiWSTgDZVJ77shzQ6tRoeb4="
-    else
-      "sha256-KIuPPIdbzYVd/REn/YVZ1+CVIid8/VaeP7LUThBuxTI=";
+  hash = pins.${arch};
 
   deps = [
     alsa-lib
