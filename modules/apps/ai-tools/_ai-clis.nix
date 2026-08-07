@@ -54,6 +54,7 @@ in
     installPhase = ''
       runHook preInstall
       install -Dm755 "$(find . -type f -name 'codex*' -perm -u+x | head -1)" "$out/bin/codex"
+      ln -s codex "$out/bin/codex-code-mode-host"
       runHook postInstall
     '';
     meta = meta "https://github.com/openai/codex" "OpenAI's Codex CLI" // { mainProgram = "codex"; };
