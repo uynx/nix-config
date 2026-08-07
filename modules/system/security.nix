@@ -1,6 +1,6 @@
 {
   flake.nixosModules.security =
-    { pkgs, ... }:
+    { ... }:
     {
       # Audited 2026-08-04: `ss -tulnp` on the running system listed nothing but
       # a DHCPv6 client and one mDNS socket, so both allow-lists stay empty.

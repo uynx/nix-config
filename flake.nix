@@ -43,13 +43,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    obscuravpn = {
-      url = "github:Sovereign-Engineering/obscuravpn-client";
-      # Their pinned rust-overlay fetches the 1.89.0 cargo component as a file
-      # named "unknown", which unpackPhase then refuses ("do not know how to
-      # unpack source archive"). A current rust-overlay names it correctly.
-      inputs.rust-overlay.url = "github:oxalica/rust-overlay";
-    };
+    obscuravpn.url = "github:Sovereign-Engineering/obscuravpn-client";
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
