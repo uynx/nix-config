@@ -25,7 +25,6 @@
       runtimePkgs = [ pkgs.jq ];
 
       shellAliases = {
-        update = "update-brave-origin && update-ai-clis && nix flake update --flake ~/nixos-config";
         word = "libreoffice --writer";
         powerpoint = "libreoffice --impress";
         gen = "nix-env --list-generations";
@@ -44,6 +43,19 @@
       configFile.content = ''
         set -g fish_greeting ""
         fish_vi_key_bindings
+
+        # `update` relocks everything and bumps the pinned tools; `update nvf` (or
+        # any input names) relocks only those and skips the tool updaters, which
+        # is the narrow diff worth having when one input needs to move.
+        # --commit-lock-file keeps the relock as its own commit, so reb's
+        # checkpoint no longer bundles a lock bump with unrelated edits.
+        function update
+            if test (count $argv) -eq 0
+                update-brave-origin; and update-ai-clis
+                or return 1
+            end
+            nix flake update --flake ~/nixos-config --commit-lock-file $argv
+        end
 
         # Android VM, sized to the monitor it opens on. Must be the *logical*
         # size, used as niri reports it — do not divide by the scale again. A
