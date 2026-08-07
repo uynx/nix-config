@@ -107,6 +107,18 @@
           echo 'rolling (takes effect now, no rebuild):'
           fi
 
+          get_ver() {
+            bin=$1
+            case "$bin" in
+              agy) agy --version 2>/dev/null | head -1 ;;
+              openclaw) openclaw --version 2>/dev/null | head -1 | sed 's/OpenClaw //' ;;
+              t3) t3 --version 2>/dev/null | head -1 | sed 's/t3 //' ;;
+              qwen) (qwen --version 2>/dev/null || qwen-code --version 2>/dev/null) | head -1 ;;
+              hermes) hermes --version 2>/dev/null | head -1 | sed 's/Hermes Agent //' ;;
+              *) echo "" ;;
+            esac
+          }
+
           # Keep stderr: a swallowed failure here reads exactly like success,
           # which is how this once installed nothing at all.
           roll() {
@@ -115,11 +127,20 @@
             if [ -n "$missingOnly" ] && command -v "$name" >/dev/null 2>&1; then
               return
             fi
-            printf '  %-12s ' "$name"
+            before=$(get_ver "$name")
             if err=$("$@" 2>&1); then
-              echo ok
+              after=$(get_ver "$name")
+              if [ -n "$before" ] && [ -n "$after" ] && [ "$before" = "$after" ]; then
+                printf '  %-12s %s (up to date)\n' "$name" "$after"
+              elif [ -n "$before" ] && [ -n "$after" ]; then
+                printf '  %-12s %s -> %s\n' "$name" "$before" "$after"
+              elif [ -n "$after" ]; then
+                printf '  %-12s %s\n' "$name" "$after"
+              else
+                printf '  %-12s ok\n' "$name"
+              fi
             else
-              echo FAILED
+              printf '  %-12s FAILED\n' "$name"
               printf '%s\n' "$err" | tail -3 | sed 's/^/               /'
             fi
           }
@@ -138,8 +159,9 @@
             roll hermes sh -c 'curl -fsSL https://hermes-agent.nousresearch.com/install.sh \
               | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
           elif [ -z "$missingOnly" ]; then
+            ver=$(get_ver hermes)
             if hermes update --check 2>&1 | grep -q 'Already up to date'; then
-              printf '  %-12s %s\n' hermes 'ok (up to date)'
+              printf '  %-12s %s (up to date)\n' hermes "$ver"
             else
               roll hermes hermes update --yes
             fi
