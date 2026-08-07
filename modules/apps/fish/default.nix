@@ -31,6 +31,7 @@
         wt = "git worktree list";
         wta = "git worktree add";
         wtr = "git worktree remove";
+        v = "nvim";
         vi = "nvim";
         vim = "nvim";
         tree = "eza --tree --icons";
