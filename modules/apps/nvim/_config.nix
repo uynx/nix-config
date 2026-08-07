@@ -1,4 +1,4 @@
-{ tmuxNavigator }:
+{ tmuxNavigator, flakePath }:
 {
   vim = {
     viAlias = true;
@@ -93,7 +93,16 @@
       enableTreesitter = true;
       enableFormat = true;
 
-      nix.enable = true;
+      nix = {
+        enable = true;
+        # nvf defaults to nil, which only knows upstream NixOS options. nixd can
+        # be pointed at a real evaluation, which is the only way completion
+        # reaches this flake's own modules — see lsp.servers.nixd below.
+        lsp.servers = [ "nixd" ];
+        # nvf defaults to alejandra; every file in this repo is nixfmt-formatted,
+        # so format-on-save would rewrite the whole tree into the other style.
+        format.type = [ "nixfmt" ];
+      };
       lua.enable = true;
       python.enable = true;
       typescript.enable = true;
