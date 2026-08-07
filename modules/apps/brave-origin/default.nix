@@ -4,6 +4,7 @@
 
     let
       update-brave-origin = pkgs.writers.writePython3Bin "update-brave-origin" { } ''
+        import json
         import os
         import re
         import subprocess
@@ -15,12 +16,12 @@
         pat = r"Package: brave-origin\n.*?Version: ([\d.]+)"
         latest = re.search(pat, idx, re.DOTALL).group(1)
         # Split: writePython3Bin runs a PEP8 check and E501 fires at 79 chars.
-        rel = "modules/apps/brave-origin/_brave-origin.nix"
+        rel = "modules/apps/brave-origin/pins.json"
         path = os.path.expanduser(f"~/nixos-config/{rel}")
-        text = open(path).read()
-        cur = re.search(r'version = "([\d.]+)";', text).group(1)
-        print(f"Current: {cur} | Latest: {latest}")
-        if cur == latest:
+        with open(path) as f:
+            pins = json.load(f)
+        print(f"Current: {pins['version']} | Latest: {latest}")
+        if pins["version"] == latest:
             print("Already up to date.")
             raise SystemExit(0)
 
@@ -46,23 +47,18 @@
             ).stdout.strip()
 
 
-        def sub(pat, repl, text):
-            text, n = re.subn(pat, repl, text, count=1)
-            if n != 1:
-                raise SystemExit(f"No match, refusing to write: {pat}")
-            return text
-
-
-        arm, amd = h("arm64"), h("amd64")
-        text = sub(r'version = "[^"]+";', f'version = "{latest}";', text)
-        # nixfmt reflows this block, so match its whitespace, don't impose it.
-        text = sub(
-            r'(arch == "arm64" then\s*)"[^"]+"(\s*else\s*)"[^"]+";',
-            r"\g<1>" + f'"{arm}"' + r"\g<2>" + f'"{amd}";',
-            text,
-        )
-        open(path, "w").write(text)
-        print("Updated brave-origin.nix successfully!")
+        # Keys are the Debian arch names, which _brave-origin.nix indexes
+        # directly. Both hashes are fetched before anything is written, so a
+        # failed fetch leaves the old pair intact rather than a mixed one.
+        fresh = {
+            "version": latest,
+            "arm64": h("arm64"),
+            "amd64": h("amd64"),
+        }
+        with open(path, "w") as f:
+            json.dump(fresh, f, indent=2)
+            f.write("\n")
+        print("Updated pins.json successfully!")
       '';
 
     in
