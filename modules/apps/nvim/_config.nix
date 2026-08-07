@@ -43,7 +43,22 @@
       };
     };
 
-    lsp.enable = true;
+    lsp = {
+      enable = true;
+
+      # The reason nixd is worth the swap: pointed at a real evaluation of this
+      # flake, completion and hover cover *our* modules' options, not just
+      # upstream NixOS. Home Manager rides in as a NixOS submodule here, so its
+      # options have to be unwrapped with getSubOptions rather than read off a
+      # homeConfigurations output this flake does not produce.
+      servers.nixd.settings.nixd = {
+        nixpkgs.expr = ''import (builtins.getFlake "${flakePath}").inputs.nixpkgs { }'';
+        options = {
+          nixos.expr = ''(builtins.getFlake "${flakePath}").nixosConfigurations.asahi.options'';
+          home_manager.expr = ''(builtins.getFlake "${flakePath}").nixosConfigurations.asahi.options.home-manager.users.type.getSubOptions [ ]'';
+        };
+      };
+    };
     formatter.conform-nvim.enable = true;
     treesitter.enable = true;
     telescope.enable = true;
