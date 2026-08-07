@@ -57,7 +57,7 @@ in
       cat <<'EOF' > $out/bin/codex-code-mode-host
 #!/bin/sh
 dir="$(dirname "$0")"
-exec "$dir/codex" exec-server "$@"
+exec "$dir/codex" "$@"
 EOF
       chmod +x $out/bin/codex-code-mode-host
       runHook postInstall
