@@ -17,14 +17,7 @@
         nixpkgs.hostPlatform = "aarch64-darwin";
       }
       {
-        home-manager.users.${self.lib.user.name}.imports = with self.homeModules; [
-          programming
-          {
-            home.username = self.lib.user.name;
-            home.homeDirectory = self.lib.user.darwinHome;
-            home.stateVersion = "26.05";
-          }
-        ];
+        home-manager.users.${self.lib.user.name}.imports = with self.homeModules; [ programming ];
       }
     ];
   };

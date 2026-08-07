@@ -16,10 +16,6 @@
       fish
     ];
 
-    # Only RustDesk uses this. Its app state lives outside the flake, so
-    # nothing else should be installed this way.
-    services.flatpak.enable = true;
-
     environment.systemPackages = with pkgs; [
       git
       vim
@@ -27,7 +23,6 @@
       curl
       ghostty
       brightnessctl
-      flatpak
     ];
 
     system.stateVersion = "26.05";
