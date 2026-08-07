@@ -7,7 +7,9 @@
 
       settings.yazi.mgr = {
         show_hidden = true;
-        sort_by = "modified";
+        # "modified" was renamed upstream; yazi rejects the whole config file
+        # and falls back to presets if this is wrong.
+        sort_by = "mtime";
         sort_dir_first = true;
       };
 
