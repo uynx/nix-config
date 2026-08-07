@@ -1,0 +1,161 @@
+{ inputs, moduleWithSystem, ... }:
+{
+  flake.nixosModules.obscura = moduleWithSystem (
+    { inputs', ... }:
+    { pkgs, lib, ... }:
+    let
+      upstream = inputs'.obscuravpn.packages;
+
+      # The sidebar icons are symbolic SVGs baked into the binary as a GResource, and
+      # GTK renders SVG through gdk-pixbuf's librsvg loader. rust-gui-bin ships
+      # unwrapped, so without this the whole sidebar falls back to "image-missing".
+      obscura-gui = pkgs.runCommand "obscura-gui" { nativeBuildInputs = [ pkgs.makeWrapper ]; } ''
+        mkdir -p $out/bin
+        makeWrapper ${upstream.rust-gui-bin}/bin/obscura-gui $out/bin/obscura-gui \
+          --set GDK_PIXBUF_MODULE_FILE \
+            "${pkgs.librsvg}/${builtins.dirOf pkgs.gdk-pixbuf.moduleDir}/loaders.cache"
+      '';
+
+      # Upstream sets OBSCURA_VERSION on rust-gui-bin but not on rust-cli-bin, so the
+      # daemon compiles with version.rs's "v0.0.0-dev" fallback and the GUI refuses to
+      # talk to it. upstream.version is the exact string the GUI was stamped with.
+      obscura = upstream.rust-cli-bin.overrideAttrs (_: {
+        OBSCURA_VERSION = builtins.readFile upstream.version;
+      });
+
+      # Obscura's own kill switch is installed by the daemon and only exists while it
+      # holds a tunnel, so boot until first connect (~12 s here) has no egress filter
+      # at all. This table is ours, is up before the network is, and mirrors their
+      # allow-list. Escape hatch if it ever locks the machine out of the network:
+      # `systemctl stop obscura-lockdown`. Re-enabling Mullvad means allowing its
+      # interface and fwmark here too, or its daemon will never reach its API.
+      lockdown-rules = pkgs.writeText "obscura-lockdown.nft" ''
+        table inet obscura-lockdown
+        delete table inet obscura-lockdown
+
+        table inet obscura-lockdown {
+          chain egress {
+            type filter hook postrouting priority filter + 10; policy drop;
+
+            oifname "lo" accept
+
+            # The daemon marks its own API and relay sockets (rustlib/src/net.rs,
+            # FWMARK = b"obsc"), which is what lets it reach the network to bring
+            # the tunnel up without punching a general hole.
+            meta mark 0x6f627363 accept
+            oifname "obscuravpn" accept
+
+            # Without these the interface never gets an address in the first place.
+            ip daddr 255.255.255.255 udp sport 68 udp dport 67 accept
+            ip6 daddr ff02::1:2 udp sport 546 udp dport 547 accept
+            icmpv6 type { nd-router-solicit, nd-neighbor-solicit, nd-neighbor-advert } accept
+
+            # The daemon resolves v1.api.prod.obscura.net with getaddrinfo on an
+            # *unmarked* socket (rustlib/src/dns.rs), so dropping 53 deadlocks the
+            # tunnel on any network whose DHCP resolver is off-LAN. This is the one
+            # deliberate pre-tunnel leak left.
+            udp dport 53 accept
+            tcp dport 53 accept
+
+            ip daddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 224.0.0.0/24, 239.0.0.0/8, 255.255.255.255 } accept
+            ip6 daddr { fe80::/10, fc00::/7, ff01::/16, ff02::/16, ff03::/16, ff04::/16, ff05::/16 } accept
+          }
+        }
+      '';
+
+      # rust-gui-bin is only the binary; upstream keeps the launcher and icons in
+      # its distro packaging directory, so pull them straight off the flake source.
+      obscura-gui-desktop = pkgs.runCommand "obscura-gui-desktop" { } ''
+        install -Dm444 ${inputs.obscuravpn}/linux/common/net.obscura.vpn.gui.desktop \
+          $out/share/applications/net.obscura.vpn.gui.desktop
+        for px in 128 256; do
+          install -Dm444 ${inputs.obscuravpn}/linux/common/icons/net.obscura.vpn.gui-$px.png \
+            $out/share/icons/hicolor/''${px}x''${px}/apps/net.obscura.vpn.gui.png
+        done
+      '';
+    in
+    {
+      environment.systemPackages = [
+        obscura
+        obscura-gui
+        obscura-gui-desktop
+      ];
+
+      # Ordered like NixOS' own firewall unit: default-deny has to be in place
+      # before anything can put a packet on the wire.
+      systemd.services.obscura-lockdown = {
+        description = "Obscura egress lockdown";
+        wantedBy = [ "sysinit.target" ];
+        before = [
+          "network-pre.target"
+          "shutdown.target"
+        ];
+        wants = [ "network-pre.target" ];
+        conflicts = [ "shutdown.target" ];
+        unitConfig = {
+          DefaultDependencies = false;
+          ConditionCapability = "CAP_NET_ADMIN";
+        };
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.nftables}/bin/nft -f ${lockdown-rules}";
+          ExecStop = "${pkgs.nftables}/bin/nft destroy table inet obscura-lockdown";
+        };
+      };
+
+      # The CLI asks systemd over D-Bus for a unit called exactly "obscura.service"
+      # to report status, so renaming this makes it report "not installed".
+      systemd.services.obscura = {
+        description = "Obscura VPN";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "network.target" ];
+
+        # The kill-switch nftables table is owner-flagged, so the kernel destroys it
+        # with the daemon — a daemon that gives up leaves the machine unfiltered, not
+        # fail-closed. Never stop retrying, matching upstream's unit.
+        startLimitIntervalSec = 0;
+
+        # auto_connect is daemon-owned state with no CLI or service flag, and the
+        # daemon rewrites the whole file on shutdown, so it has to be re-asserted
+        # here on every start. Redirecting into the original path rather than
+        # renaming a temp file over it keeps the file's mode and owner.
+        preStart = ''
+          cfg=/var/lib/obscura/config.json
+          [ -e "$cfg" ] || exit 0
+          patched=$(${lib.getExe pkgs.jq} '.auto_connect = true' "$cfg") \
+            && printf '%s' "$patched" > "$cfg"
+        '';
+
+        serviceConfig = {
+          ExecStart = "${obscura}/bin/obscura service --dns network-manager";
+          # The daemon binds /run/obscura.sock without chowning it, so the socket
+          # inherits the unit's group and mode — clients check membership of the
+          # owning group, and connecting to a unix socket needs write permission.
+          Group = "obscura";
+          UMask = "0007";
+          # --config-dir and --log-dir are required and read $STATE_DIRECTORY and
+          # $LOGS_DIRECTORY, so dropping either directive makes the daemon exit 2.
+          StateDirectory = "obscura";
+          StateDirectoryMode = "0700";
+          LogsDirectory = "obscura";
+          LogsDirectoryMode = "0700";
+
+          # The daemon parks its nftables netlink socket in the fd store so the
+          # kill-switch table survives a restart instead of dying with the socket.
+          # It pushes the fd unconditionally, so without a non-zero store max that
+          # push is silently discarded and every restart reopens the window.
+          Type = "notify";
+          FileDescriptorStoreMax = 8;
+
+          Restart = "always";
+          RestartSec = 1;
+          RestartSteps = 5;
+          RestartMaxDelaySec = 30;
+        };
+      };
+
+      users.groups.obscura = { };
+    }
+  );
+}

@@ -1,0 +1,73 @@
+{
+  # hostName is per-host, set in modules/hosts/<name>/default.nix
+  flake.nixosModules.networking = {
+    # Boot otherwise blocks on this unit until it times out whenever Wi-Fi is
+    # slow to associate, and nothing here needs the network that early.
+    systemd.services.NetworkManager-wait-online.enable = false;
+
+    networking.networkmanager = {
+      enable = true;
+      wifi.backend = "iwd";
+
+      # Wifi randomization lives in iwd below, not here: under the iwd backend
+      # iwd owns the interface MAC and NetworkManager's cloned-mac-address is
+      # a no-op. This line only covers wired.
+      ethernet.macAddress = "random";
+
+      # Defaults to yes; a constant option-12 hostname tracks better than the
+      # MAC it would otherwise undo. Enforce RFC 8981 temporary IPv6 privacy addresses.
+      settings.connection = {
+        "ipv4.dhcp-send-hostname" = false;
+        "ipv6.ip6-privacy" = 2;
+      };
+
+      # Probes nmcheck.gnome.org on every association — before the VPN is up, so
+      # it hands the real IP to a third party on each boot. Interval 0 is NM's
+      # documented off switch; the egress lockdown would block it anyway and
+      # leave NM permanently reporting "limited".
+      settings.connectivity.interval = 0;
+    };
+
+    # "network" keeps the MAC distinct per SSID so two venues can never
+    # correlate. "nic" preserves Apple vendor OUI to avoid synthetic OUI flags.
+    networking.wireless.iwd.settings = {
+      General = {
+        AddressRandomization = "network";
+        AddressRandomizationRange = "nic";
+      };
+      Scan.DisablePeriodicScan = true;
+    };
+
+    # Per-SSID alone still gives a venue a stable pseudonym across visits.
+    # AlwaysRandomizeAddress re-rolls it every connection, and only works under
+    # AddressRandomization="network". It is per-network state under /var/lib/iwd
+    # with no NixOS option and no global equivalent, hence patching at boot & on change.
+    systemd.services.iwd-randomize-known-networks = {
+      description = "Force per-connection MAC randomization on every known network";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "iwd.service" ];
+      serviceConfig.Type = "oneshot";
+      script = ''
+        shopt -s nullglob
+        for f in /var/lib/iwd/*.psk /var/lib/iwd/*.open /var/lib/iwd/*.8021x; do
+          grep -q '^AlwaysRandomizeAddress' "$f" && continue
+          # Append-only/insert-only: never rewrite the file, it holds the PSK.
+          if grep -q '^\[Settings\]' "$f"; then
+            sed -i '/^\[Settings\]/a AlwaysRandomizeAddress=true' "$f"
+          else
+            printf '\n[Settings]\nAlwaysRandomizeAddress=true\n' >> "$f"
+          fi
+        done
+      '';
+    };
+
+    systemd.paths.iwd-randomize-known-networks = {
+      description = "Watch /var/lib/iwd for new network profiles";
+      wantedBy = [ "multi-user.target" ];
+      pathConfig = {
+        PathModified = "/var/lib/iwd";
+        Unit = "iwd-randomize-known-networks.service";
+      };
+    };
+  };
+}

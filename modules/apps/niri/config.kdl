@@ -1,0 +1,183 @@
+// Translated from hypr/hyprland.conf, whose $mainMod was ALT.
+//
+// niri's `Mod` is NOT Alt here: it means Super on a TTY and Alt only when niri
+// runs nested in another compositor. So every Mod+ bind below is Super+ in this
+// session. To get Hyprland's Alt back, set `mod-key "Alt"` in the input block.
+
+input {
+    keyboard {
+        xkb {
+            layout "us"
+            options "caps:escape"
+        }
+    }
+    touchpad {
+        tap
+        natural-scroll
+        accel-speed -0.2
+
+        // The Apple trackpad is wide enough that a resting palm sits on it while
+        // typing, and with bare `tap` every brush registers a click and drops the
+        // cursor wherever the palm is. dwt gates the touchpad for a moment after
+        // each keystroke, which is the actual palm-rejection lever niri exposes.
+        dwt
+
+        // Decide a click by how many fingers are down rather than by which half
+        // of the pad was pressed. On a trackpad this size, the bottom-corner
+        // model reads a resting palm as a held right-click.
+        click-method "clickfinger"
+    }
+    mouse {
+        accel-speed -0.8
+    }
+    focus-follows-mouse
+}
+
+// The laptop is deliberately left unpositioned so it always sits at the origin,
+// with or without the external monitor attached. Pinning it to x=1920 to make
+// room for HDMI on the left left a 1920-wide hole in the layout whenever the
+// monitor was unplugged: XWayland reported a 4944x1890 root with eDP-1 at
+// +1920+0, so X clients that place themselves at (0,0) — Wine's virtual desktop
+// does exactly that — landed in the empty region beside the panel.
+output "eDP-1" {
+    mode "3024x1890@120"
+    scale 2.0
+}
+
+// Negative, so the monitor keeps its place to the left of the laptop without
+// moving the laptop off the origin.
+output "HDMI-A-1" {
+    mode "1920x1080@60"
+    scale 1.0
+    position x=-1920 y=0
+}
+
+layout {
+    gaps 8
+    center-focused-column "always"
+    preset-column-widths {
+        proportion 0.5
+        proportion 0.75
+        proportion 1.0
+    }
+    default-column-width { proportion 0.75; }
+}
+
+xwayland-satellite {
+    path "@xwaylandSatellite@"
+}
+spawn-at-startup "noctalia-shell"
+spawn-at-startup "sh" "-c" "gpg-connect-agent updatestartuptty /bye && systemctl --user restart sops-nix.service"
+
+// Tile everything. A window-rule with no `match` applies to every window, so
+// apps that ask to be floating — Proton VPN, Steam's updater, assorted dialogs
+// — join the scrolling layout instead of sitting on top of it. Rules are
+// applied in order, so anything below can still override this.
+//
+// Mod+V toggles a window back to floating when one genuinely wants it.
+window-rule {
+    open-floating false
+}
+
+window-rule {
+    match app-id="^pinentry"
+    match app-id="^org\\.gnupg\\.pinentry"
+    open-floating true
+}
+
+// Proton VPN is a narrow app; a third of the screen suits it better than the
+// global 0.75.
+window-rule {
+    match app-id="^proton\\.vpn\\.app\\.gtk$"
+    default-column-width { proportion 0.33; }
+}
+
+// Steam games open fullscreen. This replaces an imperative fullscreen toggle
+// that used to live in steam-game-watch: niri's IPC does not report whether a
+// window is already fullscreen, so a toggle would be a coin flip. Stick Fight
+// (674940) is excluded because it runs inside a Wine virtual desktop.
+window-rule {
+    match app-id="^steam_app_[0-9]+$"
+    match app-id="^cs2$"
+    exclude app-id="^steam_app_674940$"
+    open-fullscreen true
+}
+
+prefer-no-csd
+screenshot-path "~/Pictures/Screenshots/screenshot-%Y-%m-%d-%H-%M-%S.png"
+
+binds {
+    Mod+Shift+Slash { show-hotkey-overlay; }
+
+    // Apps
+    Mod+P { spawn "ghostty"; }
+    Mod+Shift+P { spawn "ghostty" "-e" "tmux-sessionizer"; }
+    Mod+Shift+Escape { spawn "ghostty" "-e" "btop"; }
+    Mod+N { spawn "brave-activation" "Personal"; }
+    Mod+M { spawn "brave-activation" "School"; }
+    Mod+D { spawn "dictate"; }
+    Mod+Space { spawn "sh" "-c" "noctalia-shell ipc call launcher toggle"; }
+
+    // Window management
+    // close-active, not niri's close-window: a Steam game leaves Proton running
+    // inside the VM when only its window is closed.
+    Mod+W { spawn "close-active"; }
+    Mod+Q { spawn "close-active"; }
+    Mod+V { toggle-window-floating; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+
+    // Focus: h/l move between columns, j/k within a column
+    Mod+H { focus-column-left; }
+    Mod+L { focus-column-right; }
+    Mod+J { focus-window-down; }
+    Mod+K { focus-window-up; }
+
+    Mod+Shift+H { move-column-left; }
+    Mod+Shift+L { move-column-right; }
+    Mod+Shift+J { move-window-down; }
+    Mod+Shift+K { move-window-up; }
+
+    // Monitors
+    Mod+E { focus-monitor-left; }
+    Mod+R { focus-monitor-right; }
+    Mod+Shift+E { move-column-to-monitor-left; }
+    Mod+Shift+R { move-column-to-monitor-right; }
+
+    // Workspaces: u/i/o replace the old workspace-switcher script
+    Mod+U { focus-workspace 1; }
+    Mod+I { focus-workspace 2; }
+    Mod+O { focus-workspace 3; }
+    Mod+Shift+U { move-column-to-workspace 1; }
+    Mod+Shift+I { move-column-to-workspace 2; }
+    Mod+Shift+O { move-column-to-workspace 3; }
+
+    // Scrolling — the reason for niri
+    Mod+WheelScrollDown  cooldown-ms=150 { focus-column-right; }
+    Mod+WheelScrollUp    cooldown-ms=150 { focus-column-left; }
+
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Minus { set-column-width "-10%"; }
+
+    // Media and brightness
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "-l" "1" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+    XF86AudioMute        allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "-e4" "-n2" "set" "5%+"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "-e4" "-n2" "set" "5%-"; }
+    XF86AudioNext  allow-when-locked=true { spawn "playerctl" "next"; }
+    XF86AudioPause allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioPlay  allow-when-locked=true { spawn "playerctl" "play-pause"; }
+
+    // Screenshots — saved to screenshot-path above and copied to the clipboard.
+    // Mod+S duplicates Print because this laptop's keyboard has no Print key.
+    Print       { screenshot; }
+    Ctrl+Print  { screenshot-screen; }
+    Alt+Print   { screenshot-window; }
+    Mod+S       { screenshot; }
+    Mod+Ctrl+S  { screenshot-screen; }
+    Mod+Alt+S   { screenshot-window; }
+
+    Mod+Shift+Q { quit; }
+}
