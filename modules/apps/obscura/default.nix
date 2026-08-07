@@ -57,8 +57,12 @@
           # owning group, and connecting to a unix socket needs write permission.
           Group = "obscura";
           UMask = "0007";
+          # --config-dir and --log-dir are required and read $STATE_DIRECTORY and
+          # $LOGS_DIRECTORY, so dropping either directive makes the daemon exit 2.
           StateDirectory = "obscura";
           StateDirectoryMode = "0700";
+          LogsDirectory = "obscura";
+          LogsDirectoryMode = "0700";
           Restart = "on-failure";
         };
       };
