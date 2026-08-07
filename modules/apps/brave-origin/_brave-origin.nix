@@ -49,7 +49,7 @@
 }:
 
 let
-  version = "1.93.132";
+  version = "1.93.134";
 
   arch =
     if stdenv.hostPlatform.system == "aarch64-linux" then
@@ -61,9 +61,9 @@ let
 
   hash =
     if arch == "arm64" then
-      "sha256-H1rOjiqKSPxLJ1FzswOIKLeEsPTbNJ6GapZsXLFBaxI="
+      "sha256-tHrttpqcQM7CDc/DoZH0DiWSTgDZVJ77shzQ6tRoeb4="
     else
-      "sha256-F5d660t4t52L27gt8SF9n/54lmK+CeqZeqlbS84wjvU=";
+      "sha256-KIuPPIdbzYVd/REn/YVZ1+CVIid8/VaeP7LUThBuxTI=";
 
   deps = [
     alsa-lib
