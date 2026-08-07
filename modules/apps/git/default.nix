@@ -63,6 +63,12 @@
           fsmonitor = true;
           untrackedCache = true;
         };
+        # Rewrites at connect time, not clone time, so a repo cloned over HTTPS
+        # starts using SSH the moment the key exists — no `remote set-url`.
+        # That is the fresh-hardware path: the key lives inside this repo, so
+        # the first clone has to be HTTPS, before any of this config exists.
+        url."git@github.com:".insteadOf = "https://github.com/";
+
         gpg.format = "ssh";
         commit.gpgsign = true;
         tag.gpgsign = true;
