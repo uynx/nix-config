@@ -2,9 +2,6 @@
 let
   inherit (self.lib) user;
 
-  # home-manager's host modules already derive home.homeDirectory from
-  # users.users.<name>.home, and any second definition collides with it rather
-  # than overriding — so set the account, not the option.
   shared = {
     useGlobalPkgs = true;
     useUserPackages = true;
@@ -31,6 +28,5 @@ in
     home-manager = shared // {
       sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
     };
-    users.users.${user.name}.home = user.darwinHome;
   };
 }
