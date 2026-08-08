@@ -6,7 +6,15 @@
   # into config.fish, so programs.fish stays enabled below rather than being
   # replaced; it is the integration point those modules write through.
   flake.wrappers.fish =
-    { wlib, pkgs, ... }:
+    {
+      wlib,
+      pkgs,
+      lib,
+      ...
+    }:
+    let
+      inherit (pkgs.stdenv.hostPlatform) isLinux isDarwin;
+    in
     {
       imports = [ wlib.wrapperModules.fish ];
 
@@ -25,8 +33,9 @@
       runtimePkgs = [ pkgs.jq ];
 
       shellAliases = {
-        word = "libreoffice --writer";
-        powerpoint = "libreoffice --impress";
+        # macOS installs LibreOffice as an .app, which has no CLI entry point.
+        word = if isDarwin then "open -a LibreOffice --args --writer" else "libreoffice --writer";
+        powerpoint = if isDarwin then "open -a LibreOffice --args --impress" else "libreoffice --impress";
         gen = "nix-env --list-generations";
         wt = "git worktree list";
         wta = "git worktree add";
@@ -37,6 +46,9 @@
         tree = "eza --tree --icons";
         ll = "eza -la --icons --group-directories-first --header --git-ignore";
         pf = "pass-find";
+      }
+      // lib.optionalAttrs isDarwin {
+        unb = "xattr -d com.apple.quarantine";
       };
 
       # No `functions` option upstream, so these are defined inline. Sourced
@@ -44,6 +56,11 @@
       configFile.content = ''
         set -g fish_greeting ""
         fish_vi_key_bindings
+        ${lib.optionalString isDarwin ''
+          # Casks with a CLI symlink it in here, so every Homebrew-delivered AI
+          # tool is invisible without this.
+          fish_add_path /opt/homebrew/bin
+        ''}
 
         # `update` relocks everything and bumps the pinned tools; `update nvf` (or
         # any input names) relocks only those and skips the tool updaters, which
@@ -52,45 +69,50 @@
         # checkpoint no longer bundles a lock bump with unrelated edits.
         function update
             if test (count $argv) -eq 0
-                update-brave-origin; and update-ai-clis
+                ${lib.optionalString isLinux "update-brave-origin; and "}update-ai-clis
                 or return 1
             end
             nix flake update --flake ~/nixos-config --commit-lock-file $argv
         end
 
-        # Android VM, sized to the monitor it opens on. Must be the *logical*
-        # size, used as niri reports it — do not divide by the scale again. A
-        # mismatch does not letterbox the picture, it scales every click, since
-        # qemu maps pointer position by proportion.
-        function android
-            set -l state ~/.local/share/waydroid-vm
+        ${lib.optionalString isLinux ''
+          # Android VM, sized to the monitor it opens on. Must be the *logical*
+          # size, used as niri reports it — do not divide by the scale again. A
+          # mismatch does not letterbox the picture, it scales every click, since
+          # qemu maps pointer position by proportion.
+          function android
+              set -l state ~/.local/share/waydroid-vm
 
-            # The external monitor if attached, otherwise whichever output has focus.
-            set -l output
-            if niri msg -j outputs | jq -e 'has("HDMI-A-1")' >/dev/null 2>&1
-                set output (niri msg -j outputs | jq -c '."HDMI-A-1"')
-            else
-                set output (niri msg -j focused-output)
-            end
+              # The external monitor if attached, otherwise whichever output has focus.
+              set -l output
+              if niri msg -j outputs | jq -e 'has("HDMI-A-1")' >/dev/null 2>&1
+                  set output (niri msg -j outputs | jq -c '."HDMI-A-1"')
+              else
+                  set output (niri msg -j focused-output)
+              end
 
-            set -l size (printf '%s' "$output" | jq -er '.logical | "\(.width) \(.height)"' | string split ' ')
-            if test (count $size) -ne 2
-                echo "Could not read the monitor size from niri."
-                return 1
-            end
+              set -l size (printf '%s' "$output" | jq -er '.logical | "\(.width) \(.height)"' | string split ' ')
+              if test (count $size) -ne 2
+                  echo "Could not read the monitor size from niri."
+                  return 1
+              end
 
-            # The disk image lives in the working directory; running this anywhere
-            # else starts a blank Android and re-downloads 1.6 GB.
-            mkdir -p $state
-            cd $state
-            or return 1
+              # The disk image lives in the working directory; running this anywhere
+              # else starts a blank Android and re-downloads 1.6 GB.
+              mkdir -p $state
+              cd $state
+              or return 1
 
-            set -x QEMU_OPTS "-device virtio-gpu-gl-pci,xres=$size[1],yres=$size[2] -display gtk,gl=on,show-menubar=off -full-screen"
-            nix run ~/nixos-config#nixosConfigurations.waydroid.config.system.build.vm
-        end
+              set -x QEMU_OPTS "-device virtio-gpu-gl-pci,xres=$size[1],yres=$size[2] -display gtk,gl=on,show-menubar=off -full-screen"
+              nix run ~/nixos-config#nixosConfigurations.waydroid.config.system.build.vm
+          end
+        ''}
 
         function reb
-            set -l target "asahi"
+            # `nh os` drives NixOS, `nh darwin` drives nix-darwin; everything
+            # else about a rebuild is the same on both.
+            set -l target ${if isDarwin then "darwin" else "asahi"}
+            set -l platform ${if isDarwin then "darwin" else "os"}
             set -l repo ~/nixos-config
             if test (count $argv) -gt 0; set target $argv[1]; end
 
@@ -99,7 +121,7 @@
             git -C $repo add -A
 
             # nh elevates itself, so no sudo here.
-            if nh os switch $repo -H $target -- --impure
+            if nh $platform switch $repo -H $target -- --impure
                 # Checkpoint commit for rollback, not a real message — reword if the
                 # change deserves one.
                 if not git -C $repo diff --cached --quiet
@@ -130,6 +152,15 @@
   # one and none of the above would load at login. No recursion: the wrapper is
   # built from perSystem's pkgs, which this overlay does not touch.
   flake.nixosModules.fish = moduleWithSystem (
+    { self', ... }:
+    {
+      nixpkgs.overlays = [ (_: _: { fish = self'.packages.fish; }) ];
+    }
+  );
+
+  # Same overlay, other module system: darwin/user.nix sets the login shell to
+  # pkgs.fish too, and macOS additionally lists it in /etc/shells.
+  flake.darwinModules.fish = moduleWithSystem (
     { self', ... }:
     {
       nixpkgs.overlays = [ (_: _: { fish = self'.packages.fish; }) ];
