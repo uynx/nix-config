@@ -64,10 +64,10 @@ together.
 | `desktopMacos` | AeroSpace, SketchyBar, JankyBorders, wallpaper, file associations | only |
 | `shell` | fish, ghostty, tmux, starship, yazi, btop, CLI tooling | yes |
 | `programming` | language toolchains, git, nvim (+ colima on macOS) | yes |
-| `office` | obsidian, libreoffice | cask LibreOffice |
+| `office` | obsidian, libreoffice | yes (`libreoffice-bin`) |
 | `latex` | texlive scheme-full (stable pin) | yes |
 | `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
-| `comms` | vesktop, whatsapp | casks |
+| `comms` | vesktop, whatsapp | whatsapp only, no vesktop |
 | `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
 | `secrets` | sops, gpg agent, password managers | needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |

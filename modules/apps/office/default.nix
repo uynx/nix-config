@@ -1,11 +1,12 @@
 {
   flake.homeModules.office =
-    { pkgs, lib, ... }:
+    { pkgs, ... }:
     {
       home.packages = [
         pkgs.obsidian
-      ]
-      # nixpkgs builds LibreOffice for Linux only; darwin/office.nix casks it.
-      ++ lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.libreoffice;
+        # Two different packages, not two platforms of one: the Linux build is
+        # from source, `-bin` repackages the official DMG and is unfree.
+        (if pkgs.stdenv.hostPlatform.isDarwin then pkgs.libreoffice-bin else pkgs.libreoffice)
+      ];
     };
 }
