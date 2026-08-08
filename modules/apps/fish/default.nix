@@ -152,6 +152,26 @@ in
             end
         end
 
+        ${lib.optionalString isLinux ''
+          # Escape hatch for the state where the daemon is down but obscura-lockdown
+          # is still filtering, which is a machine with no network at all.
+          function vpn
+              switch "$argv[1]"
+                  case fix
+                      sudo systemctl restart obscura.service
+                  case off
+                      sudo systemctl stop obscura.service obscura-lockdown.service
+                  case on
+                      sudo systemctl start obscura-lockdown.service obscura.service
+                  case '*'
+                      echo "vpn fix  restart the daemon, kill switch stays on"
+                      echo "vpn off  daemon and kill switch off — unprotected network"
+                      echo "vpn on   both back"
+                      obscura status
+              end
+          end
+        ''}
+
         function pass-find
             if not pass-cli test >/dev/null 2>&1
                 pass-cli test
