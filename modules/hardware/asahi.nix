@@ -33,6 +33,17 @@
       serviceConfig.TimeoutStartSec = "60s";
     };
 
+    # s2idle drops the ATC PHY's port power without telling the xHC how to get
+    # it back: the controller reinits, every device reports a disconnect, and
+    # nothing re-enumerates until the cable is physically replugged. Rebinding
+    # dwc3-apple re-runs probe, which is what a replug was doing by hand.
+    powerManagement.resumeCommands = ''
+      for d in /sys/bus/platform/drivers/dwc3-apple/*.usb; do
+        echo "''${d##*/}" > /sys/bus/platform/drivers/dwc3-apple/unbind || true
+        echo "''${d##*/}" > /sys/bus/platform/drivers/dwc3-apple/bind || true
+      done
+    '';
+
     # Headroom for Hogwarts / muvm guest memory pressure.
     swapDevices = [
       {
