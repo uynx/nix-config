@@ -9,7 +9,7 @@ let
     # write .desktop files, so macOS takes the cask plus the menu shortcuts.
     # Its own launchers are in `desktopMacos`: they focus through AeroSpace.
     homeDarwin = [ self.homeModules.braveShortcuts ];
-    darwin = [ self.darwinModules.webCasks ];
+    darwin = [ self.darwinModules.brave ];
   };
 in
 {

@@ -16,6 +16,9 @@
         noctalia
         theme
         screenUtils
+        # The `android` launcher only works inside a niri session — it sizes the
+        # guest from `niri msg` — so it belongs to the desktop, not to `shell`.
+        waydroid
       ];
     }).nixos;
 }
