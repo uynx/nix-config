@@ -166,6 +166,7 @@
             # The only tool with neither a darwin pin nor a Homebrew formula, so
             # it is fetched straight from the vendor. Version is read at install
             # time rather than recorded, which is what makes it rolling.
+            # shellcheck disable=SC2016  # $v is for the inner sh, not this one
             roll kimi sh -c '
               v=$(curl -fsSL https://code.kimi.com/kimi-code/latest | tr -d "[:space:]")
               mkdir -p ${home}/.local/bin
