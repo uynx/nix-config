@@ -14,17 +14,41 @@ Anything prefixed `_` is skipped by import-tree.
 | `modules/hosts/` | One dir per machine, plus the Home Manager base wiring |
 | `modules/hardware/` | Per-architecture hardware, no software choices |
 | `modules/system/` | Base NixOS every host wants; no desktop, no hardware |
+| `modules/darwin/` | The same for macOS — nix-darwin has its own module system |
 | `modules/apps/` | One dir per program, holding **every** tier it needs |
 | `modules/bundles/` | The host-facing switches — one line each, both tiers |
 | `steam-asahi/` | Fedora Asahi Steam container and runbook |
 
 `modules/apps/<name>/` is the unit of *implementation*: niri's NixOS module and
 its KDL config live in the same directory, and a directory may export any mix of
-`nixosModules`, `homeModules` and wrapped `packages`.
+`nixosModules`, `darwinModules`, `homeModules` and wrapped `packages`. Where a
+program needs a different delivery on macOS — a cask instead of a nixpkgs build —
+that goes in `<name>/darwin.nix`, beside the shared half rather than off in a
+macOS tree of its own.
 
-`modules/bundles/<name>.nix` is the unit of *choice*. A bundle pulls the NixOS
-and Home Manager halves of a component together so a host lists it once. Without
-this a host has two separate lists and dropping a component means editing both.
+`modules/bundles/<name>.nix` is the unit of *choice*. A bundle pulls every tier
+of a component together so a host lists it once. Without this a host has two
+separate lists and dropping a component means editing both.
+
+## The two platforms
+
+`mkBundle` returns both a NixOS and a darwin module from one definition, because
+the Home Manager half is identical and only the system half differs. So
+`modules/hosts/darwin/` reads like `modules/hosts/asahi/`: the same bundle names,
+one line each, and moving a component between the machines is moving a line.
+
+Everything portable is shared as-is. Where a package exists on only one platform
+the *app module* absorbs it — a `lib.optional stdenv.hostPlatform.isLinux` beside
+the package, and a cask in `darwin.nix` — so hosts never branch. Two rules keep
+that working:
+
+* **Never branch a module on `pkgs`.** `if isDarwin then … else …` around a
+  module body makes the import depend on config, which is an infinite recursion
+  inside Home Manager. Use `lib.mkIf` on the *values* instead — see
+  `modules/apps/ghostty/default.nix`.
+* **A darwin module may not share a name with the bundle that imports it**,
+  hence the `…Casks` suffixes: `flake.darwinModules.office` defined in terms of
+  `self.darwinModules.office` is the same recursion by another route.
 
 ## Adding or removing a component
 
@@ -33,25 +57,31 @@ every AI CLI, its skills wiring and dictation are gone. Replace `desktopNiri`
 with `desktopKde` and the compositor, greeter, bar and GTK theme all change
 together.
 
-| Bundle | Contents | Portable to another machine |
+| Bundle | Contents | macOS |
 |---|---|---|
-| `desktopNiri` | niri, sddm-astronaut greeter, noctalia, GTK theme, screen utils | Wayland only |
-| `desktopKde` | Plasma 6, sddm, spectacle | yes |
+| `desktopNiri` | niri, sddm-astronaut greeter, noctalia, GTK theme, screen utils | — |
+| `desktopKde` | Plasma 6, sddm, spectacle | — |
+| `desktopMacos` | AeroSpace, SketchyBar, JankyBorders, wallpaper, file associations | only |
 | `shell` | fish, ghostty, tmux, starship, yazi, btop, CLI tooling | yes |
-| `programming` | language toolchains, git, nvim | yes |
-| `office` | obsidian, libreoffice | yes |
+| `programming` | language toolchains, git, nvim (+ colima on macOS) | yes |
+| `office` | obsidian, libreoffice | cask LibreOffice |
 | `latex` | texlive scheme-full (stable pin) | yes |
-| `media` | obs, mpv, qbittorrent, image tooling | yes |
-| `comms` | vesktop, whatsapp | yes |
-| `web` | brave-origin and its profile launchers | yes |
+| `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
+| `comms` | vesktop, whatsapp | casks |
+| `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
 | `secrets` | sops, gpg agent, password managers | needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
-| `privacy` | obscura VPN + egress lockdown, tor and mullvad browsers | Linux only |
-| `ai` | every AI CLI, shared skills/AGENTS.md, dictation | aarch64-linux pins, Wayland dictation |
-| `gaming` | Steam via the Fedora/FEX distrobox container | Asahi only |
+| `privacy` | obscura VPN + egress lockdown, tor and mullvad browsers | three casks |
+| `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
+| `gaming` | Steam via the Fedora/FEX distrobox container | — |
 
-Bundles need `homeManagerBase`. Darwin has its own module system and lists
-`homeModules` directly instead.
+Every bundle needs `homeManagerBase`, on either platform.
+
+On macOS the AI CLIs come from Homebrew rather than the pins in
+`modules/apps/ai-tools/linux.nix`, which are aarch64-linux artifacts, and the
+desktop apps come along with them. `update-ai-clis` still maintains the tools
+that have neither a pin nor a formula (agy, openclaw, t3, hermes, and kimi on
+macOS); `greedyCasks` keeps the rest current on every rebuild.
 
 ## Commands
 
@@ -61,5 +91,21 @@ update && reb    # relock every input + bump pinned tools, then rebuild
 update nvf       # relock one input only
 ```
 
+`reb` targets `asahi` on Linux and `darwin` on macOS, and drives `nh os` or
+`nh darwin` accordingly; pass a host name to override it.
+
 Rebuilds need `--impure`, which `reb` passes: the Asahi firmware directory has
-to stay a real path. See `modules/hardware/asahi.nix`.
+to stay a real path, and the AI skills are read out of a working copy. See
+`modules/hardware/asahi.nix`.
+
+## First rebuild on a Mac
+
+Homebrew itself is not declarative — install it once, or the activation fails
+with `command not found`:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+nix run nix-darwin -- switch --flake ~/nixos-config#darwin --impure
+```
+
+After that first switch `reb` works like it does on Linux.
