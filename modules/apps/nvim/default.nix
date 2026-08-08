@@ -26,6 +26,12 @@
               # option completion at all, and silently.
               flakePath = "${self.lib.user.homeFor system}/nixos-config";
               hostAttr = if isDarwin then "darwinConfigurations.darwin" else "nixosConfigurations.asahi";
+              # nvf's default SCSS server, some-sass-language-server, pulls in
+              # keytar, whose node-addon-api does not compile under Apple clang.
+              # css.enable already installs the vscode server, so the Mac keeps
+              # working SCSS and loses only the Sass-aware extras.
+              scssServers =
+                if isDarwin then [ "vscode-css-language-server" ] else [ "some-sass-language-server" ];
             })
           ];
         }).neovim;
