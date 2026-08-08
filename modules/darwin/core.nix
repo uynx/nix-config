@@ -9,6 +9,7 @@
       imports = with self.darwinModules; [
         nixSettings
         defaults
+        security
         fonts
         homebrew
         user
