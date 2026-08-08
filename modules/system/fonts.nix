@@ -1,7 +1,6 @@
 {
   flake.nixosModules.fonts = { pkgs, ... }: {
     fonts = {
-      fontconfig.enable = true;
       packages = with pkgs; [
         nerd-fonts.hack
         julia-mono

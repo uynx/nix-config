@@ -4,7 +4,6 @@
     # a DHCPv6 client and one mDNS socket, so both allow-lists stay empty.
     # Opening a port means adding it here, never `firewall.enable = false`.
     networking.firewall = {
-      enable = true;
       allowedTCPPorts = [ ];
       allowedUDPPorts = [ ];
       allowPing = false;

@@ -8,8 +8,8 @@
 
     nixpkgs.config.allowUnfree = true;
 
+    # `determinateNix.enable` defaults to true, same as the NixOS side.
     determinateNix = {
-      enable = true;
       determinateNixd.garbageCollector.strategy = "automatic";
       customSettings = {
         auto-optimise-store = true;

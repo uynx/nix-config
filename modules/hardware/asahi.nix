@@ -9,10 +9,7 @@
     };
 
     boot = {
-      loader = {
-        systemd-boot.enable = true;
-        efi.canTouchEfiVariables = false;
-      };
+      loader.systemd-boot.enable = true;
       kernelParams = [
         "zswap.enabled=1"
         "zswap.compressor=zstd"

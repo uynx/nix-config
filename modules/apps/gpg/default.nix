@@ -12,10 +12,10 @@
           if pkgs.stdenv.hostPlatform.isDarwin then pkgs.pinentry_mac else pkgs.pinentry-qt;
         defaultCacheTtl = 1800;
         maxCacheTtl = 7200;
-        # gcr-ssh-agent already owns SSH_AUTH_SOCK (it spawns plain ssh-agent on
-        # /run/user/1000/gcr/ssh); two agents fighting over the variable breaks
-        # both. Not gnome-keyring — modern builds dropped their SSH component.
-        enableSshSupport = false;
+        # enableSshSupport stays at its default false: gcr-ssh-agent already
+        # owns SSH_AUTH_SOCK (it spawns plain ssh-agent on
+        # /run/user/1000/gcr/ssh) and two agents fighting over it breaks both.
+        # Not gnome-keyring — modern builds dropped their SSH component.
       };
     };
 }
