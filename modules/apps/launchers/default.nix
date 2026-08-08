@@ -1,21 +1,17 @@
 {
   # Mod+N / Mod+M profile launchers for niri. Split from darwin.nix rather than
-  # branched: the two platforms share no line of this — different browser
-  # binary, different window handling, and only Linux has a .desktop file.
+  # branched: different browser binary, different window handling, and only
+  # Linux has a .desktop file. What the two do share is in _common.nix.
   flake.homeModules.launchers =
     { pkgs, ... }:
     let
+      common = import ./_common.nix;
+
       brave = pkgs.writeShellApplication {
         name = "brave-activation";
         text = ''
           braveHome="''${XDG_CONFIG_HOME:-$HOME/.config}/BraveSoftware"
-
-          case "''${1:-}" in
-            Personal) data="$braveHome/Brave-Browser" ;;
-            School)   data="$braveHome/Brave-Browser-School" ;;
-            *) echo "usage: brave-activation Personal|School" >&2; exit 1 ;;
-          esac
-          shift
+          ${common.pickProfile}
 
           # Strict fingerprinting is absent from brave://settings/shields
           # until this feature is enabled; it is what masks the WebGL
@@ -24,12 +20,7 @@
             --enable-features=BraveShowStrictFingerprintingMode \
             --user-data-dir="$data" \
             --profile-directory=Default \
-            --disable-breakpad \
-            --no-pings \
-            --disable-domain-reliability \
-            --disable-background-networking \
-            --no-default-browser-check \
-            --no-first-run \
+            ${common.hardening} \
             "$@"
         '';
       };
