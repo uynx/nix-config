@@ -30,6 +30,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Home Manager installs .app bundles into the store, where Spotlight and the
+    # Dock cannot see them; this generates the aliases that make them launchable.
+    mac-app-util.url = "github:hraban/mac-app-util";
+
     # Dendritic
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";
