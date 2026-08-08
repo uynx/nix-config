@@ -15,26 +15,45 @@ let
     platforms = [ "aarch64-linux" ];
     sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
   };
+
+  # A vendor that ships one bare executable. `url` is a function of the version
+  # so the pin is read once, here, rather than named twice per package.
+  mkPin =
+    {
+      pname,
+      url,
+      homepage,
+      desc,
+      bin ? pname,
+    }:
+    stdenvNoCC.mkDerivation {
+      inherit pname;
+      inherit (pins.${pname}) version;
+      src = fetchurl {
+        url = url pins.${pname}.version;
+        inherit (pins.${pname}) hash;
+      };
+      dontUnpack = true;
+      installPhase = ''
+        runHook preInstall
+        install -Dm755 "$src" "$out/bin/${bin}"
+        runHook postInstall
+      '';
+      meta = meta homepage desc // {
+        mainProgram = bin;
+      };
+    };
 in
 {
   # Do NOT autoPatchelf: Bun appends its payload after the ELF, and patching
-  # shifts it out of reach, silently degrading to the plain Bun runtime.
-  claude-code = stdenvNoCC.mkDerivation {
+  # shifts it out of reach, silently degrading to the plain Bun runtime. Same
+  # for opencode below, which is built the same way.
+  claude-code = mkPin {
     pname = "claude-code";
-    inherit (pins.claude-code) version;
-    src = fetchurl {
-      url = "https://downloads.claude.ai/claude-code-releases/${pins.claude-code.version}/linux-arm64/claude";
-      inherit (pins.claude-code) hash;
-    };
-    dontUnpack = true;
-    installPhase = ''
-      runHook preInstall
-      install -Dm755 "$src" "$out/bin/claude"
-      runHook postInstall
-    '';
-    meta = meta "https://code.claude.com" "Anthropic's Claude Code CLI" // {
-      mainProgram = "claude";
-    };
+    bin = "claude";
+    url = v: "https://downloads.claude.ai/claude-code-releases/${v}/linux-arm64/claude";
+    homepage = "https://code.claude.com";
+    desc = "Anthropic's Claude Code CLI";
   };
 
   # Source is npm, not the GitHub release: that tarball ships `codex` alone,
@@ -60,22 +79,11 @@ in
     };
   };
 
-  grok = stdenvNoCC.mkDerivation {
+  grok = mkPin {
     pname = "grok";
-    inherit (pins.grok) version;
-    src = fetchurl {
-      url = "https://x.ai/cli/grok-${pins.grok.version}-linux-aarch64";
-      inherit (pins.grok) hash;
-    };
-    dontUnpack = true;
-    installPhase = ''
-      runHook preInstall
-      install -Dm755 "$src" "$out/bin/grok"
-      runHook postInstall
-    '';
-    meta = meta "https://x.ai/cli" "x.ai's official Grok CLI" // {
-      mainProgram = "grok";
-    };
+    url = v: "https://x.ai/cli/grok-${v}-linux-aarch64";
+    homepage = "https://x.ai/cli";
+    desc = "x.ai's official Grok CLI";
   };
 
   # Kimi Code, the rebuilt successor to the Python kimi-cli. Its own installer
@@ -83,25 +91,14 @@ in
   # duplicates, which would maul the store path — pin it here instead and never
   # run `/upgrade`. Versions come from code.kimi.com, not GitHub, which is still
   # publishing the old 1.x line.
-  kimi = stdenvNoCC.mkDerivation {
+  kimi = mkPin {
     pname = "kimi";
-    inherit (pins.kimi) version;
-    src = fetchurl {
-      url = "https://code.kimi.com/kimi-code/binaries/${pins.kimi.version}/kimi-code-linux-arm64";
-      inherit (pins.kimi) hash;
-    };
-    dontUnpack = true;
-    installPhase = ''
-      runHook preInstall
-      install -Dm755 "$src" "$out/bin/kimi"
-      runHook postInstall
-    '';
-    meta = meta "https://code.kimi.com" "Moonshot's Kimi Code CLI" // {
-      mainProgram = "kimi";
-    };
+    url = v: "https://code.kimi.com/kimi-code/binaries/${v}/kimi-code-linux-arm64";
+    homepage = "https://code.kimi.com";
+    desc = "Moonshot's Kimi Code CLI";
   };
 
-  # Bun-compiled like claude-code, so the same no-autoPatchelf rule applies.
+  # The three below unpack an archive, so they keep their own installPhase.
   opencode = stdenvNoCC.mkDerivation {
     pname = "opencode";
     inherit (pins.opencode) version;

@@ -1,7 +1,8 @@
 { self, ... }:
 {
-  # Every macOS preference this config asserts. No NixOS counterpart exists —
-  # this is the whole of what `system/` does on a Mac beyond nix itself.
+  # Every macOS preference this config asserts. No NixOS counterpart exists.
+  # The firewall, lock screen and login window are not preferences and live in
+  # ./security.nix, mirroring `system/security.nix`.
   flake.darwinModules.defaults = {
     system = {
       keyboard = {
@@ -74,16 +75,6 @@
             NSRecentDocumentsLimit = 0;
             NSQuitAlwaysKeepsWindows = false;
           };
-        };
-
-        screensaver = {
-          askForPassword = true;
-          askForPasswordDelay = 0;
-        };
-
-        loginwindow = {
-          GuestEnabled = false;
-          DisableConsoleAccess = true;
         };
 
         smb = {
@@ -169,14 +160,6 @@
           type = "png";
         };
       };
-    };
-
-    # If AirDrop stops working while the firewall is on, allow rapportd by hand:
-    #   sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /usr/libexec/rapportd
-    #   sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp /usr/libexec/rapportd
-    networking = {
-      applicationFirewall.enable = true;
-      applicationFirewall.enableStealthMode = true;
     };
 
     power = {
