@@ -42,6 +42,7 @@
       steam-asahi-doctor = pkgs.writeShellScriptBin "steam-asahi-doctor" ''
         set -eu
 
+        SOURCE=${config.home.homeDirectory}/nixos-config/steam-asahi
         IMAGE=localhost/steam-asahi:44
         CONTAINER=steam-asahi
 
@@ -49,24 +50,18 @@
         [ -r /dev/kvm ] && [ -w /dev/kvm ]
         ${pkgs.docker}/bin/docker image inspect "$IMAGE" >/dev/null
         ${pkgs.docker}/bin/docker container inspect "$CONTAINER" >/dev/null
-        ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- rpm -q \
-          asahi-platform-metapackage-fex-0-29.fc44.aarch64 \
-          muvm-0.6.0-3.fc44.aarch64 \
-          fex-emu-2604-1.fc44.aarch64 \
-          'fex-emu-rootfs-fedora-44^20260410.n.0-1.fc44.noarch' \
-          virglrenderer-1.3.0-1.fc44.aarch64 \
-          mesa-dri-drivers-26.1.5-1.fc44.aarch64 \
-          mesa-vulkan-drivers-26.1.5-1.fc44.aarch64 \
-          gtk2-2.24.33-25.fc44.aarch64 \
-          ibus-1.5.34-4.fc44.aarch64 \
-          NetworkManager-1.56.1-2.fc44.aarch64 \
-          openal-soft-1.24.2-6.fc44.aarch64 \
-          libvdpau-1.5-11.fc44.aarch64 \
-          libX11-devel-1.8.13-1.fc44.aarch64 \
-          mesa-libGL-devel-26.1.5-1.fc44.aarch64 \
-          steam-0-14.fc44.noarch \
-          vulkan-loader-devel-1.4.341.0-1.fc44.aarch64 \
-          xorg-x11-server-Xwayland-24.1.13-1.fc44.aarch64 >/dev/null
+
+        # Read out of the Containerfile rather than restated: a second copy of
+        # the NEVRA list is one more thing to edit on every Fedora bump. Stops
+        # at the first `dnf clean all`, so the box64 build deps removed in the
+        # next layer never enter the list.
+        ${pkgs.gawk}/bin/awk '
+          /dnf install -y/ { f = 1 }
+          f && /fc44/ { gsub(/['"'"' \\&]/, ""); print }
+          /dnf clean all/ { exit }
+        ' "$SOURCE/Containerfile" \
+          | ${pkgs.findutils}/bin/xargs \
+            ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- rpm -q >/dev/null
         ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
           test -e /usr/lib64/dri/asahi_dri.so
         ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
@@ -139,20 +134,9 @@
             --file "$SOURCE/distrobox.ini"
         fi
 
-        ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- rpm -q \
-          muvm-0.6.0-3.fc44.aarch64 \
-          fex-emu-2604-1.fc44.aarch64 \
-          'fex-emu-rootfs-fedora-44^20260410.n.0-1.fc44.noarch' \
-          virglrenderer-1.3.0-1.fc44.aarch64 \
-          mesa-dri-drivers-26.1.5-1.fc44.aarch64 \
-          mesa-vulkan-drivers-26.1.5-1.fc44.aarch64 \
-          gtk2-2.24.33-25.fc44.aarch64 \
-          ibus-1.5.34-4.fc44.aarch64 \
-          NetworkManager-1.56.1-2.fc44.aarch64 \
-          openal-soft-1.24.2-6.fc44.aarch64 \
-          libvdpau-1.5-11.fc44.aarch64 \
-          steam-0-14.fc44.noarch \
-          xorg-x11-server-Xwayland-24.1.13-1.fc44.aarch64 >/dev/null
+        # No rpm -q here: the image carries the Containerfile's hash as a label
+        # and is rebuilt whenever that changes, and dnf installs those exact
+        # NEVRAs or fails the build. `steam-asahi-doctor` checks them.
         ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
           test -x /opt/steam-arm64/steamrtarm64/steam
       '';
