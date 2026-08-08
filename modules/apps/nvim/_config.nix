@@ -1,4 +1,8 @@
-{ tmuxNavigator, flakePath }:
+{
+  tmuxNavigator,
+  flakePath,
+  hostAttr,
+}:
 {
   vim = {
     viAlias = true;
@@ -53,9 +57,11 @@
       # homeConfigurations output this flake does not produce.
       servers.nixd.settings.nixd = {
         nixpkgs.expr = ''import (builtins.getFlake "${flakePath}").inputs.nixpkgs { }'';
+        # `nixos` is only nixd's name for the slot — on a Mac this is the darwin
+        # host, which has the same home-manager submodule underneath.
         options = {
-          nixos.expr = ''(builtins.getFlake "${flakePath}").nixosConfigurations.asahi.options'';
-          home_manager.expr = ''(builtins.getFlake "${flakePath}").nixosConfigurations.asahi.options.home-manager.users.type.getSubOptions [ ]'';
+          nixos.expr = ''(builtins.getFlake "${flakePath}").${hostAttr}.options'';
+          home_manager.expr = ''(builtins.getFlake "${flakePath}").${hostAttr}.options.home-manager.users.type.getSubOptions [ ]'';
         };
       };
     };
