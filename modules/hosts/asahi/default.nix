@@ -29,11 +29,7 @@
 
       { networking.hostName = "asahi"; }
       {
-        home-manager.users.${self.lib.user.name}.home.sessionVariables = {
-          EDITOR = "nvim";
-          VISUAL = "nvim";
-          GSK_RENDERER = "gl";
-        };
+        home-manager.users.${self.lib.user.name}.home.sessionVariables.GSK_RENDERER = "gl";
       }
     ];
   };
