@@ -39,12 +39,14 @@
     "aarch64-darwin" # darwin
   ];
 
-  # Every file here is already nixfmt-clean; without this `nix fmt` is a no-op
-  # and says nothing about it.
+  # nixfmt-tree, not bare nixfmt: `nix fmt` hands the formatter a directory,
+  # which nixfmt only still accepts as a deprecated mode — and in it, it tries
+  # to parse non-Nix files, dies on the first one and silently leaves the rest
+  # of the tree unformatted. The wrapper walks the tree itself.
   config.perSystem =
     { pkgs, ... }:
     {
-      formatter = pkgs.nixfmt;
+      formatter = pkgs.nixfmt-tree;
 
       # A wrapper becomes a package on every system in the list above, and
       # these three wrap Linux-only builds — so on darwin they were outputs
