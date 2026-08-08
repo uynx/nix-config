@@ -46,10 +46,12 @@ in
         bat = {
           enable = true;
         }
-        # Ghostty ships the syntax but not the mapping. The glob needs `**` —
-        # `*` does not cross a `/`, which is why the mapping ghostty's own
-        # Home Manager module used to add never actually fired. nixpkgs has no
-        # darwin ghostty, so the syntax can only be pulled in on Linux.
+        # Linux only, and not because of the package: on darwin `programs.ghostty`
+        # is enabled, and its module already registers the syntax and a
+        # map-syntax for the real ~/.config path. Linux runs the wrapped ghostty
+        # out of home.packages, so nothing does it there. The glob needs `**` —
+        # `*` does not cross a `/`, which is why the module's own mapping never
+        # fired when it was reached through a store symlink.
         // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           syntaxes.ghostty = {
             src = "${pkgs.ghostty}/share/bat/syntaxes";

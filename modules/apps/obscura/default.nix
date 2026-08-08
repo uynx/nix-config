@@ -1,4 +1,9 @@
-{ inputs, moduleWithSystem, ... }:
+{
+  self,
+  inputs,
+  moduleWithSystem,
+  ...
+}:
 {
   flake.nixosModules.obscura = moduleWithSystem (
     { inputs', ... }:
@@ -164,7 +169,10 @@
         };
       };
 
+      # Membership belongs beside the group, not in `system/user.nix`: a host
+      # without this bundle would otherwise name a group nothing declares.
       users.groups.obscura = { };
+      users.users.${self.lib.user.name}.extraGroups = [ "obscura" ];
     }
   );
 

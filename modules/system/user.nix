@@ -11,9 +11,7 @@
           "networkmanager"
           "video"
           "audio"
-          "docker"
           "kvm"
-          "obscura"
         ];
         shell = pkgs.fish;
       };
