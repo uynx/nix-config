@@ -11,6 +11,12 @@
   #   Option+W  close window (other windows and the other instance keep running)
   #   Cmd+Q     quit *this* instance only
   flake.homeModules.braveShortcuts = {
+    # The darwin half of the hermes browser path set in `apps/ai-tools`. Here
+    # because the cask is what makes the path exist, and this module ships with
+    # it; a host without `web` gets neither.
+    home.sessionVariables.AGENT_BROWSER_EXECUTABLE_PATH =
+      "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser";
+
     targets.darwin.defaults."com.brave.Browser".NSUserKeyEquivalents = {
       "Close Window" = "~w";
       "Quit Brave" = "@q";

@@ -216,7 +216,9 @@
       # hermes' browser tool otherwise makes Playwright fetch its own Ubuntu
       # Chromium, which will not run unpatched here. Reuses whatever browser the
       # host already builds rather than adding 3.2 GB of pkgs.chromium — so it
-      # only applies on a host that took the `web` bundle.
+      # only applies on a host that took the `web` bundle. The macOS half is in
+      # `apps/brave-origin/darwin.nix`: a cask leaves nothing in `config` to
+      # test here.
       // lib.optionalAttrs config.programs.chromium.enable {
         AGENT_BROWSER_EXECUTABLE_PATH = "${config.programs.chromium.package}/bin/brave-origin";
       };

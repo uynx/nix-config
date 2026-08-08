@@ -6,8 +6,14 @@ let
       git
       nvim
     ];
+    # Wireshark is a system module on NixOS — packet capture needs a setuid
+    # wrapper and a group — and a plain app on macOS.
+    nixos = [ self.nixosModules.wireshark ];
     # colima is the container runtime on macOS, where there is no host Docker.
-    homeDarwin = [ self.homeModules.colima ];
+    homeDarwin = with self.homeModules; [
+      colima
+      wireshark
+    ];
   };
 in
 {

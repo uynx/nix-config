@@ -22,6 +22,13 @@
       };
     };
 
-    nix.registry = self.lib.selfRegistry self.lib.user.darwinHome;
+    # Both of these are `nix.*` options on the NixOS side, and both are dead
+    # here: the determinate module sets `nix.enable = mkForce false`, so
+    # nix-darwin writes neither /etc/nix/registry.json nor NIX_PATH. Home
+    # Manager's user-level equivalents are what is left.
+    home-manager.users.${self.lib.user.name}.nix = {
+      registry = self.lib.selfRegistry self.lib.user.darwinHome;
+      nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+    };
   };
 }
