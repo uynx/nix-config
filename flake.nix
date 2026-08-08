@@ -50,10 +50,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    obscuravpn = {
-      url = "github:Sovereign-Engineering/obscuravpn-client";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # Deliberately does NOT follow nixpkgs — do not re-add it. Its rust-overlay
+    # follows this input in turn, and against our weekly nixpkgs the toolchain
+    # fetch degrades to a source named "unknown" that unpackPhase then refuses:
+    # "do not know how to unpack source archive". Costs one extra nixpkgs in
+    # the lock, which is the price of a vendored Rust toolchain.
+    obscuravpn.url = "github:Sovereign-Engineering/obscuravpn-client";
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
