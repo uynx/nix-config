@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ self, inputs, ... }:
 {
   # Waydroid runs Android on the *host* kernel and Asahi's is 16 KiB-page
   # (waydroid#577, wontfix); stock nixpkgs aarch64 is 4 KiB with binder, so a
@@ -6,6 +6,10 @@
   flake.nixosConfigurations.waydroid = inputs.nixpkgs.lib.nixosSystem {
     system = "aarch64-linux";
     modules = [
+      # The guest takes no bundles — it is one Android window, not a desktop —
+      # but a call needs a working mic, and this is the same pipewire the other
+      # hosts get rather than a second copy of it.
+      self.nixosModules.audio
       (
         {
           modulesPath,
@@ -151,12 +155,6 @@
           systemd.services.cage-tty1.serviceConfig = {
             Restart = "on-failure";
             RestartSec = 5;
-          };
-
-          services.pipewire = {
-            enable = true;
-            alsa.enable = true;
-            pulse.enable = true;
           };
 
           hardware.graphics.enable = true;

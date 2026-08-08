@@ -19,11 +19,13 @@
     default = { };
   };
 
-  # Declare flake.homeModules, flake.darwinModules and flake.wrappers as real
-  # flake-parts options. flake-parts declares nixosModules itself but not these,
-  # and an undeclared flake output can only be defined once — a second module
-  # setting it is a merge error, not an override. Wrapped programs also appear
-  # as packages.*.<name>.
+  # These bring the option declarations this config defines outputs at:
+  # home-manager declares flake.homeModules and flake.homeConfigurations,
+  # nix-darwin declares flake.darwinConfigurations only (hence the mkOption
+  # above), and wrapper-modules declares flake.wrappers. flake-parts declares
+  # nixosModules itself. An undeclared flake output can only be defined once —
+  # a second module setting it is a merge error, not an override. Wrapped
+  # programs also appear as packages.*.<name>.
   imports = [
     inputs.home-manager.flakeModules.home-manager
     inputs.nix-darwin.flakeModules.default
@@ -36,4 +38,12 @@
     "x86_64-linux" # x86
     "aarch64-darwin" # darwin
   ];
+
+  # Every file here is already nixfmt-clean; without this `nix fmt` is a no-op
+  # and says nothing about it.
+  config.perSystem =
+    { pkgs, ... }:
+    {
+      formatter = pkgs.nixfmt;
+    };
 }

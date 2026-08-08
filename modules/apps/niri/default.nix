@@ -5,13 +5,12 @@ let
   # overlay below — so the override is written once here and used by both.
   overrideNiri =
     prev:
+    let
+      downgrade = map (x: if (x.pname or "") == "libdisplay-info" then prev.libdisplay-info_0_2 else x);
+    in
     prev.niri.overrideAttrs (old: {
-      buildInputs = map (
-        x: if (x.pname or "") == "libdisplay-info" then prev.libdisplay-info_0_2 else x
-      ) (old.buildInputs or [ ]);
-      nativeBuildInputs = map (
-        x: if (x.pname or "") == "libdisplay-info" then prev.libdisplay-info_0_2 else x
-      ) (old.nativeBuildInputs or [ ]);
+      buildInputs = downgrade (old.buildInputs or [ ]);
+      nativeBuildInputs = downgrade (old.nativeBuildInputs or [ ]);
     });
 in
 {
