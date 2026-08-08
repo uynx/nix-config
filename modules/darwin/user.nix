@@ -17,7 +17,6 @@
       system.primaryUser = self.lib.user.name;
 
       programs.fish.enable = true;
-      programs.bash.enable = true;
 
       environment.shells = with pkgs; [
         fish

@@ -66,11 +66,8 @@ in
         nix-index.enable = true;
         nix-index-database.comma.enable = true;
 
-        man = {
-          enable = true;
-          # Home Manager ships no man package on darwin, where this only warns.
-          generateCaches = pkgs.stdenv.hostPlatform.isLinux;
-        };
+        # Home Manager ships no man package on darwin, where this only warns.
+        man.generateCaches = pkgs.stdenv.hostPlatform.isLinux;
 
         eza = {
           enable = true;

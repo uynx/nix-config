@@ -5,10 +5,8 @@
   flake.nixosModules.bluetooth = { pkgs, ... }: {
     environment.systemPackages = [ pkgs.overskride ];
 
-    hardware.bluetooth = {
-      enable = true;
-      powerOnBoot = true;
-      settings.General.AutoEnable = true;
-    };
+    # powerOnBoot defaults true and is what writes bluez' `Policy.AutoEnable`;
+    # there is no `General.AutoEnable` for it to be written twice.
+    hardware.bluetooth.enable = true;
   };
 }

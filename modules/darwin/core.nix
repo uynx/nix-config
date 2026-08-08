@@ -25,12 +25,8 @@
         curl
       ];
 
-      documentation = {
-        enable = false;
-        doc.enable = false;
-        man.enable = false;
-        info.enable = false;
-      };
+      # Gates the whole module, so the per-format switches under it are moot.
+      documentation.enable = false;
       system.tools.darwin-uninstaller.enable = false;
 
       # nix-darwin's own counter, unrelated to NixOS' system.stateVersion.
