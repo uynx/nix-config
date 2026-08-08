@@ -1,5 +1,5 @@
 {
-  description = "Asahi NixOS — uynx";
+  description = "Nix configuration for my computers";
 
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-weekly/*";
@@ -32,7 +32,10 @@
 
     # Home Manager installs .app bundles into the store, where Spotlight and the
     # Dock cannot see them; this generates the aliases that make them launchable.
-    mac-app-util.url = "github:hraban/mac-app-util";
+    mac-app-util = {
+      url = "github:hraban/mac-app-util";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # Dendritic
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -47,7 +50,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    obscuravpn.url = "github:Sovereign-Engineering/obscuravpn-client";
+    obscuravpn = {
+      url = "github:Sovereign-Engineering/obscuravpn-client";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);

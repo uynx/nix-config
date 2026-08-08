@@ -1,6 +1,10 @@
-# repeated_keys fires on every dendritic module, because keeping
-# flake.nixosModules.x, flake.homeModules.x and flake.wrappers.x as separate
-# assignments is the point of the layout. Without this the other 20-odd lints
-# are buried and nobody runs statix at all.
-disabled = ["repeated_keys"]
-ignore = [".direnv", "flake.lock"]
+# manual_inherit_from fires on every colour palette here — `red = c.red;` beside
+# `purple = c.magenta;`. The keys are the consumer's names, not ours, so only
+# some could ever become an `inherit` and the mixed result reads worse than the
+# table it replaces.
+#
+# repeated_keys wants `flake = { nixosModules.x = …; darwinModules.x = …; }`.
+# The full `flake.nixosModules.x` spelling is how a module is addressed
+# throughout this repo and in the README, and grepping that exact string is how
+# you find where an output is defined — collapsing the prefix loses that.
+disabled = ["manual_inherit_from", "repeated_keys"]

@@ -4,8 +4,9 @@
   # on purpose: same bundle names, same one-line-per-component rule. The two
   # differ only where macOS has no equivalent — no hardware module, no
   # `desktopNiri`, and `gaming` stays on the Linux side.
+  # No `system` argument: nix-darwin derives the platform from
+  # nixpkgs.hostPlatform below, and setting both states it twice.
   flake.darwinConfigurations.darwin = inputs.nix-darwin.lib.darwinSystem {
-    system = "aarch64-darwin";
     specialArgs = { inherit inputs; };
     modules = with self.darwinModules; [
       core
