@@ -1,4 +1,4 @@
-{ moduleWithSystem, lib, ... }:
+{ moduleWithSystem, ... }:
 {
   # Config lands in a store NOCTALIA_CONFIG_DIR, so noctalia's settings GUI
   # still cannot save — same trade as before, now without a forced symlink in
@@ -17,6 +17,9 @@
   #     config silently no-ops.
   flake.wrappers.noctalia-shell =
     { wlib, pkgs, ... }:
+    let
+      saved = builtins.fromJSON (builtins.readFile ./settings.json);
+    in
     {
       imports = [ wlib.wrapperModules.noctalia-shell ];
 
@@ -31,9 +34,13 @@
         '';
       });
 
-      settings = builtins.fromJSON (builtins.readFile ./settings.json) // {
+      # Nested rather than one `//`: that is a shallow merge and would drop
+      # every other wallpaper.* key in the file.
+      settings = saved // {
         # The one override that cannot live in the file: a store path.
-        wallpaper.directory = "${../../wallpapers}";
+        wallpaper = saved.wallpaper // {
+          directory = "${../../wallpapers}";
+        };
       };
 
       colors = builtins.fromJSON (builtins.readFile ./Flexoki.json);
