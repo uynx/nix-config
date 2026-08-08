@@ -12,6 +12,14 @@
       N = "${lib.getExe pkgs.niri}";
       J = "${lib.getExe pkgs.jq}";
 
+      # The container mounts this as the guest's $HOME, so every path the guest
+      # and the host both touch hangs off it. `home.file` keys need the relative
+      # form, the scripts need the absolute one.
+      guestRel = ".local/share/steam-asahi/home";
+      steamRel = "${guestRel}/.local/share/Steam";
+      guest = "${config.home.homeDirectory}/${guestRel}";
+      steam = "${config.home.homeDirectory}/${steamRel}";
+
       # niri calls Hyprland's `class` `app_id` and its `address` `id`, and
       # returns outputs as an object keyed by name rather than a list.
       shellHelpers = ''
@@ -173,7 +181,7 @@
           "$RUNTIME_DIR/krun" \
           "$RUNTIME_DIR/muvm.lock"
         rm -f \
-          ${config.home.homeDirectory}/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
+          ${guest}/.cache/steam-asahi/open-url.pipe
       '';
 
       # Distrobox's xdg-open forwarding cannot cross muvm's VM boundary, so web
@@ -181,7 +189,7 @@
       steam-guest-open = pkgs.writeShellScript "steam-guest-open" ''
         set -eu
 
-        FIFO=${config.home.homeDirectory}/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
+        FIFO=${guest}/.cache/steam-asahi/open-url.pipe
         [ "$#" = 1 ] || exit 2
         case "$1" in
           http://* | https://*) ;;
@@ -210,10 +218,7 @@
         import sys
         from pathlib import Path
 
-        config = Path(
-            "${config.home.homeDirectory}/.local/share/steam-asahi/home/"
-            ".local/share/Steam/config/config.vdf"
-        )
+        config = Path("${steam}/config/config.vdf")
         app_id, tool = sys.argv[1:3]
         if config.is_file():
             text = config.read_text()
@@ -318,7 +323,7 @@
             ;;
         esac
 
-        STEAM_HOME=${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam
+        STEAM_HOME=${guest}/.steam
         STEAM_BIN="$STEAM_HOME/root/steamrtarm64/steam"
         [ -p "$STEAM_HOME/steam.pipe" ] && [ -x "$STEAM_BIN" ]
 
@@ -341,11 +346,11 @@
         ${steam-compat-config}/bin/steam-compat-config 674940 box64_stickfight
         ${steam-compat-config}/bin/steam-compat-config 990080 proton_10
 
-        STEAM_ROOT=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam
-        STEAM_HOME=${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam
+        STEAM_ROOT=${steam}
+        STEAM_HOME=${guest}/.steam
         STEAM_BIN="$STEAM_ROOT/steamrtarm64/steam"
-        GUEST_BIN=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/bin
-        URL_FIFO=${config.home.homeDirectory}/.local/share/steam-asahi/home/.cache/steam-asahi/open-url.pipe
+        GUEST_BIN=${guest}/.local/bin
+        URL_FIFO=${guest}/.cache/steam-asahi/open-url.pipe
 
         mkdir -p "$GUEST_BIN" "$(dirname "$URL_FIFO")"
         install -m 0755 ${steam-guest-open} "$GUEST_BIN/xdg-open"
@@ -411,7 +416,7 @@
 
         if [ "$(${pkgs.docker}/bin/docker container inspect \
           --format '{{.State.Running}}' steam-asahi 2>/dev/null || true)" = true ] && \
-           [ -p ${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam/steam.pipe ]; then
+           [ -p ${guest}/.steam/steam.pipe ]; then
           ${steam-asahi-remote}/bin/steam-asahi-remote ui || true
           for _ in $(${pkgs.coreutils}/bin/seq 1 50); do
             STEAM_ID=$(window_id steam)
@@ -533,7 +538,7 @@
         HEIGHT=''${RESOLUTION#*x}
 
         if [ "$APP_ID" = 730 ]; then
-          CS2_VIDEO=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam/userdata/483670283/730/local/cfg/cs2_video.txt
+          CS2_VIDEO=${steam}/userdata/483670283/730/local/cfg/cs2_video.txt
           # CS2 indexes monitors in X's enumeration order, i.e. left to right.
           CS2_MONITOR=$(${N} msg -j outputs 2>/dev/null | ${J} -r \
             --arg name "$(printf '%s' "$OUTPUT" | ${J} -r '.name')" '
@@ -556,7 +561,7 @@
           fi
         fi
 
-        COMPAT="${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam/steamapps/compatdata"
+        COMPAT="${steam}/steamapps/compatdata"
         PREFIX="$COMPAT/''${APP_ID}/pfx"
         REG_FILE="$PREFIX/user.reg"
         if [ "$APP_ID" = 3540 ] && [ -f "$REG_FILE" ]; then
@@ -615,10 +620,10 @@
           --format '{{.State.Running}}' steam-asahi 2>/dev/null || true)
         if [ "$CONTAINER_RUNNING" = true ]; then
           for _ in $(${pkgs.coreutils}/bin/seq 1 100); do
-            [ -p ${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam/steam.pipe ] && break
+            [ -p ${guest}/.steam/steam.pipe ] && break
             sleep 0.1
           done
-          if [ -p ${config.home.homeDirectory}/.local/share/steam-asahi/home/.steam/steam.pipe ]; then
+          if [ -p ${guest}/.steam/steam.pipe ]; then
             ${steam-asahi-remote}/bin/steam-asahi-remote "$APP_ID"
             exit 0
           fi
@@ -638,7 +643,7 @@
       steam-game-entries = pkgs.writeShellScriptBin "steam-game-entries" ''
         set -eu
 
-        STEAM_ROOT=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam
+        STEAM_ROOT=${steam}
         APPLICATIONS="''${XDG_DATA_HOME:-$HOME/.local/share}/applications"
         MANIFESTS=$(mktemp)
         GENERATED=$(mktemp -d)
@@ -733,41 +738,38 @@
       };
 
       home.file = {
-        ".local/share/steam-asahi/home/.local/share/Steam/steamapps/common/Counter-Strike Global Offensive/game/csgo/cfg/autoexec.cfg" =
+        "${steamRel}/steamapps/common/Counter-Strike Global Offensive/game/csgo/cfg/autoexec.cfg" = {
+          force = true;
+          text = ''
+            // Venus can lose CS2's player-occlusion query pool during match load.
+            r_csgo_player_occlusion_query 0
+          '';
+        };
+        "${steamRel}/compatibilitytools.d/Box64-StickFight/compatibilitytool.vdf".text = ''
+          "compatibilitytools"
           {
-            force = true;
-            text = ''
-              // Venus can lose CS2's player-occlusion query pool during match load.
-              r_csgo_player_occlusion_query 0
-            '';
-          };
-        ".local/share/steam-asahi/home/.local/share/Steam/compatibilitytools.d/Box64-StickFight/compatibilitytool.vdf".text =
-          ''
-            "compatibilitytools"
+            "compat_tools"
             {
-              "compat_tools"
+              "box64_stickfight"
               {
-                "box64_stickfight"
-                {
-                  "install_path" "."
-                  "display_name" "Box64 Stick Fight"
-                  "from_oslist" "windows"
-                  "to_oslist" "linux"
-                }
+                "install_path" "."
+                "display_name" "Box64 Stick Fight"
+                "from_oslist" "windows"
+                "to_oslist" "linux"
               }
             }
-          '';
-        ".local/share/steam-asahi/home/.local/share/Steam/compatibilitytools.d/Box64-StickFight/toolmanifest.vdf".text =
-          ''
-            "manifest"
-            {
-              "commandline" "/proton run"
-              "commandline_getnativepath" "/proton getnativepath"
-              "commandline_getcompatpath" "/proton getcompatpath"
-              "commandline_waitforexitandrun" "/proton waitforexitandrun"
-            }
-          '';
-        ".local/share/steam-asahi/home/.local/share/Steam/compatibilitytools.d/Box64-StickFight/proton" = {
+          }
+        '';
+        "${steamRel}/compatibilitytools.d/Box64-StickFight/toolmanifest.vdf".text = ''
+          "manifest"
+          {
+            "commandline" "/proton run"
+            "commandline_getnativepath" "/proton getnativepath"
+            "commandline_getcompatpath" "/proton getcompatpath"
+            "commandline_waitforexitandrun" "/proton waitforexitandrun"
+          }
+        '';
+        "${steamRel}/compatibilitytools.d/Box64-StickFight/proton" = {
           executable = true;
           text = ''
             #!/bin/sh
@@ -790,8 +792,8 @@
             GAME=$1
             export MESA_LOADER_DRIVER_OVERRIDE=zink
             export VK_DRIVER_FILES=/usr/share/vulkan/icd.d/virtio_icd.aarch64.json
-            PROTON=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam/steamapps/common/Proton\ 10.0/files
-            export WINEPREFIX=${config.home.homeDirectory}/.local/share/steam-asahi/home/.local/share/Steam/steamapps/compatdata/674940/pfx
+            PROTON=${steam}/steamapps/common/Proton\ 10.0/files
+            export WINEPREFIX=${steam}/steamapps/compatdata/674940/pfx
             export WINEDEBUG=-all
             export WINEDLLPATH="$PROTON/lib/vkd3d:$PROTON/lib/wine"
             export LD_LIBRARY_PATH="$PROTON/lib/x86_64-linux-gnu:$PROTON/lib/i386-linux-gnu:${x86-libgcc}/lib:/usr/lib64:/usr/lib:''${LD_LIBRARY_PATH:-}"
