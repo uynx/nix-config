@@ -43,9 +43,11 @@ call, never two.
 Everything portable is shared as-is. Where a package exists on only one platform
 the *app module* absorbs it — a `lib.optional stdenv.hostPlatform.isLinux` beside
 the package, and a cask in `darwin.nix` — so hosts never branch. An app splits
-into two files only when the platforms share no line of implementation, the way
-`apps/launchers/` does; one differing package name stays a ternary. Two rules
-keep that working:
+into two files only when the platforms share no *structure*, the way
+`apps/launchers/` does — different browser binary, different window handling —
+and whatever text the two halves still have in common goes in an `_`-prefixed
+file beside them rather than in both. One differing package name stays a
+ternary. Two rules keep that working:
 
 * **Never branch a module on `pkgs`.** `if isDarwin then … else …` around a
   module body makes the import depend on config, which is an infinite recursion

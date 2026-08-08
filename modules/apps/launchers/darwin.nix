@@ -8,6 +8,8 @@
   flake.homeModules.launchersMacos =
     { pkgs, ... }:
     let
+      common = import ./_common.nix;
+
       # AeroSpace runs exec-and-forget under /bin/bash, whose PATH has neither
       # profile on it.
       aeroPath = ''
@@ -20,14 +22,7 @@
         text = ''
           ${aeroPath}
           braveHome="$HOME/Library/Application Support/BraveSoftware"
-
-          name=''${1:-}
-          case "$name" in
-            Personal) data="$braveHome/Brave-Browser" ;;
-            School)   data="$braveHome/Brave-Browser-School" ;;
-            *) echo "usage: brave-activation Personal|School" >&2; exit 1 ;;
-          esac
-          shift
+          ${common.pickProfile}
 
           ws=$(aerospace list-workspaces --focused)
           id=$(aerospace list-windows --workspace "$ws" --format '%{window-id}|%{window-title}' 2>/dev/null |
@@ -46,12 +41,7 @@
             --user-data-dir="$data" \
             --profile-directory=Default \
             --new-window \
-            --disable-breakpad \
-            --no-pings \
-            --disable-domain-reliability \
-            --disable-background-networking \
-            --no-default-browser-check \
-            --no-first-run \
+            ${common.hardening} \
             "$@"
         '';
       };
