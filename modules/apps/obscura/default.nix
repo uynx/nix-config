@@ -116,6 +116,15 @@
         # fail-closed. Never stop retrying, matching upstream's unit.
         startLimitIntervalSec = 0;
 
+        # A switch stops this unit in its stop phase and only starts it again in its
+        # start phase, with the whole activation script in between — and obscura-lockdown
+        # stays up throughout, so that gap is a total network blackout. Home Manager's
+        # activation runs in that gap and blocks for 90 s per try on the rclone Drive
+        # mount, which is the rebuild that never says "finished". Interrupting it there
+        # leaves the daemon stopped and the machine locked out until reboot. `reb`
+        # restarts it after the switch instead, where nothing else is waiting.
+        restartIfChanged = false;
+
         # auto_connect is daemon-owned state with no CLI or service flag, and the
         # daemon rewrites the whole file on shutdown, so it has to be re-asserted
         # here on every start. Redirecting into the original path rather than
