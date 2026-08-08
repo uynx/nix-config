@@ -30,7 +30,9 @@
 
       # Same filename shadows the packaged brave-origin.desktop, whose Exec has
       # no --user-data-dir and opens an empty third profile. home.file, not
-      # xdg.desktopEntries: that is gated on xdg.enable, false here.
+      # xdg.desktopEntries: ~/.local/share outranks the profile in
+      # XDG_DATA_DIRS, so this wins outright instead of relying on the hiPrio
+      # collision that desktopEntries resolves it with (apps/steam takes that route).
       home.file.".local/share/applications/brave-origin.desktop".text = ''
         [Desktop Entry]
         Type=Application

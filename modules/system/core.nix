@@ -21,7 +21,6 @@
       vim
       wget
       curl
-      ghostty
       brightnessctl
     ];
 

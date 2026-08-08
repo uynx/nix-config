@@ -712,7 +712,6 @@
 
         ACTIVE=$(${N} msg -j focused-window 2>/dev/null || echo '{}')
         APP=$(printf '%s' "$ACTIVE" | ${J} -r '.app_id // ""' 2>/dev/null || true)
-        PID=$(printf '%s' "$ACTIVE" | ${J} -r '.pid // 0' 2>/dev/null || true)
         case "$APP" in
           steam|Steam|steam_app_[0-9]*|cs2)
             exec ${steam-asahi-stop}/bin/steam-asahi-stop

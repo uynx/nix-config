@@ -1,6 +1,6 @@
 {
   flake.homeModules.office =
-    { pkgs, lib, ... }:
+    { pkgs, ... }:
     let
       inherit (pkgs.stdenv.hostPlatform) isDarwin;
     in

@@ -89,7 +89,6 @@ in
         xwayland-satellite
         wl-clipboard
         playerctl
-        flatpak
       ];
 
       xdg.portal = {
