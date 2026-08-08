@@ -90,38 +90,17 @@
           ${aeroPath}
           ws=$(aerospace list-workspaces --focused)
 
-          tmux has-session -t main 2>/dev/null || tmux new-session -d -s main -n 1 -c "$HOME"
-          tmux set-option -t main renumber-windows off
-          if ! tmux list-windows -t main -F '#I' 2>/dev/null | grep -qx "$ws"; then
-            # Window 3 attaches wrong unless 2 exists first.
-            if [ "$ws" = 3 ] && ! tmux list-windows -t main -F '#I' 2>/dev/null | grep -qx 2; then
-              tmux new-window -d -t main:2 -n 2 -c "$HOME"
-            fi
-            # -c $HOME or the window inherits the active pane's cwd.
-            tmux new-window -d -t "main:$ws" -n "$ws" -c "$HOME"
-          fi
-
           id=$(aerospace list-windows --workspace "$ws" --format '%{window-id}|%{app-name}' 2>/dev/null |
             awk -F'|' '$2 ~ /Ghostty/ { print $1 }' | tail -1 || true)
           if [ -n "$id" ]; then
-            aerospace focus --window-id "$id"
-            tmux select-window -t "main-$ws:$ws" 2>/dev/null || true
-            exit 0
+            exec aerospace focus --window-id "$id"
           fi
 
+          # aerospace-claim-window.sh reads this to pull the new window here.
           printf '%s' "$ws" >/tmp/aerospace-launch-ws
           (sleep 3; rm -f /tmp/aerospace-launch-ws) &
 
-          # Grouped session per workspace: shared window list, independent
-          # selection, so two Ghosttys never mirror each other.
-          exec ghostty -e sh -c "
-            if tmux has-session -t 'main-$ws' 2>/dev/null; then
-              tmux select-window -t 'main-$ws:$ws' 2>/dev/null
-              exec tmux attach-session -t 'main-$ws'
-            else
-              exec tmux new-session -t main -s 'main-$ws' \; set-option destroy-unattached on \; select-window -t ':$ws'
-            fi
-          "
+          exec ghostty
         '';
       };
     in
