@@ -45,5 +45,16 @@
     { pkgs, ... }:
     {
       formatter = pkgs.nixfmt;
+
+      # A wrapper becomes a package on every system in the list above, and
+      # these three wrap Linux-only builds — so on darwin they were outputs
+      # that could not evaluate at all, which is `nix flake show` and
+      # `nix flake check` failing rather than anything the Mac actually uses.
+      # `control_type` defaults to `exclude`, so true here means "do not build".
+      wrappers.packages = lib.genAttrs [
+        "ghostty"
+        "niri"
+        "noctalia-shell"
+      ] (_: pkgs.stdenv.hostPlatform.isDarwin);
     };
 }
