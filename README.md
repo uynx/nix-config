@@ -33,14 +33,19 @@ separate lists and dropping a component means editing both.
 ## The two platforms
 
 `mkBundle` returns both a NixOS and a darwin module from one definition, because
-the Home Manager half is identical and only the system half differs. So
+the Home Manager half is usually identical and only the system half differs. So
 `modules/hosts/darwin/` reads like `modules/hosts/asahi/`: the same bundle names,
 one line each, and moving a component between the machines is moving a line.
+Where the home tier differs by an entry or two, `homeLinux` and `homeDarwin` add
+to the shared `home` list rather than restating it — a bundle is one `mkBundle`
+call, never two.
 
 Everything portable is shared as-is. Where a package exists on only one platform
 the *app module* absorbs it — a `lib.optional stdenv.hostPlatform.isLinux` beside
-the package, and a cask in `darwin.nix` — so hosts never branch. Two rules keep
-that working:
+the package, and a cask in `darwin.nix` — so hosts never branch. An app splits
+into two files only when the platforms share no line of implementation, the way
+`apps/launchers/` does; one differing package name stays a ternary. Two rules
+keep that working:
 
 * **Never branch a module on `pkgs`.** `if isDarwin then … else …` around a
   module body makes the import depend on config, which is an infinite recursion

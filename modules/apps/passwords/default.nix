@@ -8,7 +8,7 @@
           bitwarden-cli
           proton-pass-cli
         ]
-        # The desktop app is Linux-only in nixpkgs; darwin/passwords.nix casks it.
+        # The desktop app is Linux-only in nixpkgs; ./darwin.nix casks it.
         ++ lib.optional stdenv.hostPlatform.isLinux bitwarden-desktop;
 
       # Without this proton-pass-cli tries the system keyring, which nothing on a
