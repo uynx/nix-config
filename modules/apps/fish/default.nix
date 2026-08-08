@@ -134,6 +134,12 @@ in
 
             # nh elevates itself, so no sudo here.
             if nh $platform switch $repo -H $target -- --impure
+                ${lib.optionalString isLinux ''
+                  # obscura.service is restartIfChanged = false, so this is the only
+                  # place a new daemon binary lands short of a reboot. It has to be
+                  # after the switch: restarting it during one deadlocks activation.
+                  sudo systemctl try-restart obscura.service
+                ''}
                 # Checkpoint commit for rollback, not a real message — reword if the
                 # change deserves one.
                 if not git -C $repo diff --cached --quiet
