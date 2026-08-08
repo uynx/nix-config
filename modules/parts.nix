@@ -8,6 +8,17 @@
     default = { };
   };
 
+  # Same again for darwinModules. The nix-darwin flake module imported below
+  # declares only `darwinConfigurations`, so this output stayed undeclared and
+  # every file after the first to define one collided — as an infinite
+  # recursion rather than a merge error, which is a long way from the cause.
+  # Values are taken whole, so each module is defined at its own name and never
+  # at a path below it.
+  options.flake.darwinModules = lib.mkOption {
+    type = lib.types.lazyAttrsOf lib.types.raw;
+    default = { };
+  };
+
   # Declare flake.homeModules, flake.darwinModules and flake.wrappers as real
   # flake-parts options. flake-parts declares nixosModules itself but not these,
   # and an undeclared flake output can only be defined once — a second module
