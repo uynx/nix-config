@@ -2,7 +2,7 @@
   tmuxNavigator,
   flakePath,
   hostAttr,
-  scssServers,
+  isDarwin,
   c,
 }:
 {
@@ -131,10 +131,20 @@
       typescript.enable = true;
       tsx.enable = true;
       html.enable = true;
-      css.enable = true;
+      css = {
+        # Some Sass speaks plain CSS too, so on Linux it is the only server
+        # needed and nvf's css LSP (vscode-css-language-server) is redundant.
+        # It stays on darwin, where Some Sass cannot build: nvf builds that
+        # server itself and its keytar dependency's node-addon-api does not
+        # compile under Apple clang.
+        enable = true;
+        lsp.enable = isDarwin;
+      };
       scss = {
         enable = true;
-        lsp.servers = scssServers;
+        lsp.servers = [
+          (if isDarwin then "vscode-css-language-server" else "some-sass-language-server")
+        ];
       };
       svelte.enable = true;
       vue.enable = true;
