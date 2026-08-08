@@ -5,8 +5,6 @@ let
   };
 in
 {
-  # Notes and the office suite. Portable, and the bundle the family machines
-  # actually want.
   flake.nixosModules.office = bundle.nixos;
   flake.darwinModules.office = bundle.darwin;
 }

@@ -6,7 +6,6 @@ let
   };
 in
 {
-  # Playback, capture and image tooling.
   flake.nixosModules.media = bundle.nixos;
   flake.darwinModules.media = bundle.darwin;
 }
