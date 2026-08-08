@@ -22,6 +22,12 @@
       wget
       curl
       brightnessctl
+
+      # A generic `pinentry` on PATH, so any GNUPGHOME without its own
+      # gpg-agent.conf (a scratch keyring, a container, `sudo -H gpg`) still
+      # finds a prompt instead of failing "No pinentry". Doesn't touch the
+      # real ~/.gnupg agent, which pins pinentry-qt by exact store path.
+      pinentry-all
     ];
 
     system.stateVersion = "26.05";

@@ -24,6 +24,7 @@
       # bitwarden-desktop would just sit unopenable.
       {
         environment.systemPackages = [
+          inputs.nixpkgs.legacyPackages.aarch64-linux.vim
           inputs.nixpkgs.legacyPackages.aarch64-linux.git
           inputs.nixpkgs.legacyPackages.aarch64-linux.gh
           inputs.nixpkgs.legacyPackages.aarch64-linux.bitwarden-cli
