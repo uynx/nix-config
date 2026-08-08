@@ -25,7 +25,6 @@
       gaming
 
       ./_hardware-configuration.nix
-      inputs.determinate.nixosModules.default
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
 
       { networking.hostName = "asahi"; }

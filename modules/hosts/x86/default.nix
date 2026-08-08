@@ -14,7 +14,6 @@
       programming
 
       # ./_hardware-configuration.nix
-      inputs.determinate.nixosModules.default
 
       { networking.hostName = "x86"; }
     ];

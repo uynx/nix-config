@@ -1,6 +1,10 @@
 { self, inputs, ... }:
 {
   flake.nixosModules.nixSettings = {
+    # Imported here rather than by each host: the option below is meaningless
+    # without it, and a host should not have to know that.
+    imports = [ inputs.determinate.nixosModules.default ];
+
     determinate.enable = true;
     nixpkgs.config.allowUnfree = true;
     nix = {

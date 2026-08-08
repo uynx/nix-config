@@ -27,8 +27,6 @@
       # secrets
       # cloud
 
-      inputs.determinate.darwinModules.default
-
       {
         networking = {
           hostName = "MacBook-Pro";
