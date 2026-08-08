@@ -17,15 +17,12 @@
       # host that took this bundle, and the branch belongs beside the package
       # that forced it.
       programs.fish.shellAliases =
-        if isDarwin then
-          {
-            word = "open -a LibreOffice --args --writer";
-            powerpoint = "open -a LibreOffice --args --impress";
-          }
-        else
-          {
-            word = "libreoffice --writer";
-            powerpoint = "libreoffice --impress";
-          };
+        let
+          lo = if isDarwin then "open -a LibreOffice --args" else "libreoffice";
+        in
+        {
+          word = "${lo} --writer";
+          powerpoint = "${lo} --impress";
+        };
     };
 }
