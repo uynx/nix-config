@@ -34,6 +34,13 @@
     { self', ... }:
     {
       home.packages = [ self'.packages.nvim ];
+
+      # Here rather than per host: the editor is what decides these, and both
+      # hosts were restating the same two lines.
+      home.sessionVariables = {
+        EDITOR = "nvim";
+        VISUAL = "nvim";
+      };
     }
   );
 }

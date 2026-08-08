@@ -34,12 +34,6 @@
         };
         nixpkgs.hostPlatform = "aarch64-darwin";
       }
-      {
-        home-manager.users.${self.lib.user.name}.home.sessionVariables = {
-          EDITOR = "nvim";
-          VISUAL = "nvim";
-        };
-      }
     ];
   };
 }
