@@ -9,7 +9,6 @@ let
   };
 in
 {
-  # Every AI CLI, the shared skills/AGENTS.md wiring and push-to-talk dictation.
   flake.nixosModules.ai = bundle.nixos;
   flake.darwinModules.ai = bundle.darwin;
 }

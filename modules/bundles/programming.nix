@@ -17,7 +17,6 @@ let
   };
 in
 {
-  # Language toolchains, git and the editor. Portable.
   flake.nixosModules.programming = bundle.nixos;
   flake.darwinModules.programming = bundle.darwin;
 }
