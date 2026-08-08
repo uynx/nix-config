@@ -1,4 +1,3 @@
-{ self, ... }:
 {
   # Tiling window manager for macOS. The config is an out-of-store symlink into
   # ~/dotfiles for the same reason niri's is not: it is tuned live, and
@@ -15,6 +14,6 @@
       };
 
       home.file.".aerospace.toml".source =
-        config.lib.file.mkOutOfStoreSymlink "${self.lib.user.darwinHome}/dotfiles/aerospace.toml";
+        config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/aerospace.toml";
     };
 }

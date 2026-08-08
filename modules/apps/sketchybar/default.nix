@@ -37,6 +37,6 @@
     { config, ... }:
     {
       home.file.".config/sketchybar".source =
-        config.lib.file.mkOutOfStoreSymlink "${self.lib.user.darwinHome}/dotfiles/sketchybar";
+        config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/sketchybar";
     };
 }
