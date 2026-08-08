@@ -1,4 +1,7 @@
-{ moduleWithSystem, ... }:
+{ self, moduleWithSystem, ... }:
+let
+  c = self.lib.flexoki;
+in
 {
   flake.wrappers.starship =
     { wlib, ... }:
@@ -11,14 +14,14 @@
         # Redefining the standard colour names retints every module at once.
         palette = "flexoki";
         palettes.flexoki = {
-          black = "#100f0f";
-          red = "#d14d41";
-          green = "#879a39";
-          yellow = "#d0a215";
-          blue = "#4385be";
-          purple = "#ce5d97";
-          cyan = "#3aa99f";
-          white = "#cecdc3";
+          black = c.bg;
+          red = c.red;
+          green = c.green;
+          yellow = c.yellow;
+          blue = c.blue;
+          purple = c.magenta;
+          cyan = c.cyan;
+          white = c.fg;
         };
       };
     };

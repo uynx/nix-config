@@ -1,4 +1,7 @@
-{ inputs, ... }:
+{ self, inputs, ... }:
+let
+  c = self.lib.flexoki;
+in
 {
   flake.homeModules.cli =
     {
@@ -95,19 +98,19 @@
           historyWidget.command = "";
           # Flexoki Dark, matching ghostty and neovim.
           colors = {
-            "bg+" = "#403e3c";
-            bg = "#100f0f";
-            fg = "#878580";
-            "fg+" = "#cecdc3";
-            hl = "#d0a215";
-            "hl+" = "#d0a215";
-            info = "#879a39";
-            marker = "#3aa99f";
-            pointer = "#d14d41";
-            prompt = "#4385be";
-            spinner = "#ce5d97";
-            header = "#575653";
-            border = "#575653";
+            "bg+" = c.selection;
+            bg = c.bg;
+            fg = c.gray;
+            "fg+" = c.fg;
+            hl = c.yellow;
+            "hl+" = c.yellow;
+            info = c.green;
+            marker = c.cyan;
+            pointer = c.red;
+            prompt = c.blue;
+            spinner = c.magenta;
+            header = c.dim;
+            border = c.dim;
           };
         };
 

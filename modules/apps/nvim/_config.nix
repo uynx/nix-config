@@ -2,6 +2,7 @@
   tmuxNavigator,
   flakePath,
   hostAttr,
+  c,
 }:
 {
   vim = {
@@ -22,28 +23,28 @@
       scrolloff = 8;
     };
 
-    # nvf has no flexoki theme and flexoki-neovim is not in nixpkgs. Values are
-    # ghostty's "Flexoki Dark" verbatim — do not invent replacements.
+    # nvf has no flexoki theme and flexoki-neovim is not in nixpkgs, so the
+    # palette is mapped onto base16 by hand.
     theme = {
       enable = true;
       name = "base16";
       base16-colors = {
-        base00 = "#100f0f";
-        base01 = "#403e3c";
-        base02 = "#575653";
-        base03 = "#878580";
-        base04 = "#878580";
-        base05 = "#cecdc3";
-        base06 = "#cecdc3";
-        base07 = "#cecdc3";
-        base08 = "#d14d41";
-        base09 = "#ad8301";
-        base0A = "#d0a215";
-        base0B = "#879a39";
-        base0C = "#3aa99f";
-        base0D = "#4385be";
-        base0E = "#ce5d97";
-        base0F = "#af3029";
+        base00 = c.bg;
+        base01 = c.selection;
+        base02 = c.dim;
+        base03 = c.gray;
+        base04 = c.gray;
+        base05 = c.fg;
+        base06 = c.fg;
+        base07 = c.fg;
+        base08 = c.red;
+        base09 = c.yellowDeep;
+        base0A = c.yellow;
+        base0B = c.green;
+        base0C = c.cyan;
+        base0D = c.blue;
+        base0E = c.magenta;
+        base0F = c.redDeep;
       };
     };
 

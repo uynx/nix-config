@@ -1,3 +1,7 @@
+{ self, ... }:
+let
+  c = self.lib.flexoki;
+in
 {
   # Deliberately NOT wrapped. A wrapper puts the config in GIT_CONFIG_GLOBAL
   # inside one binary, so every other git — a devshell's, a container's, CI's —
@@ -34,16 +38,17 @@
         side-by-side = true;
         line-numbers = true;
         # No Flexoki .tmTheme exists, so syntax highlighting keeps bat's default
-        # and only delta's own decorations are recoloured.
+        # and only delta's own decorations are recoloured. The four diff
+        # backgrounds are darkened blends with no palette entry of their own.
         plus-style = "syntax #1e2b18";
         minus-style = "syntax #33201d";
         plus-emph-style = "syntax #2f4523";
         minus-emph-style = "syntax #55302b";
-        line-numbers-plus-style = "#879a39";
-        line-numbers-minus-style = "#d14d41";
-        line-numbers-zero-style = "#575653";
-        file-style = "#d0a215";
-        hunk-header-style = "#4385be";
+        line-numbers-plus-style = c.green;
+        line-numbers-minus-style = c.red;
+        line-numbers-zero-style = c.dim;
+        file-style = c.yellow;
+        hunk-header-style = c.blue;
       };
     };
 
