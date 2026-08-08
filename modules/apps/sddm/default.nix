@@ -1,3 +1,4 @@
+{ self, ... }:
 {
   flake.nixosModules.sddm =
     { pkgs, lib, ... }:
@@ -12,12 +13,14 @@
       timeOld = "font.pointSize: root.font.pointSize * 9";
       timeNew = "font.pixelSize: Screen.height * 0.055";
 
-      bg = "#100f0f";
-      fg = "#cecdc3";
-      field = "#403e3c";
-      gray = "#878580";
-      amber = "#d0a215";
-      red = "#d14d41";
+      inherit (self.lib.flexoki)
+        bg
+        fg
+        gray
+        red
+        ;
+      field = self.lib.flexoki.selection;
+      amber = self.lib.flexoki.yellow;
 
       theme =
         (pkgs.sddm-astronaut.override {

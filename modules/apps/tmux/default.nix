@@ -1,4 +1,13 @@
-{ moduleWithSystem, ... }:
+{ self, moduleWithSystem, ... }:
+let
+  c = self.lib.flexoki;
+  # Flexoki surface shades and orange-600, none of which the terminal palette
+  # carries an entry for.
+  surface = "#252320";
+  surfaceAlt = "#282726";
+  faint = "#343331";
+  orange = "#bc5215";
+in
 {
   # Config kept verbatim in configAfter rather than re-expressed as the
   # wrapper's typed options: plugin settings only take effect if they are set
@@ -40,16 +49,16 @@
         set -as terminal-overrides ',*:Setcx=\E[58::2::%p1%{65536}%/%d::%p1%{256}%/%{255}%&%d::%p1%{255}%&%d%;m'
 
         # Flexoki. Transparent backgrounds inherit Ghostty's window opacity.
-        set -g status-style "bg=#252320,fg=#cecdc3"
-        set -g message-style "bg=default,fg=#cecdc3"
-        set -g status-left "#[fg=#205ea6,bold] #S #[fg=#343331]| "
+        set -g status-style "bg=${surface},fg=${c.fg}"
+        set -g message-style "bg=default,fg=${c.fg}"
+        set -g status-left "#[fg=${c.blueDeep},bold] #S #[fg=${faint}]| "
         set -g status-left-length 20
         set -g status-right ""
         set -g status-right-length 50
-        set -g window-status-format "#[fg=#878580] #I: #W "
-        set -g window-status-current-format "#[fg=#bc5215,bold,bg=#282726] #I: #W* "
-        set -g pane-border-style "fg=#282726"
-        set -g pane-active-border-style "fg=#205ea6"
+        set -g window-status-format "#[fg=${c.gray}] #I: #W "
+        set -g window-status-current-format "#[fg=${orange},bold,bg=${surfaceAlt}] #I: #W* "
+        set -g pane-border-style "fg=${surfaceAlt}"
+        set -g pane-active-border-style "fg=${c.blueDeep}"
 
         set -g mouse on
         set -s escape-time 0
