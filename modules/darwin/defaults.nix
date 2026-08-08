@@ -19,28 +19,15 @@
             "Assistant Enabled" = false;
             "Dictation Enabled" = false;
           };
-          "com.apple.Siri" = {
-            "Siri Data Sharing Opt-Out" = true;
-            StatusMenuVisible = false;
-            UserHasDeclinedEnable = true;
-          };
           "com.apple.SubmitDiagnostics".iCloudAnalytics = false;
           "com.apple.AdLib" = {
             allowApplePersonalizedAdvertising = false;
             allowIdentifierForAdvertising = false;
             AD_ID_OPT_OUT = true;
           };
-          "com.apple.Safari" = {
-            UniversalSearchEnabled = false;
-            PreloadTopHit = false;
-            BlockStoragePolicy = 2;
-            IncludeInternalDebugMenu = true;
-            IncludeDevelopMenu = true;
-            WebKitDeveloperExtrasEnabledPreferenceKey = true;
-            "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" = true;
-            ShowFullURLInSmartSearchField = true;
-            AutoOpenSafeDownloads = false;
-          };
+          # Sandboxed app domains (Safari, Siri, TextEdit, QuickTimePlayerX) cannot
+          # be written from here — `defaults` redirects into ~/Library/Containers,
+          # which TCC blocks, and one failure aborts the whole activation.
           "com.apple.spotlight" = {
             SuggestionsEnabled = false;
             LookupEnabled = false;
@@ -52,11 +39,6 @@
           };
           "com.apple.TimeMachine".DoNotOfferNewDisksForBackup = true;
           "com.apple.mail".DisableDataDetectors = true;
-          "com.apple.TextEdit" = {
-            RichText = 0;
-            PlainTextEncoding = 4;
-            PlainTextEncodingForWrite = 4;
-          };
           "com.apple.finder" = {
             WarnOnEmptyTrash = false;
             DisableAllAnimations = true;
@@ -65,10 +47,6 @@
             skip-verify = true;
             skip-verify-locked = true;
             skip-verify-remote = true;
-          };
-          "com.apple.QuickTimePlayerX" = {
-            NSRecentDocumentsLimit = 0;
-            NSQuitAlwaysKeepsWindows = false;
           };
         };
 
