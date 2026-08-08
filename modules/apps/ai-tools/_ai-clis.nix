@@ -16,8 +16,9 @@ let
     sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
   };
 
-  # A vendor that ships one bare executable. `url` is a function of the version
-  # so the pin is read once, here, rather than named twice per package.
+  # `url` is a function of the version so the pin is read once, here, rather
+  # than named twice per package. Default to a vendor that ships one bare
+  # executable; an archive names its `sourceRoot` and its own `install`.
   mkPin =
     {
       pname,
@@ -25,24 +26,28 @@ let
       homepage,
       desc,
       bin ? pname,
+      sourceRoot ? null,
+      install ? ''install -Dm755 "$src" "$out/bin/${bin}"'',
     }:
-    stdenvNoCC.mkDerivation {
-      inherit pname;
-      inherit (pins.${pname}) version;
-      src = fetchurl {
-        url = url pins.${pname}.version;
-        inherit (pins.${pname}) hash;
-      };
-      dontUnpack = true;
-      installPhase = ''
-        runHook preInstall
-        install -Dm755 "$src" "$out/bin/${bin}"
-        runHook postInstall
-      '';
-      meta = meta homepage desc // {
-        mainProgram = bin;
-      };
-    };
+    stdenvNoCC.mkDerivation (
+      {
+        inherit pname;
+        inherit (pins.${pname}) version;
+        src = fetchurl {
+          url = url pins.${pname}.version;
+          inherit (pins.${pname}) hash;
+        };
+        installPhase = ''
+          runHook preInstall
+          ${lib.removeSuffix "\n" install}
+          runHook postInstall
+        '';
+        meta = meta homepage desc // {
+          mainProgram = bin;
+        };
+      }
+      // (if sourceRoot == null then { dontUnpack = true; } else { inherit sourceRoot; })
+    );
 in
 {
   # Do NOT autoPatchelf: Bun appends its payload after the ELF, and patching
@@ -61,22 +66,13 @@ in
   # tool calls through a sibling `codex-code-mode-host` binary that only the
   # npm platform package carries. Without it every call dies at "timed out
   # negotiating with the code-mode host". The `codex` binaries are identical.
-  codex = stdenvNoCC.mkDerivation {
+  codex = mkPin {
     pname = "codex";
-    inherit (pins.codex) version;
-    src = fetchurl {
-      url = "https://registry.npmjs.org/@openai/codex/-/codex-${pins.codex.version}-linux-arm64.tgz";
-      inherit (pins.codex) hash;
-    };
+    url = v: "https://registry.npmjs.org/@openai/codex/-/codex-${v}-linux-arm64.tgz";
     sourceRoot = "package/vendor/aarch64-unknown-linux-musl";
-    installPhase = ''
-      runHook preInstall
-      install -Dm755 bin/codex bin/codex-code-mode-host -t "$out/bin"
-      runHook postInstall
-    '';
-    meta = meta "https://github.com/openai/codex" "OpenAI's Codex CLI" // {
-      mainProgram = "codex";
-    };
+    install = ''install -Dm755 bin/codex bin/codex-code-mode-host -t "$out/bin"'';
+    homepage = "https://github.com/openai/codex";
+    desc = "OpenAI's Codex CLI";
   };
 
   grok = mkPin {
@@ -98,45 +94,27 @@ in
     desc = "Moonshot's Kimi Code CLI";
   };
 
-  # The three below unpack an archive, so they keep their own installPhase.
-  opencode = stdenvNoCC.mkDerivation {
+  opencode = mkPin {
     pname = "opencode";
-    inherit (pins.opencode) version;
-    src = fetchurl {
-      url = "https://github.com/sst/opencode/releases/download/v${pins.opencode.version}/opencode-linux-arm64.tar.gz";
-      inherit (pins.opencode) hash;
-    };
+    url = v: "https://github.com/sst/opencode/releases/download/v${v}/opencode-linux-arm64.tar.gz";
     sourceRoot = ".";
-    installPhase = ''
-      runHook preInstall
-      install -Dm755 opencode "$out/bin/opencode"
-      runHook postInstall
-    '';
-    meta = meta "https://github.com/sst/opencode" "SST's OpenCode terminal agent" // {
-      mainProgram = "opencode";
-    };
+    install = ''install -Dm755 opencode "$out/bin/opencode"'';
+    homepage = "https://github.com/sst/opencode";
+    desc = "SST's OpenCode terminal agent";
   };
 
   # Ships its own node next to the launcher, so the tree moves whole and only
   # the launcher gets linked into bin.
-  cursor-agent = stdenvNoCC.mkDerivation {
+  cursor-agent = mkPin {
     pname = "cursor-agent";
-    inherit (pins.cursor-agent) version;
-    src = fetchurl {
-      url = "https://downloads.cursor.com/lab/${pins.cursor-agent.version}/linux/arm64/agent-cli-package.tar.gz";
-      inherit (pins.cursor-agent) hash;
-    };
+    url = v: "https://downloads.cursor.com/lab/${v}/linux/arm64/agent-cli-package.tar.gz";
     sourceRoot = "dist-package";
-    installPhase = ''
-      runHook preInstall
+    install = ''
       mkdir -p "$out/libexec" "$out/bin"
       cp -r . "$out/libexec/cursor-agent"
       ln -s "$out/libexec/cursor-agent/cursor-agent" "$out/bin/cursor-agent"
-      runHook postInstall
     '';
-    meta = meta "https://cursor.com/cli" "Cursor's agent CLI" // {
-      mainProgram = "cursor-agent";
-    };
+    homepage = "https://cursor.com/cli";
+    desc = "Cursor's agent CLI";
   };
-
 }
