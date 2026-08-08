@@ -68,8 +68,8 @@
       obscura-gui-desktop = pkgs.runCommand "obscura-gui-desktop" { } ''
         install -Dm444 ${inputs.obscuravpn}/linux/common/net.obscura.vpn.gui.desktop \
           $out/share/applications/net.obscura.vpn.gui.desktop
-        for px in 128 256; do
-          install -Dm444 ${inputs.obscuravpn}/linux/common/icons/net.obscura.vpn.gui-$px.png \
+        for px in 64 128 256; do
+          install -Dm444 ${inputs.obscuravpn}/linux/common/icons/''${px}x''${px}/net.obscura.vpn.gui.png \
             $out/share/icons/hicolor/''${px}x''${px}/apps/net.obscura.vpn.gui.png
         done
       '';
