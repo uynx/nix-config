@@ -124,7 +124,13 @@
       tsx.enable = true;
       html.enable = true;
       css.enable = true;
-      scss.enable = true;
+      scss = {
+        enable = true;
+        # nvf defaults to some-sass-language-server, whose keytar dependency
+        # fails to compile under Apple clang. css.enable already pulls this
+        # server in, so the swap costs nothing.
+        lsp.servers = [ "vscode-css-language-server" ];
+      };
       svelte.enable = true;
       vue.enable = true;
       typst.enable = true;
