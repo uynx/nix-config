@@ -12,15 +12,16 @@
       # macOS deliberately gets Bitwarden alone. Proton Pass is Linux-only here
       # until there is a reason to carry the second manager on both — ./darwin.nix
       # casks the desktop app, and nothing below it applies there.
-      home.packages =
-        [ pkgs.bitwarden-cli ]
-        ++ lib.optionals isLinux (
-          with pkgs;
-          [
-            proton-pass-cli
-            bitwarden-desktop
-          ]
-        );
+      home.packages = [
+        pkgs.bitwarden-cli
+      ]
+      ++ lib.optionals isLinux (
+        with pkgs;
+        [
+          proton-pass-cli
+          bitwarden-desktop
+        ]
+      );
 
       # Without this proton-pass-cli tries the system keyring, which nothing on a
       # niri session provides.
