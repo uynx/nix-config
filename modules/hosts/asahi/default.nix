@@ -24,6 +24,10 @@
       latex
       gaming
 
+      # An app module rather than a bundle: it has no Home Manager tier, so
+      # wrapping it would only restate the name.
+      virt
+
       ./_hardware-configuration.nix
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
 
