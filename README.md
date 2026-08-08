@@ -53,9 +53,22 @@ ternary. Two rules keep that working:
   module body makes the import depend on config, which is an infinite recursion
   inside Home Manager. Use `lib.mkIf` on the *values* instead — see
   `modules/apps/ghostty/default.nix`.
-* **A darwin module may not share a name with the bundle that imports it**,
-  hence the `…Casks` suffixes: `flake.darwinModules.office` defined in terms of
-  `self.darwinModules.office` is the same recursion by another route.
+* **A darwin module may not share a name with the bundle that imports it**:
+  `flake.darwinModules.office` defined in terms of `self.darwinModules.office`
+  is the same recursion by another route. Otherwise a darwin module is named
+  after its own directory, matching the home module beside it — only
+  `mediaCasks` needs a distinct name, because `apps/media/` and the `media`
+  bundle are spelled the same.
+
+A third rule keeps the shell out of it:
+
+* **The shell may not name a component.** `apps/fish/` holds no command that
+  drives another program: `vpn` lives in `apps/obscura/`, `android` in
+  `apps/waydroid/`, `pass-find` in `apps/passwords/`. A component that needs to
+  run something at `update` or `reb` time registers it through `shellHooks`
+  (declared in `apps/fish/default.nix`, loaded for every Home Manager user by
+  `homeManagerBase`), so a host that drops the component drops the command with
+  it rather than keeping one that fails.
 
 ## Adding or removing a component
 
@@ -66,7 +79,7 @@ together.
 
 | Bundle | Contents | macOS |
 |---|---|---|
-| `desktopNiri` | niri, sddm-astronaut greeter, noctalia, GTK theme, screen utils | — |
+| `desktopNiri` | niri, sddm-astronaut greeter, noctalia, GTK theme, screen utils, `android` | — |
 | `desktopKde` | Plasma 6, sddm, spectacle | — |
 | `desktopMacos` | AeroSpace, SketchyBar, JankyBorders, wallpaper, file associations | only |
 | `shell` | fish, ghostty, tmux, starship, yazi, btop, CLI tooling | yes |
@@ -76,13 +89,14 @@ together.
 | `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
 | `comms` | vesktop, whatsapp | whatsapp only, no vesktop |
 | `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
-| `secrets` | sops, gpg agent, password managers | needs its own key in `.sops.yaml` |
+| `secrets` | sops, gpg agent, both password managers, `pass-find` | Bitwarden only; needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
-| `privacy` | obscura VPN + egress lockdown, tor and mullvad browsers | three casks |
+| `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
 | `gaming` | Steam via the Fedora/FEX distrobox container | — |
 
-Every bundle needs `homeManagerBase`, on either platform.
+Every bundle needs `homeManagerBase`, on either platform — it carries the Home
+Manager wiring and the `shellHooks` option declarations.
 
 On macOS the AI CLIs come from Homebrew rather than the pins in
 `modules/apps/ai-tools/linux.nix`, which are aarch64-linux artifacts, and the
@@ -99,7 +113,11 @@ update nvf       # relock one input only
 ```
 
 `reb` targets `asahi` on Linux and `darwin` on macOS, and drives `nh os` or
-`nh darwin` accordingly; pass a host name to override it.
+`nh darwin` accordingly; pass a host name to override it. Both commands are
+assembled per host: `update` runs the pin updaters this host installed and
+`reb` runs its post-switch hooks, so neither names a component this host may
+not have. `nix fmt` formats the tree with nixfmt, and `statix check .` should
+report nothing.
 
 Rebuilds need `--impure`, which `reb` passes: the Asahi firmware directory has
 to stay a real path, and the AI skills are read out of a working copy. See
