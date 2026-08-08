@@ -6,15 +6,17 @@
   # writable path: the wrapper seeds it once and hands editing back. The
   # wrapper also ships `dump-noctalia-shell`, which prints the running settings
   # as Nix, replacing the rm/restart/copy-back loop.
+  #
+  # Two settings are asserted in ./settings.json rather than patched over it
+  # here, since `dump-noctalia-shell` round-trips through that file anyway:
+  #   templates.activeTemplates[].enabled — all false. The ghostty template
+  #     spams "Unknown color" every login (Flexoki omits its terminal_normal_*
+  #     keys) and theming belongs in Nix.
+  #   notifications.enabled — true. Nothing else here claims
+  #     org.freedesktop.Notifications, so with it off every notify-send in the
+  #     config silently no-ops.
   flake.wrappers.noctalia-shell =
     { wlib, pkgs, ... }:
-    let
-      saved = builtins.fromJSON (builtins.readFile ./settings.json);
-
-      # All off: the ghostty one spams "Unknown color" every login (Flexoki
-      # omits its terminal_normal_* keys) and theming belongs in Nix anyway.
-      disableTemplates = map (t: t // { enabled = false; });
-    in
     {
       imports = [ wlib.wrapperModules.noctalia-shell ];
 
@@ -29,13 +31,9 @@
         '';
       });
 
-      settings = lib.recursiveUpdate saved {
+      settings = builtins.fromJSON (builtins.readFile ./settings.json) // {
+        # The one override that cannot live in the file: a store path.
         wallpaper.directory = "${../../wallpapers}";
-        templates.activeTemplates = disableTemplates saved.templates.activeTemplates;
-
-        # Nothing else on this host claims org.freedesktop.Notifications, so
-        # with this off every notify-send in the config silently no-ops.
-        notifications.enabled = true;
       };
 
       colors = builtins.fromJSON (builtins.readFile ./Flexoki.json);
