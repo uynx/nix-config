@@ -44,9 +44,13 @@
         package = pkgs.ghostty-bin;
       };
 
+      # Inlined, not `config-file = ${./config}`: ghostty applies an included
+      # file after the whole including file, so any override here loses to the
+      # shared config's own value. Appending to its text is the only order that
+      # wins.
       home.file.".config/ghostty/config" = lib.mkIf isDarwin {
-        text = ''
-          config-file = ${./config}
+        text = builtins.readFile ./config + ''
+
           font-size = 16
         '';
       };
