@@ -2,6 +2,7 @@
   tmuxNavigator,
   flakePath,
   hostAttr,
+  scssServers,
   c,
 }:
 {
@@ -133,10 +134,7 @@
       css.enable = true;
       scss = {
         enable = true;
-        # nvf defaults to some-sass-language-server, whose keytar dependency
-        # fails to compile under Apple clang. css.enable already pulls this
-        # server in, so the swap costs nothing.
-        lsp.servers = [ "vscode-css-language-server" ];
+        lsp.servers = scssServers;
       };
       svelte.enable = true;
       vue.enable = true;
