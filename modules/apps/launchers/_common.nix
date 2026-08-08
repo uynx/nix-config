@@ -17,6 +17,11 @@
   '';
 
   hardening = builtins.concatStringsSep " " [
+    # Strict fingerprinting is absent from brave://settings/shields until this
+    # feature is enabled; it is what masks the WebGL vendor/renderer string
+    # that Standard leaves untouched. Still has to be selected by hand, once
+    # per --user-data-dir.
+    "--enable-features=BraveShowStrictFingerprintingMode"
     "--disable-breakpad"
     "--no-pings"
     "--disable-domain-reliability"
