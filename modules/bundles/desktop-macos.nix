@@ -8,6 +8,9 @@
       darwin = [ self.darwinModules.sketchybar ];
       home = with self.homeModules; [
         aerospace
+        # Not `web` like on Linux: the macOS launchers focus through AeroSpace,
+        # and one of them is the terminal.
+        launchers
         sketchybar
         jankyborders
         desktoppr
