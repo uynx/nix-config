@@ -18,6 +18,17 @@
       # user module. This is the one line that carries determinate plus the
       # substituters, which is the whole reason to build a custom image.
       self.nixosModules.nixSettings
+
+      # Bootstraps the flake clone and the GPG key restore without a
+      # `nix-shell` detour. CLI only — the image has no display server, so
+      # bitwarden-desktop would just sit unopenable.
+      {
+        environment.systemPackages = [
+          inputs.nixpkgs.legacyPackages.aarch64-linux.git
+          inputs.nixpkgs.legacyPackages.aarch64-linux.gh
+          inputs.nixpkgs.legacyPackages.aarch64-linux.bitwarden-cli
+        ];
+      }
     ];
   };
 }
