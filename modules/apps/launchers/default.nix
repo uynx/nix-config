@@ -13,11 +13,7 @@
           braveHome="''${XDG_CONFIG_HOME:-$HOME/.config}/BraveSoftware"
           ${common.pickProfile}
 
-          # Strict fingerprinting is absent from brave://settings/shields
-          # until this feature is enabled; it is what masks the WebGL
-          # vendor/renderer string that Standard leaves untouched.
           exec brave-origin \
-            --enable-features=BraveShowStrictFingerprintingMode \
             --user-data-dir="$data" \
             --profile-directory=Default \
             ${common.hardening} \
