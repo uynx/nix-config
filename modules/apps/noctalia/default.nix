@@ -18,6 +18,17 @@
     {
       imports = [ wlib.wrapperModules.noctalia-shell ];
 
+      # Password dots are the one lock screen element with no colour setting;
+      # they follow mPrimary, which makes them amber next to the greeter's
+      # plain foreground.
+      package = pkgs.noctalia-shell.overrideAttrs (_: {
+        postInstall = ''
+          substituteInPlace $out/share/noctalia-shell/Modules/LockScreen/LockScreenPanel.qml \
+            --replace-fail 'isSelected ? Color.mOnPrimary : Color.mPrimary' \
+                           'isSelected ? Color.mOnPrimary : Color.mOnSurface'
+        '';
+      });
+
       settings = lib.recursiveUpdate saved {
         wallpaper.directory = "${../../wallpapers}";
         templates.activeTemplates = disableTemplates saved.templates.activeTemplates;
