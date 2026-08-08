@@ -1,35 +1,46 @@
 { self, inputs, ... }:
 {
-  # macOS on the same MacBook that dual-boots `asahi`. nix-darwin is a separate
-  # module system with no boot.loader or systemd, so nothing under
-  # modules/system applies — only homeModules cross the boundary, which is also
-  # why this host lists them directly instead of taking bundles.
-  # STUB: cannot be built from aarch64-linux. Evaluates only. The real macOS
-  # config still lives in ~/nix-darwin-config and is folded in here later.
+  # macOS on the same MacBook that dual-boots `asahi`. Reads like the asahi host
+  # on purpose: same bundle names, same one-line-per-component rule. The two
+  # differ only where macOS has no equivalent — no hardware module, no
+  # `desktopNiri`, and `gaming` stays on the Linux side.
   flake.darwinConfigurations.darwin = inputs.nix-darwin.lib.darwinSystem {
     system = "aarch64-darwin";
     specialArgs = { inherit inputs; };
-    modules = [
-      self.darwinModules.homeManagerBase
+    modules = with self.darwinModules; [
+      core
+      homeManagerBase
+
+      desktopMacos
+      shell
+      programming
+      ai
+      privacy
+      web
+      media
+      comms
+      office
+      latex
+
+      # Both need this machine's own key added to .sops.yaml and its own
+      # secrets/secrets.yaml; until then activation would fail on decryption.
+      # secrets
+      # cloud
+
+      inputs.determinate.darwinModules.default
 
       {
-        networking.hostName = "darwin";
-        system.stateVersion = 5;
+        networking = {
+          hostName = "MacBook-Pro";
+          computerName = "MacBook-Pro";
+        };
         nixpkgs.hostPlatform = "aarch64-darwin";
       }
       {
-        home-manager.users.${self.lib.user.name}.imports = with self.homeModules; [
-          fish
-          tmux
-          starship
-          yazi
-          btop
-          cli
-          dev
-          git
-          nvim
-          gpg
-        ];
+        home-manager.users.${self.lib.user.name}.home.sessionVariables = {
+          EDITOR = "nvim";
+          VISUAL = "nvim";
+        };
       }
     ];
   };

@@ -8,24 +8,25 @@
   # rewrite. On a machine driven remotely over RustDesk, add
   # `services.displayManager.defaultSession = "plasmax11"` — Wayland re-prompts
   # for screen capture on every connection.
-  flake.nixosModules.desktopKde = self.lib.mkBundle {
-    nixos = [
-      (
-        { pkgs, ... }:
-        {
-          services.desktopManager.plasma6.enable = true;
-          # No `package` here: plasma6 already selects kdePackages.sddm, and a
-          # second definition collides rather than overriding.
-          services.displayManager.sddm = {
-            enable = true;
-            wayland.enable = true;
-          };
-          environment.systemPackages = [ pkgs.kdePackages.spectacle ];
+  flake.nixosModules.desktopKde =
+    (self.lib.mkBundle {
+      nixos = [
+        (
+          { pkgs, ... }:
+          {
+            services.desktopManager.plasma6.enable = true;
+            # No `package` here: plasma6 already selects kdePackages.sddm, and a
+            # second definition collides rather than overriding.
+            services.displayManager.sddm = {
+              enable = true;
+              wayland.enable = true;
+            };
+            environment.systemPackages = [ pkgs.kdePackages.spectacle ];
 
-          services.gnome.gnome-keyring.enable = true;
-          security.pam.services.sddm.enableGnomeKeyring = true;
-        }
-      )
-    ];
-  };
+            services.gnome.gnome-keyring.enable = true;
+            security.pam.services.sddm.enableGnomeKeyring = true;
+          }
+        )
+      ];
+    }).nixos;
 }

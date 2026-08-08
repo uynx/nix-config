@@ -24,8 +24,13 @@ in
   };
 
   flake.darwinModules.homeManagerBase = {
-    imports = [ inputs.home-manager.darwinModules.home-manager ];
-    home-manager = shared;
+    imports = [
+      inputs.home-manager.darwinModules.home-manager
+      inputs.mac-app-util.darwinModules.default
+    ];
+    home-manager = shared // {
+      sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
+    };
     users.users.${user.name}.home = user.darwinHome;
   };
 }
