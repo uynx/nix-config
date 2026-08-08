@@ -8,7 +8,7 @@
   # _config.nix is underscore-prefixed so import-tree skips it — it is not a
   # flake-parts module.
   perSystem =
-    { pkgs, ... }:
+    { pkgs, system, ... }:
     let
       inherit (pkgs.stdenv.hostPlatform) isDarwin;
     in
@@ -23,7 +23,7 @@
               # neovim, so both halves have to name that machine's own home and
               # its own host — a Linux path and `asahi` leave a Mac with no
               # option completion at all, and silently.
-              flakePath = "${if isDarwin then self.lib.user.darwinHome else self.lib.user.home}/nixos-config";
+              flakePath = "${self.lib.user.homeFor system}/nixos-config";
               hostAttr = if isDarwin then "darwinConfigurations.darwin" else "nixosConfigurations.asahi";
             })
           ];
