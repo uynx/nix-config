@@ -1,9 +1,11 @@
-{ self, ... }:
+{ self, inputs, ... }:
 {
   # The darwin twin of `system/nix-settings.nix`. Determinate owns nix.conf on
   # macOS, so the settings go through `determinateNix.customSettings` — the
   # plain `nix.settings` options are refused while it is enabled.
   flake.darwinModules.nixSettings = {
+    imports = [ inputs.determinate.darwinModules.default ];
+
     nixpkgs.config.allowUnfree = true;
 
     determinateNix = {
