@@ -22,7 +22,6 @@
       "cursor"
       "antigravity"
       "kimi"
-      "google-gemini"
     ];
   };
 }
