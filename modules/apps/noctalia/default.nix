@@ -7,7 +7,7 @@
   # wrapper also ships `dump-noctalia-shell`, which prints the running settings
   # as Nix, replacing the rm/restart/copy-back loop.
   flake.wrappers.noctalia-shell =
-    { wlib, ... }:
+    { wlib, pkgs, ... }:
     let
       saved = builtins.fromJSON (builtins.readFile ./settings.json);
 

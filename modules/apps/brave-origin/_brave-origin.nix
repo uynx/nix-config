@@ -49,7 +49,7 @@
 }:
 
 let
-  # Rewritten by `update-brave-origin` with json.dump, so this file is ordinary
+  # Rewritten by `update-brave-origin` with jq, so this file is ordinary
   # Nix and safe to format. The hash keys are the Debian arch names, which is
   # what lets `pins.${arch}` replace a second if-chain.
   pins = builtins.fromJSON (builtins.readFile ./pins.json);

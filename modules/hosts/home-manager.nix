@@ -8,6 +8,10 @@ let
     backupFileExtension = "bak";
     extraSpecialArgs = { inherit inputs; };
     users.${user.name}.home.stateVersion = "26.05";
+    # Option declarations only. Here rather than in the `shell` bundle because
+    # any app may register a hook, and it must not have to know whether this
+    # host took the shell.
+    sharedModules = [ self.homeModules.shellHooks ];
   };
 in
 {
@@ -26,7 +30,7 @@ in
       inputs.mac-app-util.darwinModules.default
     ];
     home-manager = shared // {
-      sharedModules = [ inputs.mac-app-util.homeManagerModules.default ];
+      sharedModules = shared.sharedModules ++ [ inputs.mac-app-util.homeManagerModules.default ];
     };
   };
 }

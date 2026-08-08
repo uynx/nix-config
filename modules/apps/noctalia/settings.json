@@ -394,7 +394,7 @@
         "autoStartAuth": false,
         "avatarImage": "/home/uynx/.face",
         "boxRadiusRatio": 1,
-        "clockFormat": "hh\\nmm",
+        "clockFormat": "hh\\nmm\\nAP",
         "clockStyle": "custom",
         "compactLockScreen": false,
         "dimmerOpacity": 0.2,
@@ -430,7 +430,7 @@
         },
         "language": "",
         "lockOnSuspend": true,
-        "lockScreenAnimations": true,
+        "lockScreenAnimations": false,
         "lockScreenBlur": 0.1,
         "lockScreenCountdownDuration": 10000,
         "lockScreenMonitors": [

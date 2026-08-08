@@ -197,6 +197,10 @@
     {
       home.packages = [ update-ai-clis ];
 
+      # Registered rather than named by `update` itself, so a host without the
+      # AI bundle does not get an `update` that calls a missing command.
+      shellHooks.update = [ "update-ai-clis" ];
+
       home.sessionVariables = {
         # Without these a self-updater fetches a newer build into ~/.local and
         # the pin stops being what actually runs.

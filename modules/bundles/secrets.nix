@@ -6,7 +6,7 @@ let
       gpg
       passwords
     ];
-    darwin = [ self.darwinModules.passwordsCasks ];
+    darwin = [ self.darwinModules.passwords ];
   };
 in
 {

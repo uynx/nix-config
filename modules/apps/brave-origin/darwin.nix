@@ -1,7 +1,8 @@
 {
-  # Brave Origin is built here from the Debian arm64 package, which leaves macOS
-  # with ordinary Brave.
-  flake.darwinModules.webCasks = {
+  # There is no Brave Origin on macOS — ./default.nix builds it from the Debian
+  # package, which leaves the Mac with ordinary Brave. Hence `brave`, not
+  # `braveOrigin`: it is a different browser, not the same one delivered twice.
+  flake.darwinModules.brave = {
     homebrew.casks = [ "brave-browser" ];
   };
 
