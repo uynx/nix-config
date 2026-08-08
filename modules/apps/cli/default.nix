@@ -65,7 +65,9 @@
 
         man = {
           enable = true;
-          generateCaches = true;
+          # No man package on darwin, where the option only warns.
+          # Home Manager ships no man package on darwin, where this only warns.
+          generateCaches = pkgs.stdenv.hostPlatform.isLinux;
         };
 
         eza = {

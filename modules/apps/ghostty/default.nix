@@ -26,8 +26,30 @@
 
   flake.homeModules.ghostty = moduleWithSystem (
     { self', ... }:
+    { pkgs, lib, ... }:
+    let
+      inherit (pkgs.stdenv.hostPlatform) isDarwin;
+    in
     {
-      home.packages = [ self'.packages.ghostty ];
+      # mkIf rather than two separate modules: branching on `pkgs` at the module
+      # level would make the import itself depend on config, which is an
+      # infinite recursion inside Home Manager.
+      home.packages = lib.mkIf (!isDarwin) [ self'.packages.ghostty ];
+
+      # nixpkgs has no darwin ghostty to wrap — only the notarized build, which
+      # ignores the wrapper's .desktop patching anyway. Same config file, one
+      # Retina-sized override on top.
+      programs.ghostty = lib.mkIf isDarwin {
+        enable = true;
+        package = pkgs.ghostty-bin;
+      };
+
+      home.file.".config/ghostty/config" = lib.mkIf isDarwin {
+        text = ''
+          config-file = ${./config}
+          font-size = 16
+        '';
+      };
     }
   );
 }
