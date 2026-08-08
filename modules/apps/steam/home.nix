@@ -218,7 +218,11 @@
         import sys
         from pathlib import Path
 
-        config = Path("${steam}/config/config.vdf")
+        # Split to stay under flake8's E501, which writePython3Bin enforces.
+        config = Path(
+            "${guest}/"
+            ".local/share/Steam/config/config.vdf"
+        )
         app_id, tool = sys.argv[1:3]
         if config.is_file():
             text = config.read_text()
