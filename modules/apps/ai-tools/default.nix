@@ -12,7 +12,7 @@
     }:
     let
       home = config.home.homeDirectory;
-      inherit (pkgs.stdenv.hostPlatform) isLinux isDarwin;
+      inherit (pkgs.stdenv.hostPlatform) isLinux;
 
       skillsDir = "${home}/dotfiles/skills";
       sharedSkills =
@@ -151,7 +151,6 @@
               t3) t3 --version 2>/dev/null | head -1 | sed 's/t3 //' ;;
               qwen) (qwen --version 2>/dev/null || qwen-code --version 2>/dev/null) | head -1 ;;
               hermes) hermes --version 2>/dev/null | head -1 | sed 's/Hermes Agent //' ;;
-              kimi) kimi --version 2>/dev/null | head -1 ;;
               *) echo "" ;;
             esac
           }
@@ -187,18 +186,6 @@
           roll openclaw npm install -g --prefix "${home}/.local" openclaw
           roll t3       npm install -g --prefix "${home}/.local" t3
           roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
-          ${lib.optionalString isDarwin ''
-            # The only tool with neither a darwin pin nor a Homebrew formula, so
-            # it is fetched straight from the vendor. Version is read at install
-            # time rather than recorded, which is what makes it rolling.
-            # shellcheck disable=SC2016  # $v is for the inner sh, not this one
-            roll kimi sh -c '
-              v=$(curl -fsSL https://code.kimi.com/kimi-code/latest | tr -d "[:space:]")
-              mkdir -p ${home}/.local/bin
-              curl -fsSL -o ${home}/.local/bin/kimi \
-                "https://code.kimi.com/kimi-code/binaries/$v/kimi-code-darwin-arm64"
-              chmod +x ${home}/.local/bin/kimi'
-          ''}
           # Vendor installer, not `uv tool install`: upstream marks every pypi
           # install unsupported. It brings its own node and uv under ~/.hermes,
           # so it costs minutes and is only worth running when hermes is absent.

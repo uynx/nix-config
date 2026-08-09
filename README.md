@@ -101,8 +101,8 @@ Manager wiring and the `shellHooks` option declarations.
 On macOS the AI CLIs come from Homebrew rather than the pins in
 `modules/apps/ai-tools/linux.nix`, which are aarch64-linux artifacts, and the
 desktop apps come along with them. `update-ai-clis` still maintains the tools
-that have neither a pin nor a formula (agy, openclaw, t3, hermes, and kimi on
-macOS); `greedyCasks` keeps the rest current on every rebuild.
+that have neither a pin nor a formula (agy, openclaw, t3 and hermes);
+`greedyCasks` keeps the rest current on every rebuild.
 
 ## Commands
 
