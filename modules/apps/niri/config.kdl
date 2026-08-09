@@ -15,6 +15,7 @@ input {
         tap
         natural-scroll
         accel-speed -0.2
+        scroll-factor 0.7
 
         // The Apple trackpad is wide enough that a resting palm sits on it while
         // typing, and with bare `tap` every brush registers a click and drops the
