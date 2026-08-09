@@ -22,6 +22,7 @@
         in
         {
           word = "${lo} --writer";
+          excel = "${lo} --calc";
           powerpoint = "${lo} --impress";
         };
     };
