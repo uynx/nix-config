@@ -47,6 +47,10 @@
       HandleLidSwitchExternalPower = "lock";
     };
 
+    # A wedge becomes a reboot instead of a held power button. systemd pings the
+    # SoC watchdog from PID 1, so it fires even when the kernel stops scheduling.
+    systemd.settings.Manager.RuntimeWatchdogSec = "2min";
+
     # Headroom for Hogwarts / muvm guest memory pressure.
     swapDevices = [
       {
