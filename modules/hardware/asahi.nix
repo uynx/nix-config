@@ -38,6 +38,15 @@
       serviceConfig.TimeoutStartSec = "60s";
     };
 
+    # Resuming from s2idle intermittently leaves the GPU power domain dead
+    # (`PS gfx: Failed to reach power state 0xf`), and the machine wedges the
+    # moment the compositor draws. Nothing suspends by itself until that is
+    # fixed; noctalia's `idle.suspendTimeout` is 0 for the same reason.
+    services.logind.settings.Login = {
+      HandleLidSwitch = "lock";
+      HandleLidSwitchExternalPower = "lock";
+    };
+
     # Headroom for Hogwarts / muvm guest memory pressure.
     swapDevices = [
       {
