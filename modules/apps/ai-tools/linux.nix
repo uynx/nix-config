@@ -31,7 +31,22 @@
           audio=/tmp/whisper-dictate.wav
           model=${whisperModel}
 
+          # A leftover pid file must start a recording, not fake a stop: after a
+          # crash or reboot the pid is dead or recycled onto something else, so
+          # confirm it is still our recorder. `|| true` because errexit would
+          # abort the check if pw-record exits mid-read.
+          recording=0
           if [ -f "$recordPid" ]; then
+            pid=$(cat "$recordPid" || true)
+            if [ -n "''${pid:-}" ] && [ -d "/proc/$pid" ]; then
+              case $(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null || true) in
+                *pw-record*) recording=1 ;;
+              esac
+            fi
+            [ "$recording" -eq 1 ] || rm -f "$recordPid" "$audio"
+          fi
+
+          if [ "$recording" -eq 1 ]; then
             pid=$(cat "$recordPid")
             rm -f "$recordPid"
             kill "$pid" 2>/dev/null || true
