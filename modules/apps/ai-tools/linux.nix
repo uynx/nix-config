@@ -53,7 +53,7 @@
             sleep 0.2
 
             [ -f "$audio" ] || exit 0
-            notify-send "Whisper Dictation" "Transcribing..." -i microphone-sensitivity-high-symbolic || true
+            notify-send "Dictation" "Transcribing..." -i microphone-sensitivity-high-symbolic || true
 
             # writeShellApplication sets errexit and pipefail, so without
             # `|| true` the "no speech" branch below can never run.
@@ -71,7 +71,7 @@
             rm -f "$audio"
             pw-record --format=s16 --rate=16000 --channels=1 "$audio" >/dev/null 2>&1 &
             echo $! > "$recordPid"
-            notify-send "Whisper Dictation" "Recording... Press shortcut again to finish." -i media-record-symbolic || true
+            notify-send "Dictation" "Recording... press Super+D again to finish." -i media-record-symbolic || true
           fi
         '';
       };
