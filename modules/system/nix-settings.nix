@@ -20,10 +20,8 @@
       };
       settings = {
         auto-optimise-store = true;
-        trusted-users = [
-          "root"
-          self.lib.user.name
-        ];
+        # root is the option's own default and this list merges with it.
+        trusted-users = [ self.lib.user.name ];
         substituters = self.lib.caches.substituters;
         trusted-public-keys = self.lib.caches.publicKeys;
       };
