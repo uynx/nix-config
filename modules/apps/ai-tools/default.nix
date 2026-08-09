@@ -57,12 +57,27 @@
           fi
           export PATH="$PATH:${home}/.local/bin:${home}/.hermes/bin"
 
+          # Counts pins and tools this run could not reach, for the summary at
+          # the end. Declared out here so it spans the Linux-only pin section
+          # and the rolling installs below, which both feed it.
+          skipped=0
+
           ${lib.optionalString isLinux ''
             file=${home}/nixos-config/modules/apps/ai-tools/pins.json
 
             # bump <name> <latest-version> <download-url>
+            # One unreachable vendor must not cost every later pin. Under
+            # errexit a failed prefetch would abort the whole run, so each step
+            # reports and returns instead, and callers use `try_bump`.
             bump() {
               name=$1 latest=$2 url=$3
+
+              # An empty or null version means the lookup failed, and pasting it
+              # into the URL would prefetch a 404 page rather than the artifact.
+              if [ -z "$latest" ] || [ "$latest" = null ]; then
+                printf '%-12s SKIPPED (lookup failed)\n' "$name"
+                return 1
+              fi
 
               # Refuse to invent a key: `.[$n] = …` would happily create one, so a
               # typo'd name would add a pin nothing reads instead of failing.
@@ -73,12 +88,17 @@
               fi
               if [ "$current" = "$latest" ]; then
                 printf '%-12s %s (up to date)\n' "$name" "$current"
-                return
+                return 0
               fi
 
               hash=$(nix hash convert --hash-algo sha256 --to sri \
-                "$(nix-prefetch-url --type sha256 "$url")")
+                "$(nix-prefetch-url --type sha256 "$url")") || {
+                printf '%-12s SKIPPED (prefetch failed)\n' "$name"
+                return 1
+              }
 
+              # Written via mktemp and mv, so a pin is either fully updated or
+              # untouched. That is what makes skipping one safe to continue past.
               tmp=$(mktemp)
               jq --arg n "$name" --arg v "$latest" --arg h "$hash" \
                 '.[$n] = { version: $v, hash: $h }' "$file" >"$tmp"
@@ -87,31 +107,35 @@
               printf '%-12s %s -> %s\n' "$name" "$current" "$latest"
             }
 
+            try_bump() {
+              bump "$@" || skipped=$((skipped + 1))
+            }
+
             if [ -z "$missingOnly" ]; then
-            claude=$(curl -fsSL https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]')
-            bump claude-code "$claude" \
+            claude=$(curl -fsSL https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]' || true)
+            try_bump claude-code "$claude" \
               "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude"
 
             # npm, not the GitHub feed — the GitHub tarball omits the code-mode
             # host binary, so the feed has to match the source we actually fetch.
-            codex=$(curl -fsSL https://registry.npmjs.org/@openai/codex/latest | jq -r '.version')
-            bump codex "$codex" \
+            codex=$(curl -fsSL https://registry.npmjs.org/@openai/codex/latest | jq -r '.version' || true)
+            try_bump codex "$codex" \
               "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-arm64.tgz"
 
-            grok=$(curl -fsSL https://x.ai/cli/stable | tr -d '[:space:]')
-            bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
+            grok=$(curl -fsSL https://x.ai/cli/stable | tr -d '[:space:]' || true)
+            try_bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
 
-            kimi=$(curl -fsSL https://code.kimi.com/kimi-code/latest | tr -d '[:space:]')
-            bump kimi "$kimi" \
+            kimi=$(curl -fsSL https://code.kimi.com/kimi-code/latest | tr -d '[:space:]' || true)
+            try_bump kimi "$kimi" \
               "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-arm64"
 
             opencode=$(curl -fsSL https://api.github.com/repos/sst/opencode/releases/latest \
-              | jq -r '.tag_name | ltrimstr("v")')
-            bump opencode "$opencode" \
+              | jq -r '.tag_name | ltrimstr("v")' || true)
+            try_bump opencode "$opencode" \
               "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-arm64.tar.gz"
 
-            cursor=$(curl -fsSL https://cursor.com/install | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1)
-            bump cursor-agent "$cursor" \
+            cursor=$(curl -fsSL --compressed https://cursor.com/install | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1 || true)
+            try_bump cursor-agent "$cursor" \
               "https://downloads.cursor.com/lab/$cursor/linux/arm64/agent-cli-package.tar.gz"
 
             echo
@@ -155,6 +179,7 @@
             else
               printf '  %-12s FAILED\n' "$name"
               printf '%s\n' "$err" | tail -3 | sed 's/^/               /'
+              skipped=$((skipped + 1))
             fi
           }
 
@@ -190,6 +215,16 @@
             else
               roll hermes hermes update --yes
             fi
+          fi
+
+          # Exits 0 even with skips. Every pin is written atomically, so a
+          # skipped one leaves the file consistent and there is no reason to
+          # stop `update` from relocking the flake afterwards. A hard crash
+          # still exits non-zero under errexit, which is what the caller's
+          # `; or return 1` is actually for.
+          if [ "$skipped" -gt 0 ]; then
+            echo
+            echo "$skipped not updated this run — rerun to retry."
           fi
         '';
       };
