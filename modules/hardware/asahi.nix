@@ -38,14 +38,16 @@
       serviceConfig.TimeoutStartSec = "60s";
     };
 
-    # Resuming from s2idle intermittently leaves the GPU power domain dead
-    # (`PS gfx: Failed to reach power state 0xf`), and the machine wedges the
-    # moment the compositor draws. Nothing suspends by itself until that is
-    # fixed; noctalia's `idle.suspendTimeout` is 0 for the same reason.
-    services.logind.settings.Login = {
-      HandleLidSwitch = "lock";
-      HandleLidSwitchExternalPower = "lock";
-    };
+    # s2idle drops the ATC PHY's port power without telling the xHC how to get
+    # it back, and nothing re-enumerates until the cable is replugged. Rebinding
+    # re-runs probe, which is what the replug was doing by hand. Only safe with
+    # the dwc3-apple drvdata patch above — without it every resume oopses.
+    powerManagement.resumeCommands = ''
+      for d in /sys/bus/platform/drivers/dwc3-apple/*.usb; do
+        echo "''${d##*/}" > /sys/bus/platform/drivers/dwc3-apple/unbind || true
+        echo "''${d##*/}" > /sys/bus/platform/drivers/dwc3-apple/bind || true
+      done
+    '';
 
     # A wedge becomes a reboot instead of a held power button. systemd pings the
     # SoC watchdog from PID 1, so it fires even when the kernel stops scheduling.
