@@ -60,14 +60,17 @@
       serviceConfig.TimeoutStartSec = "60s";
     };
 
-    # s2idle drops the ATC PHY's port power without telling the xHC how to get
-    # it back, and nothing re-enumerates until the cable is replugged. Rebinding
-    # re-runs probe, which is what the replug was doing by hand. Only safe with
-    # the dwc3-apple drvdata patch above — without it every resume oopses.
+    # tps6598x_resume() never re-reads port status, so after s2idle the Type-C
+    # controller still believes the cable never left and emits no connect event
+    # — and every layer below it (mux, ATC PHY, dwc3 core, DP alt-mode) stays
+    # torn down until a physical replug. tps6598x_probe() *does* do that check,
+    # so rebinding is a replug in software. Rebinding dwc3-apple instead cannot
+    # work: its probe only arms a wait for the connect event that never comes.
+    # 0-003a is the charging port, left alone so resume never renegotiates PD.
     powerManagement.resumeCommands = ''
-      for d in /sys/bus/platform/drivers/dwc3-apple/*.usb; do
-        echo "''${d##*/}" > /sys/bus/platform/drivers/dwc3-apple/unbind || true
-        echo "''${d##*/}" > /sys/bus/platform/drivers/dwc3-apple/bind || true
+      for d in 0-0038 0-003b 0-003f; do
+        echo "$d" > /sys/bus/i2c/drivers/tps6598x/unbind || true
+        echo "$d" > /sys/bus/i2c/drivers/tps6598x/bind || true
       done
     '';
 
