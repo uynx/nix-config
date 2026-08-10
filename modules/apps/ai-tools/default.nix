@@ -271,6 +271,12 @@
           (_: {
             source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
           })
+        // {
+          # Claude Code only — no other CLI has the concept. Selected by the
+          # `outputStyle` key in ~/.claude/settings.json, which stays unmanaged.
+          ".claude/output-styles".source =
+            config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/output-styles";
+        }
         //
           lib.genAttrs
             [
