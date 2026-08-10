@@ -15,6 +15,9 @@
         # of the flake pinned where it is.
         ((pkgs.llama-cpp.override { vulkanSupport = true; }).overrideAttrs {
           inherit version;
+          # Moves with the source: the bundled web UI's package-lock.json is
+          # part of the tree being bumped.
+          npmDepsHash = "sha256-2Q7XhaLAArmviOLdQsNbYTfdyDE5pW9lR26cRHEVl9k=";
           src = pkgs.fetchFromGitHub {
             owner = "ggml-org";
             repo = "llama.cpp";
