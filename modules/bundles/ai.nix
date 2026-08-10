@@ -8,6 +8,7 @@ let
     homeLinux = with self.homeModules; [
       aiToolsPinned
       dictate
+      llamaCpp
     ];
     darwin = [ self.darwinModules.aiTools ];
   };
