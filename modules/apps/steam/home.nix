@@ -110,13 +110,14 @@
         # %{version}-%{release}, not %{evr}: evr prefixes the epoch that the
         # pins omit, and NetworkManager (epoch 1) then never matches itself.
         # --arch keeps --latest-limit off the .src RPMs, which sort newest.
-        Q="--qf %{name} %{name}-%{version}-%{release}.%{arch}\n"
+        # The format stays inline and quoted. Held in a variable it word-splits
+        # on its own space, and dnf reads half the format as a package name.
         HAVE=$($ENTER dnf -q repoquery --available --arch aarch64,noarch \
-          $Q $PINS 2>/dev/null || true)
+          --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $PINS 2>/dev/null || true)
         NAMES=$(printf '%s\n' "$HAVE" | ${pkgs.gawk}/bin/awk '{ print $1 }' | ${pkgs.coreutils}/bin/sort -u)
         # shellcheck disable=SC2086
-        LATEST=$($ENTER dnf -q repoquery --available --arch aarch64,noarch \
-          --latest-limit 1 $Q $NAMES 2>/dev/null || true)
+        LATEST=$($ENTER dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
+          --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES 2>/dev/null || true)
 
         PLAN=$(printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v have="$HAVE" -v latest="$LATEST" '
           BEGIN {
