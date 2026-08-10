@@ -81,6 +81,58 @@
         printf '%s\n' "Steam Asahi container checks passed."
       '';
 
+      # Reports drift, never rewrites. These pins are one matched set against
+      # the host kernel, so bumping them to latest unattended is exactly what
+      # killed every game on 7.1.5. The two dnf calls are per-list, not
+      # per-package: an exact-NEVRA query drops pins that aged off the mirrors,
+      # which is the failure that stops the image building at all.
+      update-steam-asahi-pins = pkgs.writeShellScriptBin "update-steam-asahi-pins" ''
+        set -eu
+
+        FILE=${config.home.homeDirectory}/nixos-config/steam-asahi/Containerfile
+        ENTER="${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi --"
+
+        if ! ${pkgs.docker}/bin/docker container inspect steam-asahi >/dev/null 2>&1; then
+          printf '%-46s %s\n' steam-asahi "no container, skipped"
+          exit 0
+        fi
+
+        PINS=$(
+          ${pkgs.gawk}/bin/awk '
+            /dnf install -y/ { f = 1 }
+            f && /fc44/ { gsub(/['"'"' \\&]/, ""); print }
+            /dnf clean all/ { exit }
+          ' "$FILE"
+        )
+
+        # Unquoted on purpose: the NEVRA list is the argument vector, and no
+        # NEVRA contains whitespace.
+        # shellcheck disable=SC2086
+        # %{version}-%{release}, not %{evr}: evr prefixes the epoch that the
+        # pins omit, and NetworkManager (epoch 1) then never matches itself.
+        # --arch keeps --latest-limit off the .src RPMs, which sort newest.
+        Q="--qf %{name} %{name}-%{version}-%{release}.%{arch}\n"
+        HAVE=$($ENTER dnf -q repoquery --available --arch aarch64,noarch \
+          $Q $PINS 2>/dev/null || true)
+        NAMES=$(printf '%s\n' "$HAVE" | ${pkgs.gawk}/bin/awk '{ print $1 }' | ${pkgs.coreutils}/bin/sort -u)
+        # shellcheck disable=SC2086
+        LATEST=$($ENTER dnf -q repoquery --available --arch aarch64,noarch \
+          --latest-limit 1 $Q $NAMES 2>/dev/null || true)
+
+        printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v have="$HAVE" -v latest="$LATEST" '
+          BEGIN {
+            n = split(have, h, "\n")
+            for (i = 1; i <= n; i++) { split(h[i], a, " "); if (a[2] != "") name[a[2]] = a[1] }
+            n = split(latest, l, "\n")
+            for (i = 1; i <= n; i++) { split(l[i], a, " "); if (a[1] != "") newest[a[1]] = a[2] }
+          }
+          $0 == "" { next }
+          !($0 in name) { printf "%-46s GONE from the repos\n", $0; drift = 1; next }
+          newest[name[$0]] != $0 { printf "%-46s -> %s\n", $0, newest[name[$0]]; drift = 1 }
+          END { if (!drift) printf "%-46s %s\n", "steam-asahi pins", "(up to date)" }
+        '
+      '';
+
       steam-asahi-bootstrap = pkgs.writeShellScriptBin "steam-asahi-bootstrap" ''
         set -eu
 
@@ -723,10 +775,14 @@
         steam-asahi-stop
         steam-game-entries
         steam-menu
+        update-steam-asahi-pins
         distrobox
         dive
         close-active
       ];
+
+      # Reports only, so it cannot half-update a pin set and abort the relock.
+      shellHooks.update = [ "update-steam-asahi-pins" ];
 
       xdg.desktopEntries.steam = {
         name = "Steam";
