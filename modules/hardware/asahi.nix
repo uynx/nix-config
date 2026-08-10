@@ -38,8 +38,11 @@
         "zswap.shrinker_enabled=1"
         "reserve_mem=8M:16384:oops"
         "ramoops.mem_name=oops"
-        "ramoops.console_size=4M"
-        "ramoops.record_size=1M"
+        # Raw bytes. Module params are parsed with kstrtoul, which rejects the
+        # K/M/G suffixes that `reserve_mem` above accepts — "4M" makes ramoops
+        # refuse to load at all, and pstore then records nothing.
+        "ramoops.console_size=4194304"
+        "ramoops.record_size=1048576"
         "no_console_suspend"
       ];
       extraModprobeConfig = ''
