@@ -130,19 +130,21 @@
           !($0 in name) { print "GONE", $0, "-"; next }
           {
             new = newest[name[$0]]
-            if (new == "" || new == $0) next
             # Graphics and emulation are a matched set against the pinned host
             # kernel — moving them unattended is what killed every game on
-            # 7.1.5, so they are reported and left alone.
-            if (name[$0] ~ /^(virglrenderer|muvm|mesa-|fex-|asahi-|steam)/) print "HOLD", $0, new
-            else print "BUMP", $0, new
+            # 7.1.5. They always print, with or without an update, because
+            # their standing versions are the thing worth watching.
+            if (name[$0] ~ /^(virglrenderer|muvm|mesa-|fex-|asahi-|steam)/) {
+              if (new == "" || new == $0) print "HOLD", $0, "-"
+              else print "HOLDNEW", $0, new
+              next
+            }
+            if (new == "" || new == $0) next
+            print "BUMP", $0, new
           }
         ')
 
-        if [ -z "$PLAN" ]; then
-          printf '%-46s %s\n' "steam-asahi pins" "(up to date)"
-          exit 0
-        fi
+        printf 'steam-asahi pins\n'
 
         TMP=$(${pkgs.coreutils}/bin/mktemp)
         ${pkgs.coreutils}/bin/cp "$FILE" "$TMP"
@@ -150,14 +152,23 @@
           case $kind in
             BUMP)
               ${pkgs.gnused}/bin/sed -i "s|$old|$new|" "$TMP"
-              printf '%-46s -> %s\n' "$old" "$new"
+              printf '  %-46s -> %s\n' "$old" "$new"
               ;;
-            HOLD) printf '%-46s -> %s (held, kernel-coupled)\n' "$old" "$new" ;;
-            GONE) printf '%-46s %s\n' "$old" "GONE from the repos, pin by hand" ;;
+            HOLD) printf '  %-46s %s\n' "$old" "(up to date, held)" ;;
+            HOLDNEW) printf '  %-46s -> %s (held, kernel-coupled)\n' "$old" "$new" ;;
+            GONE) printf '  %-46s %s\n' "$old" "GONE from the repos, pin by hand" ;;
           esac
         done
-        # Written back through cat so the file keeps its own permissions.
-        ${pkgs.coreutils}/bin/cat "$TMP" >"$FILE"
+
+        # Only rewrite when something actually moved, so an unchanged run
+        # leaves the file's mtime and the container config hash alone.
+        if printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -q '^BUMP'; then
+          # Written back through cat so the file keeps its own permissions.
+          ${pkgs.coreutils}/bin/cat "$TMP" >"$FILE"
+          printf '  %s\n' "updated — next game launch rebuilds the container"
+        else
+          printf '  %s\n' "nothing to update"
+        fi
         ${pkgs.coreutils}/bin/rm -f "$TMP"
       '';
 
