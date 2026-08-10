@@ -1,3 +1,4 @@
+{ lib, ... }:
 {
   flake.nixosModules.hardwareAsahi = {
     hardware.asahi = {
@@ -17,11 +18,29 @@
           name = "dwc3-apple-set-drvdata";
           patch = ./dwc3-apple-set-drvdata.patch;
         }
+        {
+          name = "pstore-console";
+          patch = null;
+          # Without this, ramoops' console_size is silently inert — and the
+          # continuous console log is the only thing that survives a wake-up
+          # hang, since a hang never reaches the oops/panic dumper at all.
+          structuredExtraConfig.PSTORE_CONSOLE = lib.kernel.yes;
+        }
       ];
+      # ramoops keeps the kernel log in reserved RAM across a reset, so the
+      # watchdog reboot after a hang leaves it readable in /sys/fs/pstore.
+      # no_console_suspend is required or nothing is recorded across the
+      # suspend/resume window, which is the window under investigation.
+      kernelModules = [ "ramoops" ];
       kernelParams = [
         "zswap.enabled=1"
         "zswap.compressor=zstd"
         "zswap.shrinker_enabled=1"
+        "reserve_mem=8M:16384:oops"
+        "ramoops.mem_name=oops"
+        "ramoops.console_size=4M"
+        "ramoops.record_size=1M"
+        "no_console_suspend"
       ];
       extraModprobeConfig = ''
         options hid_apple iso_layout=0
