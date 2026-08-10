@@ -11,13 +11,7 @@
 
     boot = {
       loader.systemd-boot.enable = true;
-      # Unbinding dwc3-apple oopses the kernel without this — still true at
-      # asahi-wip, so do not drop it on a kernel bump without rechecking.
       kernelPatches = [
-        {
-          name = "dwc3-apple-set-drvdata";
-          patch = ./dwc3-apple-set-drvdata.patch;
-        }
         {
           name = "pstore-console";
           patch = null;
