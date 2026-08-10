@@ -81,11 +81,10 @@
         printf '%s\n' "Steam Asahi container checks passed."
       '';
 
-      # Reports drift, never rewrites. These pins are one matched set against
-      # the host kernel, so bumping them to latest unattended is exactly what
-      # killed every game on 7.1.5. The two dnf calls are per-list, not
-      # per-package: an exact-NEVRA query drops pins that aged off the mirrors,
-      # which is the failure that stops the image building at all.
+      # Rewrites the ordinary pins, holds the graphics/emulation ones. The two
+      # dnf calls are per-list, not per-package: an exact-NEVRA query drops
+      # pins that aged off the mirrors, which is the failure that stops the
+      # image building at all and is invisible to steam-asahi-doctor.
       update-steam-asahi-pins = pkgs.writeShellScriptBin "update-steam-asahi-pins" ''
         set -eu
 
@@ -119,7 +118,7 @@
         LATEST=$($ENTER dnf -q repoquery --available --arch aarch64,noarch \
           --latest-limit 1 $Q $NAMES 2>/dev/null || true)
 
-        printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v have="$HAVE" -v latest="$LATEST" '
+        PLAN=$(printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v have="$HAVE" -v latest="$LATEST" '
           BEGIN {
             n = split(have, h, "\n")
             for (i = 1; i <= n; i++) { split(h[i], a, " "); if (a[2] != "") name[a[2]] = a[1] }
@@ -127,10 +126,38 @@
             for (i = 1; i <= n; i++) { split(l[i], a, " "); if (a[1] != "") newest[a[1]] = a[2] }
           }
           $0 == "" { next }
-          !($0 in name) { printf "%-46s GONE from the repos\n", $0; drift = 1; next }
-          newest[name[$0]] != $0 { printf "%-46s -> %s\n", $0, newest[name[$0]]; drift = 1 }
-          END { if (!drift) printf "%-46s %s\n", "steam-asahi pins", "(up to date)" }
-        '
+          !($0 in name) { print "GONE", $0, "-"; next }
+          {
+            new = newest[name[$0]]
+            if (new == "" || new == $0) next
+            # Graphics and emulation are a matched set against the pinned host
+            # kernel — moving them unattended is what killed every game on
+            # 7.1.5, so they are reported and left alone.
+            if (name[$0] ~ /^(virglrenderer|muvm|mesa-|fex-|asahi-|steam)/) print "HOLD", $0, new
+            else print "BUMP", $0, new
+          }
+        ')
+
+        if [ -z "$PLAN" ]; then
+          printf '%-46s %s\n' "steam-asahi pins" "(up to date)"
+          exit 0
+        fi
+
+        TMP=$(${pkgs.coreutils}/bin/mktemp)
+        ${pkgs.coreutils}/bin/cp "$FILE" "$TMP"
+        printf '%s\n' "$PLAN" | while read -r kind old new; do
+          case $kind in
+            BUMP)
+              ${pkgs.gnused}/bin/sed -i "s|$old|$new|" "$TMP"
+              printf '%-46s -> %s\n' "$old" "$new"
+              ;;
+            HOLD) printf '%-46s -> %s (held, kernel-coupled)\n' "$old" "$new" ;;
+            GONE) printf '%-46s %s\n' "$old" "GONE from the repos, pin by hand" ;;
+          esac
+        done
+        # Written back through cat so the file keeps its own permissions.
+        ${pkgs.coreutils}/bin/cat "$TMP" >"$FILE"
+        ${pkgs.coreutils}/bin/rm -f "$TMP"
       '';
 
       steam-asahi-bootstrap = pkgs.writeShellScriptBin "steam-asahi-bootstrap" ''
