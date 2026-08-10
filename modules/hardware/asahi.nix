@@ -10,7 +10,13 @@
     };
 
     boot = {
-      loader.systemd-boot.enable = true;
+      loader.systemd-boot = {
+        enable = true;
+        # The ESP is 476M and only ~350M of that is ours; a kernel/initrd pair
+        # is 94M. Unbounded, two kernel bumps fill it and activation dies
+        # mid-write with ENOSPC.
+        configurationLimit = 10;
+      };
       kernelPatches = [
         {
           name = "pstore-console";
