@@ -3,6 +3,7 @@ let
   bundle = self.lib.mkBundle {
     homeLinux = with self.homeModules; [
       braveOrigin
+      firefox
       launchers
     ];
     # Brave Origin is built from the Debian arm64 package and the launchers
