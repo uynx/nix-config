@@ -478,7 +478,7 @@
           -e "BROWSER=$GUEST_BIN/xdg-open" \
           --gpu-mode=venus
         if [ "$APP_ID" = 990080 ]; then
-          set -- "$@" --vram=4096
+          set -- "$@" --vram=2048
         fi
         set -- "$@" --execute-pre=/usr/local/libexec/steam-guest-tune -- \
           "$STEAM_BIN"
