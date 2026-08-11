@@ -93,6 +93,15 @@ in
             the first failure aborts, so nothing relocks on a half-updated pin.
           '';
         };
+
+        rebPostSwitch = lib.mkOption {
+          type = lib.types.lines;
+          default = "";
+          description = ''
+            Fish run by `reb` after a successful switch and before the
+            checkpoint commit. For units a switch cannot restart itself.
+          '';
+        };
       };
     };
 
@@ -146,6 +155,7 @@ in
 
             # nh elevates itself, so no sudo here.
             if nh $platform switch $repo -H $target -- --impure
+                ${config.shellHooks.rebPostSwitch}
                 # Checkpoint commit for rollback, not a real message — reword if the
                 # change deserves one.
                 if not git -C $repo diff --cached --quiet
