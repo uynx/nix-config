@@ -27,7 +27,19 @@
 
       # Gates the whole module, so the per-format switches under it are moot.
       documentation.enable = false;
-      system.tools.darwin-uninstaller.enable = false;
+      time.timeZone = "America/Chicago";
+
+      launchd.daemons.sntp-sync = {
+        serviceConfig = {
+          ProgramArguments = [
+            "/usr/bin/sntp"
+            "-sS"
+            "time.apple.com"
+          ];
+          RunAtLoad = true;
+          StartInterval = 3600;
+        };
+      };
 
       # nix-darwin's own counter, unrelated to NixOS' system.stateVersion.
       system.stateVersion = 6;
