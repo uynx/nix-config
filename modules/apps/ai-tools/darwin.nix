@@ -24,7 +24,6 @@
       "chatgpt"
       "cursor"
       "antigravity"
-      "antigravity-ide"
       "kimi"
       "google-gemini"
       "perplexity"
