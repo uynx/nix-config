@@ -262,6 +262,7 @@
             ".codex/AGENTS.md"
             ".cursorrules"
             ".cursor/rules/system.mdc"
+            ".gemini/AGENTS.md" # agy, whose state dir is Antigravity's
             ".grok/AGENTS.md"
             ".kimi-code/AGENTS.md"
             ".openclaw/AGENTS.md"
@@ -277,6 +278,7 @@
               ".agents/skills"
               ".claude/skills"
               ".cursor/skills"
+              ".gemini/skills"
               ".grok/skills"
               ".kimi-code/skills"
               ".openclaw/skills"

@@ -18,5 +18,11 @@
       home.file = lib.mkIf (!isDarwin) {
         ".config/vesktop/themes/flexoki.theme.css".source = ./flexoki-discord.css;
       };
+
+      # Invite links land on the desktop client rather than reopening the web app.
+      xdg.mimeApps = lib.mkIf (!isDarwin) {
+        enable = true;
+        defaultApplications."x-scheme-handler/discord" = "vesktop.desktop";
+      };
     };
 }

@@ -29,6 +29,25 @@
         PROTON_PASS_KEY_PROVIDER = "fs";
       };
 
+      # Bitwarden's own "start on login" toggle writes this file with the running
+      # build's store path baked in, so the next version bump plus a GC leaves an
+      # autostart entry pointing at nothing. Declaring it re-resolves per rebuild.
+      home.file = lib.mkIf isLinux {
+        ".config/autostart/bitwarden.desktop".text = ''
+          [Desktop Entry]
+          Type=Application
+          Name=Bitwarden
+          Exec=${lib.getExe pkgs.bitwarden-desktop} --autostart
+          StartupNotify=false
+          Terminal=false
+        '';
+      };
+
+      xdg.mimeApps = lib.mkIf isLinux {
+        enable = true;
+        defaultApplications."x-scheme-handler/bitwarden" = "bitwarden.desktop";
+      };
+
       # Drives proton-pass-cli, so it follows it rather than living in the fish
       # wrapper — on macOS there is no `pass-cli` for it to call.
       programs.fish = lib.mkIf isLinux {

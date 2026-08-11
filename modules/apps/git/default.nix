@@ -54,6 +54,8 @@ in
 
     programs.git = {
       enable = true;
+      # Per-repo agent state, never the same twice and never worth a commit.
+      ignores = [ "**/.claude/settings.local.json" ];
       settings = {
         user = {
           name = "Brandon Alexander";
