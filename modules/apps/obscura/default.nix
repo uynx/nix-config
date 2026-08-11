@@ -179,11 +179,6 @@
   # Both of these used to live in the fish wrapper, which meant a host that
   # dropped this bundle kept a `vpn` command driving units it no longer had.
   flake.homeModules.obscura = {
-    # obscura.service is restartIfChanged = false, so a switch is the one thing
-    # that never lands a new daemon binary. It has to run after the switch:
-    # restarting it during one deadlocks activation.
-    shellHooks.rebPostSwitch = "sudo systemctl try-restart obscura.service";
-
     # Escape hatch for the state where the daemon is down but obscura-lockdown
     # is still filtering, which is a machine with no network at all.
     programs.fish.functions.vpn.body = ''
