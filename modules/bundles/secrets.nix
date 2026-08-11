@@ -5,7 +5,6 @@ let
       sops
       passwords
     ];
-    darwin = [ self.darwinModules.passwords ];
   };
 in
 {
