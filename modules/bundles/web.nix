@@ -4,6 +4,7 @@ let
     homeLinux = with self.homeModules; [
       braveOrigin
       launchers
+      ungoogledChromium
     ];
     # Brave Origin is built from the Debian arm64 package and the launchers
     # write .desktop files, so macOS takes the cask plus the menu shortcuts.
