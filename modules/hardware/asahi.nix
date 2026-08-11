@@ -60,6 +60,16 @@
       serviceConfig.TimeoutStartSec = "60s";
     };
 
+    # s2idle never completes here: apple-drm's suspend callback returns -22, so
+    # the kernel aborts and resumes immediately. logind's idle retry then loops
+    # every ~30 s, and each bounce re-associates Wi-Fi on a fresh randomized MAC
+    # until the router's DHCP pool is exhausted. Lid must lock, never suspend;
+    # noctalia's `idle.suspendTimeout` is 0 for the same reason.
+    services.logind.settings.Login = {
+      HandleLidSwitch = "lock";
+      HandleLidSwitchExternalPower = "lock";
+    };
+
     # tps6598x_resume() never re-reads port status, so after s2idle the Type-C
     # controller still believes the cable never left and emits no connect event
     # — and every layer below it (mux, ATC PHY, dwc3 core, DP alt-mode) stays
