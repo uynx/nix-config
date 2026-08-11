@@ -69,5 +69,19 @@
         enable = true;
         package = pkgs.callPackage ./_brave-origin.nix { };
       };
+
+      # The default browser. Declared here rather than left to whichever app
+      # last wrote mimeapps.list — a hand-set default is invisible on a fresh
+      # machine, where links then open in nothing at all.
+      xdg.mimeApps = {
+        enable = true;
+        defaultApplications = lib.genAttrs [
+          "text/html"
+          "x-scheme-handler/http"
+          "x-scheme-handler/https"
+          "x-scheme-handler/about"
+          "x-scheme-handler/unknown"
+        ] (_: "brave-origin.desktop");
+      };
     };
 }
