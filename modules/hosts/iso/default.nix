@@ -23,11 +23,17 @@
       # `nix-shell` detour. CLI only — the image has no display server, so
       # bitwarden-desktop would just sit unopenable.
       {
-        environment.systemPackages = [
-          inputs.nixpkgs.legacyPackages.aarch64-linux.vim
-          inputs.nixpkgs.legacyPackages.aarch64-linux.git
-          inputs.nixpkgs.legacyPackages.aarch64-linux.gh
-          inputs.nixpkgs.legacyPackages.aarch64-linux.bitwarden-cli
+        environment.systemPackages = with inputs.nixpkgs.legacyPackages.aarch64-linux; [
+          vim
+          git
+          gh
+          bitwarden-cli
+          jq
+          sops
+          gnupg
+          age
+          cryptsetup
+          curl
         ];
       }
     ];
