@@ -99,8 +99,12 @@
         PINS=$(
           ${pkgs.gawk}/bin/awk '
             /dnf install -y/ { f = 1 }
-            f && /fc44/ { gsub(/['"'"' \\&]/, ""); print }
-            /dnf clean all/ { exit }
+            f && /fc44/ {
+              line = $0
+              gsub(/['"'"' \\&]/, "", line)
+              if (!seen[line]++) print line
+            }
+            /dnf clean all/ { f = 0 }
           ' "$FILE"
         )
 
@@ -134,7 +138,7 @@
             # kernel — moving them unattended is what killed every game on
             # 7.1.5. They always print, with or without an update, because
             # their standing versions are the thing worth watching.
-            if (name[$0] ~ /^(virglrenderer|muvm|libkrun|mesa-|fex-|asahi-|steam)/) {
+            if (name[$0] ~ /^(virglrenderer|muvm|libkrun|mesa-|fex-|asahi-|steam|vulkan-loader)/) {
               if (new == "" || new == $0) print "HOLD", $0, "-"
               else print "HOLDNEW", $0, new
               next
