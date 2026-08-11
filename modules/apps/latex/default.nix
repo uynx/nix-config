@@ -11,13 +11,10 @@
       };
     in
     {
-      home.packages = [
-        (pkgs-stable.texlive.withPackages (
-          ps: with ps; [
-            scheme-full
-            biber
-          ]
-        ))
-      ];
+      # texliveFull, not `texlive.withPackages`: any withPackages set is a
+      # locally-combined derivation Hydra never built, so it recompiles on every
+      # stable-pin bump. texliveFull is the same full scheme, biber included,
+      # and is in cache.nixos.org for aarch64.
+      home.packages = [ pkgs-stable.texliveFull ];
     };
 }
