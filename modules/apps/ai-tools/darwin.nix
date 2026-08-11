@@ -25,9 +25,6 @@
       "cursor"
       "antigravity"
       "kimi"
-      "google-gemini"
-      "perplexity"
-      "lm-studio"
     ];
   };
 }
