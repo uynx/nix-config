@@ -191,13 +191,15 @@
             fi
           }
 
-          # `agy update` cannot run before agy exists, so a fresh machine needs
-          # the vendor installer once.
-          if command -v agy >/dev/null 2>&1; then
-            roll agy    agy update
-          else
-            roll agy    sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://antigravity.google/cli/install.sh | bash'
-          fi
+          ${lib.optionalString isLinux ''
+            # On Linux, agy is maintained by its self-updater / vendor script.
+            # On macOS, the `antigravity-cli` Homebrew cask manages it.
+            if command -v agy >/dev/null 2>&1; then
+              roll agy    agy update
+            else
+              roll agy    sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://antigravity.google/cli/install.sh | bash'
+            fi
+          ''}
           roll openclaw npm install -g --prefix "${home}/.local" openclaw
           roll t3       npm install -g --prefix "${home}/.local" t3
           roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
