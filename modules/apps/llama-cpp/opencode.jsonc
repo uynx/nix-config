@@ -1,0 +1,26 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    // Points at the `llama-router` user service (`systemd.user.services` in
+    // this module), which loads each model on demand via `--models-preset`.
+    // Only one is resident at a time, so switching models here costs a reload
+    // rather than more RAM. Limits must match the presets: ctx 16384 + output
+    // 4096 fits inside the server's 24576 window with headroom for compaction.
+    "llamacpp": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "llama.cpp (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:8080/v1"
+      },
+      "models": {
+        "ornith-1.0-9b-Q5_K_M": { "name": "Ornith 1.0 9B — best local coder", "limit": { "context": 16384, "output": 4096 } },
+        "Qwen3.5-9B-Q5_K_M": { "name": "Qwen3.5 9B — smartest local", "limit": { "context": 16384, "output": 4096 } },
+        "Qwythos-9B-v2-Q4_K_M": { "name": "Qwythos 9B v2 — fastest", "limit": { "context": 16384, "output": 4096 } },
+        "gemma-4-12b-coder-Q4_K_M": { "name": "Gemma 4 12B Coder", "limit": { "context": 16384, "output": 4096 } },
+        "gemma-4-12b-it-Q4_K_M": { "name": "Gemma 4 12B — vision", "limit": { "context": 16384, "output": 4096 } },
+        "Huihui-Qwen3.5-9B-abliterated-Q5_K_M": { "name": "Huihui Qwen3.5 9B — uncensored", "limit": { "context": 16384, "output": 4096 } },
+        "Qwen3.5-9B-heretic-v2-Q5_K_M": { "name": "Qwen3.5 9B Heretic v2 — uncensored", "limit": { "context": 16384, "output": 4096 } }
+      }
+    }
+  }
+}
