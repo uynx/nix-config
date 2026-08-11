@@ -35,6 +35,7 @@ RUN dnf install -y "dnf5-command(copr)" && \
       libxkbcommon-devel-1.13.1-2.fc44.aarch64 \
       mesa-libGL-devel-26.1.6-1.fc44.aarch64 \
       steam-0-14.fc44.noarch \
+      vulkan-loader-1.4.341.0-1.fc44.aarch64 \
       vulkan-loader-devel-1.4.341.0-1.fc44.aarch64 \
       xorg-x11-server-Xwayland-24.1.13-1.fc44.aarch64 && \
     dnf clean all && \
