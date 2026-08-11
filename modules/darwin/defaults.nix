@@ -22,6 +22,7 @@
           "com.apple.universalaccess".reduceMotion = true;
           "com.apple.assistant.support" = {
             "Assistant Enabled" = false;
+            "Dictation Enabled" = false;
           };
           "com.apple.Siri" = {
             "Siri Data Sharing Opt-Out" = true;
@@ -34,6 +35,17 @@
             allowIdentifierForAdvertising = false;
             AD_ID_OPT_OUT = true;
           };
+          "com.apple.Safari" = {
+            UniversalSearchEnabled = false;
+            PreloadTopHit = false;
+            BlockStoragePolicy = 2;
+            IncludeInternalDebugMenu = true;
+            IncludeDevelopMenu = true;
+            WebKitDeveloperExtrasEnabledPreferenceKey = true;
+            "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" = true;
+            ShowFullURLInSmartSearchField = true;
+            AutoOpenSafeDownloads = false;
+          };
           "com.apple.spotlight" = {
             SuggestionsEnabled = false;
             LookupEnabled = false;
@@ -44,6 +56,7 @@
             DSDontWriteUSBStores = true;
           };
           "com.apple.TimeMachine".DoNotOfferNewDisksForBackup = true;
+          "com.apple.mail".DisableDataDetectors = true;
           "com.apple.TextEdit" = {
             RichText = 0;
             PlainTextEncoding = 4;
