@@ -481,7 +481,7 @@
           --gpu-mode=venus
         if [ "$APP_ID" = 990080 ]; then
           # Hogwarts otherwise grows Venus past this 16 GiB host's headroom.
-          set -- "$@" --vram=4096
+          set -- "$@" --vram=2048
         fi
         set -- "$@" --execute-pre=/usr/local/libexec/steam-guest-tune -- \
           "$STEAM_BIN"
