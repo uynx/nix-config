@@ -296,7 +296,18 @@
             name = ".codex/skills/${skill}";
             value.source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills/${skill}";
           }) sharedSkills
-        );
+        )
+        // lib.optionalAttrs isLinux {
+          ".local/share/applications/t3.desktop".text = ''
+            [Desktop Entry]
+            Type=Application
+            Name=T3 Code
+            GenericName=AI coding workspace
+            Exec=${home}/.local/bin/t3
+            Terminal=false
+            Categories=Development;
+          '';
+        };
 
       home.activation.createRequiredDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         mkdir -p \
