@@ -134,7 +134,7 @@
             # kernel — moving them unattended is what killed every game on
             # 7.1.5. They always print, with or without an update, because
             # their standing versions are the thing worth watching.
-            if (name[$0] ~ /^(virglrenderer|muvm|mesa-|fex-|asahi-|steam)/) {
+            if (name[$0] ~ /^(virglrenderer|muvm|libkrun|mesa-|fex-|asahi-|steam)/) {
               if (new == "" || new == $0) print "HOLD", $0, "-"
               else print "HOLDNEW", $0, new
               next
