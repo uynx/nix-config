@@ -22,6 +22,7 @@
           "com.apple.universalaccess".reduceMotion = true;
           "com.apple.assistant.support" = {
             "Assistant Enabled" = false;
+            "Dictation Enabled" = true;
           };
           "com.apple.Siri" = {
             "Siri Data Sharing Opt-Out" = true;
