@@ -313,6 +313,52 @@
         done <"$FIFO"
       '';
 
+      # 16-byte atomics. On FEX's defaults that means a permanent fault loop in
+      # the anti-tamper VM, then a torn compare-exchange and a corrupted
+      # pointer. `full` is lowercase on purpose — the enum is case-sensitive and
+      # an unrecognised value is ignored silently, which looks identical to the
+      # setting not helping.
+        Config = {
+          SMCChecks = "full";
+          StrictInProcessSplitLocks = true;
+          Multiblock = false;
+        };
+        ThunksDB = { };
+      });
+
+      # 8 Mar 2023 one its skeletal-mesh mod set requires. Swapping renames
+      # directories, so the *names* stop describing their contents after the
+      # first swap — that inversion has already cost one debugging session.
+      # A marker file inside each directory is the authority instead.
+        set -eu
+        C=${guest}/.local/share/Steam/steamapps/common
+        id_of() { cat "$1/.hl-build" 2>/dev/null || echo unknown; }
+
+        case "''${1-status}" in
+          status)
+            printf 'live:   %s\nparked: %s\n' "$(id_of "$LIVE")" "$(id_of "$PARKED")"
+            exit 0
+            ;;
+          2023 | 2026) want=$1 ;;
+        esac
+
+        [ -d "$LIVE" ] && [ -d "$PARKED" ] || {
+          echo "need both '$LIVE' and '$PARKED'" >&2; exit 1; }
+        for d in "$LIVE" "$PARKED"; do
+          [ -f "$d/.hl-build" ] || {
+            echo "missing $d/.hl-build — label each install once, by hand" >&2; exit 1; }
+        done
+
+        if [ "$(id_of "$LIVE")" = "$want" ]; then
+          echo "already on $want"
+          exit 0
+        fi
+        mv "$LIVE" "$C/.hl-swap"
+        mv "$PARKED" "$LIVE"
+        mv "$C/.hl-swap" "$PARKED"
+        printf 'live:   %s\nparked: %s\n' "$(id_of "$LIVE")" "$(id_of "$PARKED")"
+      '';
+
       steam-compat-config = pkgs.writers.writePython3Bin "steam-compat-config" { } ''
         import re
         import sys
@@ -535,6 +581,8 @@
           --gpu-mode=venus
         if [ "$APP_ID" = 990080 ]; then
           set -- "$@" --vram=2048
+          # Per-game FEX tuning. Passed here rather than through Steam's launch
+          # options, which live in localconfig.vdf and are rewritten by Steam.
         fi
         set -- "$@" --execute-pre=/usr/local/libexec/steam-guest-tune -- \
           "$STEAM_BIN"
