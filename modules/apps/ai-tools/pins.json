@@ -8,8 +8,8 @@
     "hash": "sha256-TQm/AAWXdo36BwsOfGEvD8JYrH+rNk5XAQTqYl+RhUY="
   },
   "grok": {
-    "version": "1.0.0",
-    "hash": "sha256-u3xREWVkoiGfakmFCBUGD0FpGKxAfx8rqCxTwLDUOD8="
+    "version": "1.0.3",
+    "hash": "sha256-7USVDquQVztvR1GR9XkXE6VpQ5ObO5pi4/TpXt0UrNk="
   },
   "kimi": {
     "version": "0.35.0",
