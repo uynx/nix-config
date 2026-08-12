@@ -486,7 +486,7 @@
           cp -a /opt/steam-arm64/steamrtarm64 "$STEAM_ROOT/"
         fi
         mkdir -p "$STEAM_ROOT/package" "$STEAM_HOME"
-        printf '%s\n' publicbeta >"$STEAM_ROOT/package/beta"
+        printf '%s\n' "''${STEAM_CLIENT_BRANCH-publicbeta}" >"$STEAM_ROOT/package/beta"
         ln -sfn "$STEAM_ROOT" "$STEAM_HOME/root"
         ln -sfn "$STEAM_ROOT/linuxarm64" "$STEAM_HOME/sdkarm64"
         chmod -R u+rwX "$STEAM_ROOT/steamrtarm64"
