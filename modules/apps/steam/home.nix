@@ -275,8 +275,13 @@
         rm -rf \
           "$RUNTIME_DIR/krun" \
           "$RUNTIME_DIR/muvm.lock"
+        # steam.pipe outlives the client that made it, and `steam-launch` reads
+        # its mere existence as "client is live" — so every later launch took the
+        # remote path and skipped `steam-asahi-run`, losing the FEX RootFS mount,
+        # --vram and the max_map_count tune.
         rm -f \
-          ${guest}/.cache/steam-asahi/open-url.pipe
+          ${guest}/.cache/steam-asahi/open-url.pipe \
+          ${guest}/.steam/steam.pipe
       '';
 
       # Distrobox's xdg-open forwarding cannot cross muvm's VM boundary, so web
