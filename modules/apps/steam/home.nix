@@ -498,13 +498,14 @@
         fi
 
         # Hogwarts is pinned to the 2023 build its mods need; an online client
-        # repatches it to current on every -applaunch.
-        if [ "$APP_ID" = 990080 ]; then OFFLINE=1; else OFFLINE=0; fi
+        # repatches it to current on every -applaunch. Only ever force offline,
+        # never force online: an online client also installs Valve's FEX compat
+        # tool, which has no RootFS here and breaks every Proton game.
         LOGINUSERS=${steam}/config/loginusers.vdf
-        if [ -f "$LOGINUSERS" ]; then
+        if [ "$APP_ID" = 990080 ] && [ -f "$LOGINUSERS" ]; then
           ${pkgs.gnused}/bin/sed -i \
-            -e "s/\(\"WantsOfflineMode\"[[:space:]]*\"\)[01]/\1$OFFLINE/" \
-            -e "s/\(\"SkipOfflineModeWarning\"[[:space:]]*\"\)[01]/\1$OFFLINE/" \
+            -e 's/\("WantsOfflineMode"[[:space:]]*"\)[01]/\11/' \
+            -e 's/\("SkipOfflineModeWarning"[[:space:]]*"\)[01]/\11/' \
             "$LOGINUSERS"
         fi
 
