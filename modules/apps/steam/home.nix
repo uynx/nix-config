@@ -451,10 +451,23 @@
         # provide one at this path; Fedora ships it as an image instead. Without
         # the mount every Proton game dies before Proton starts. Container side,
         # not the guest: muvm does not propagate a loop mount made inside it.
+        # Fedora's image also lacks the graphics_provider.json that Valve's
+        # image carries. Without it _v2-entry-point silently drops the whole
+        # emulation branch, so the game runs with no x86 graphics stack and
+        # dies on a 15s timeout. pressure-vessel does parse it and demands a
+        # non-empty graphics_provider_v0.architectures. The overlay exists
+        # because the erofs is read-only; its upper cannot live on tmpfs,
+        # which the kernel rejects as an overlayfs upperdir.
         ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- sudo sh -c \
-          'grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
-             mkdir -p /usr/share/guestos/fex-mesa
+          'O=/home/uynx/.local/share/steam-asahi/fex-mesa-ovl
+           grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
+             mkdir -p /usr/share/guestos/.fex-rootfs /usr/share/guestos/fex-mesa "$O/upper" "$O/work"
              mount -o loop,ro /usr/share/fex-emu/RootFS/default.erofs \
+               /usr/share/guestos/.fex-rootfs
+             printf "%s" "{\"graphics_provider_v0\":{\"architectures\":[\"x86_64-linux-gnu\",\"i386-linux-gnu\"]}}" \
+               >"$O/upper/graphics_provider.json"
+             mount -t overlay overlay \
+               -o lowerdir=/usr/share/guestos/.fex-rootfs,upperdir=$O/upper,workdir=$O/work \
                /usr/share/guestos/fex-mesa
            }'
 
