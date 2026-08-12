@@ -447,27 +447,26 @@
         APP_ID=''${1:-}
         ${steam-asahi-bootstrap}/bin/steam-asahi-bootstrap
 
-        # Steam's FEX compat tool ships an empty rootfs and expects the OS to
-        # provide one at this path; Fedora ships it as an image instead. Without
-        # the mount every Proton game dies before Proton starts. Container side,
-        # not the guest: muvm does not propagate a loop mount made inside it.
-        # Fedora's image also lacks the graphics_provider.json that Valve's
-        # image carries. Without it _v2-entry-point silently drops the whole
-        # emulation branch, so the game runs with no x86 graphics stack and
-        # dies on a 15s timeout. pressure-vessel does parse it and demands a
-        # non-empty graphics_provider_v0.architectures. The overlay exists
-        # because the erofs is read-only; its upper cannot live on tmpfs,
-        # which the kernel rejects as an overlayfs upperdir.
+        # Steam's FEX compat tool expects the OS to supply a combined FEX+Mesa
+        # x86 rootfs here, and it has to be the Arch image FEX publishes — the
+        # tool's own source calls it an "arch linux install". Fedora's rootfs
+        # shares sonames with the aarch64 container, so pressure-vessel hands
+        # host binaries 32-bit libraries and every Proton game dies before
+        # Proton starts. The Arch image carries its own graphics_provider.json;
+        # do not hand-write one. Container side, not the guest: muvm does not
+        # propagate a loop mount made inside it.
+        ROOTFS=/home/uynx/.local/share/steam-asahi/ArchLinux.ero
+        if [ ! -e "$ROOTFS" ]; then
+          ${pkgs.curl}/bin/curl -fsSL --connect-timeout 10 -o "$ROOTFS.part" \
+            https://rootfs.fex-emu.gg/ArchLinux/2026-08-11/ArchLinux.ero
+          echo "b035dcfe31a3d8e7ee497f2809caa11bf3a85bc68d707c7621d7433839d19ff2  $ROOTFS.part" \
+            | ${pkgs.coreutils}/bin/sha256sum -c -
+          ${pkgs.coreutils}/bin/mv "$ROOTFS.part" "$ROOTFS"
+        fi
         ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- sudo sh -c \
-          'O=/home/uynx/.local/share/steam-asahi/fex-mesa-ovl
-           grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
-             mkdir -p /usr/share/guestos/.fex-rootfs /usr/share/guestos/fex-mesa "$O/upper" "$O/work"
-             mount -o loop,ro /usr/share/fex-emu/RootFS/default.erofs \
-               /usr/share/guestos/.fex-rootfs
-             printf "%s" "{\"graphics_provider_v0\":{\"architectures\":[\"x86_64-linux-gnu\",\"i386-linux-gnu\"]}}" \
-               >"$O/upper/graphics_provider.json"
-             mount -t overlay overlay \
-               -o lowerdir=/usr/share/guestos/.fex-rootfs,upperdir=$O/upper,workdir=$O/work \
+          'grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
+             mkdir -p /usr/share/guestos/fex-mesa
+             mount -o loop,ro /home/uynx/.local/share/steam-asahi/ArchLinux.ero \
                /usr/share/guestos/fex-mesa
            }'
 
