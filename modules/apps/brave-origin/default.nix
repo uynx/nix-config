@@ -73,6 +73,15 @@
       # The default browser. Declared here rather than left to whichever app
       # last wrote mimeapps.list — a hand-set default is invisible on a fresh
       # machine, where links then open in nothing at all.
+      # Both copies are overwritten rather than backed up, and that is not
+      # optional: apps rewrite these on every launch (Bitwarden recreated both
+      # within seconds of a fresh login), so the backup Home Manager takes
+      # collides with the one it took last time and **the switch fails** —
+      # "would be clobbered by backing up". `xdg.mimeApps` writes the
+      # `~/.local/share/applications` copy too, for pre-2014 lookup order.
+      xdg.configFile."mimeapps.list".force = true;
+      xdg.dataFile."applications/mimeapps.list".force = true;
+
       xdg.mimeApps = {
         enable = true;
         defaultApplications = lib.genAttrs [
