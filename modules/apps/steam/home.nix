@@ -472,7 +472,20 @@
 
         ${steam-compat-config}/bin/steam-compat-config 32440 proton_10
         ${steam-compat-config}/bin/steam-compat-config 674940 box64_stickfight
-        ${steam-compat-config}/bin/steam-compat-config 990080 proton_10
+        # Hogwarts is pinned to the 2023 build, which spins forever in ntdll
+        # under Proton 10. Proton 8 is the closest release to that build that
+        # still starts it. Do not "upgrade" this to match the other games.
+        ${steam-compat-config}/bin/steam-compat-config 990080 proton_8
+
+        # The 2023 build refuses to start unless the VC++ redistributable is
+        # registered, though Wine's builtin runtime DLLs serve it fine. Steam
+        # rebuilds this prefix whenever the Proton version changes and takes
+        # the keys with it, so re-assert them on every launch.
+        HL_REG=${guest}/.local/share/Steam/steamapps/compatdata/990080/pfx/system.reg
+        if [ -f "$HL_REG" ] && ! ${pkgs.gnugrep}/bin/grep -q 'VC\\\\Runtimes' "$HL_REG"; then
+          printf '\n[Software\\\\Microsoft\\\\VisualStudio\\\\14.0\\\\VC\\\\Runtimes\\\\x64] %s\n"Installed"=dword:00000001\n"Major"=dword:0000000e\n"Minor"=dword:00000026\n"Bld"=dword:0000816a\n"RBld"=dword:00000000\n"Version"="14.38.33130.0"\n' \
+            "$(${pkgs.coreutils}/bin/date +%s)" >>"$HL_REG"
+        fi
 
         STEAM_ROOT=${steam}
         STEAM_HOME=${guest}/.steam
@@ -653,8 +666,11 @@
         trap cleanup_launch EXIT
 
         case "$APP_ID" in
-          32440 | 990080)
+          32440)
             ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton_10
+            ;;
+          990080)
+            ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton_8
             ;;
           674940)
             ${steam-compat-config}/bin/steam-compat-config "$APP_ID" box64_stickfight
