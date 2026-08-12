@@ -166,19 +166,6 @@ in
                 return 1
             end
           '';
-
-          # The unit is enabled, so `llama off` lasts until the next boot only.
-          llama.body = ''
-            switch "$argv[1]"
-              case on
-                systemctl --user start llama-router
-              case off
-                systemctl --user stop llama-router
-              case '*'
-                echo "usage: llama on|off"
-                return 1
-            end
-          '';
         };
       };
     }
