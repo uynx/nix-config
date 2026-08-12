@@ -33,6 +33,9 @@
       # build's store path baked in, so the next version bump plus a GC leaves an
       # autostart entry pointing at nothing. Declaring it re-resolves per rebuild.
       home.file = lib.mkIf isLinux {
+        # Overwritten, not backed up: Bitwarden rewrites this every launch, so
+        # a backup would collide with the previous one and fail the switch.
+        ".config/autostart/bitwarden.desktop".force = true;
         ".config/autostart/bitwarden.desktop".text = ''
           [Desktop Entry]
           Type=Application
