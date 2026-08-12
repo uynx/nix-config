@@ -441,6 +441,18 @@
 
         APP_ID=''${1:-}
         ${steam-asahi-bootstrap}/bin/steam-asahi-bootstrap
+
+        # Steam's FEX compat tool ships an empty rootfs and expects the OS to
+        # provide one at this path; Fedora ships it as an image instead. Without
+        # the mount every Proton game dies before Proton starts. Container side,
+        # not the guest: muvm does not propagate a loop mount made inside it.
+        ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- sudo sh -c \
+          'grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
+             mkdir -p /usr/share/guestos/fex-mesa
+             mount -o loop,ro /usr/share/fex-emu/RootFS/default.erofs \
+               /usr/share/guestos/fex-mesa
+           }'
+
         ${steam-compat-config}/bin/steam-compat-config 32440 proton_10
         ${steam-compat-config}/bin/steam-compat-config 674940 box64_stickfight
         ${steam-compat-config}/bin/steam-compat-config 990080 proton_10
