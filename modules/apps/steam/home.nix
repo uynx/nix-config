@@ -804,6 +804,15 @@
             "$REG_FILE"
         fi
 
+        # Unity is handed a zero width by this stack's display query, saves it,
+        # and reuses it on every later launch; rewriting both keys is the undo.
+        if [ "$APP_ID" = 674940 ] && [ -f "$REG_FILE" ]; then
+          sed -i -E \
+            -e "s/(\"Screenmanager Resolution Width_h182942802\"=dword:)[0-9a-fA-F]+/\1$(printf '%08x' "$WIDTH")/" \
+            -e "s/(\"Screenmanager Resolution Height_h2627697771\"=dword:)[0-9a-fA-F]+/\1$(printf '%08x' "$HEIGHT")/" \
+            "$REG_FILE"
+        fi
+
         PC_CONFIG=
         if [ "$APP_ID" = 32440 ]; then
           PC_CONFIG=$(find "$PREFIX/drive_c/users/steamuser/AppData/Local" \
@@ -1021,11 +1030,8 @@
             export BOX64_DYNAREC_BIGBLOCK=0
             export BOX64_NOGTK=1
 
-            # Display query here returns width 0, which Unity persists and then
-            # refuses to launch from. Explicit size overrides the stored value.
             exec /usr/local/bin/box64 "$PROTON/bin/wine" \
-              "$GAME" -force-d3d9 -popupwindow -screen-fullscreen 0 \
-              -screen-width 1280 -screen-height 720
+              "$GAME" -force-d3d9 -popupwindow -screen-fullscreen 0
           '';
         };
       };
