@@ -478,6 +478,16 @@
           esac
         fi
 
+        # repatches it to current on every -applaunch.
+        if [ "$APP_ID" = 990080 ]; then OFFLINE=1; else OFFLINE=0; fi
+        LOGINUSERS=${steam}/config/loginusers.vdf
+        if [ -f "$LOGINUSERS" ]; then
+          ${pkgs.gnused}/bin/sed -i \
+            -e "s/\(\"WantsOfflineMode\"[[:space:]]*\"\)[01]/\1$OFFLINE/" \
+            -e "s/\(\"SkipOfflineModeWarning\"[[:space:]]*\"\)[01]/\1$OFFLINE/" \
+            "$LOGINUSERS"
+        fi
+
         set -- /usr/bin/muvm \
           -e "BROWSER=$GUEST_BIN/xdg-open" \
           --gpu-mode=venus
