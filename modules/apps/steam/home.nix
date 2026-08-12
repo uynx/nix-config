@@ -1021,8 +1021,11 @@
             export BOX64_DYNAREC_BIGBLOCK=0
             export BOX64_NOGTK=1
 
+            # Display query here returns width 0, which Unity persists and then
+            # refuses to launch from. Explicit size overrides the stored value.
             exec /usr/local/bin/box64 "$PROTON/bin/wine" \
-              "$GAME" -force-d3d9 -popupwindow -screen-fullscreen 0
+              "$GAME" -force-d3d9 -popupwindow -screen-fullscreen 0 \
+              -screen-width 1280 -screen-height 720
           '';
         };
       };
