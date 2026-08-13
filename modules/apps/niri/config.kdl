@@ -98,6 +98,11 @@ window-rule {
     open-fullscreen true
 }
 
+// Mod+Shift+Slash still summons it on demand.
+hotkey-overlay {
+    skip-at-startup
+}
+
 prefer-no-csd
 screenshot-path "~/Pictures/Screenshots/screenshot-%Y-%m-%d-%H-%M-%S.png"
 
