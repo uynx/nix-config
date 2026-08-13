@@ -41,6 +41,31 @@
         target_output() {
           ${N} msg -j focused-output 2>/dev/null
         }
+
+        # Two container variants, selected by STEAM_VARIANT. Both mount the same
+        # guest home, so the Steam library and every prefix are shared and only
+        # one may run at a time. `arch` is the experiment that can reach a 7.1
+        # kernel; `fedora` stays the default until that is proven.
+        steam_variant() {
+          case "''${STEAM_VARIANT:-fedora}" in
+            fedora)
+              CONTAINER=steam-asahi
+              IMAGE=localhost/steam-asahi:44
+              CFILE=Containerfile
+              INI=distrobox.ini
+              ;;
+            arch)
+              CONTAINER=steam-asahi-arch
+              IMAGE=localhost/steam-asahi-arch:1
+              CFILE=Containerfile.arch
+              INI=distrobox-arch.ini
+              ;;
+            *)
+              printf 'unknown STEAM_VARIANT: %s\n' "''${STEAM_VARIANT:-}" >&2
+              return 1
+              ;;
+          esac
+        }
       '';
       x86-pkgs = import inputs.nixpkgs {
         system = "x86_64-linux";
@@ -49,10 +74,21 @@
       x86-libgcc = x86-pkgs.stdenv.cc.cc.lib;
       steam-asahi-doctor = pkgs.writeShellScriptBin "steam-asahi-doctor" ''
         set -eu
+        ${shellHelpers}
+        steam_variant
 
         SOURCE=${config.home.homeDirectory}/nixos-config/steam-asahi
-        IMAGE=localhost/steam-asahi:44
-        CONTAINER=steam-asahi
+
+        # The NEVRA audit below is dnf-shaped and Arch has no equivalent, so
+        # that variant gets the environment checks and nothing more.
+        if [ "''${STEAM_VARIANT:-fedora}" = arch ]; then
+          [ "$(${pkgs.glibc.bin}/bin/getconf PAGESIZE)" = 16384 ]
+          [ -r /dev/kvm ] && [ -w /dev/kvm ]
+          ${pkgs.docker}/bin/docker image inspect "$IMAGE" >/dev/null
+          ${pkgs.docker}/bin/docker container inspect "$CONTAINER" >/dev/null
+          printf '%-46s %s\n' "$CONTAINER" "ok (no package audit on arch)"
+          exit 0
+        fi
 
         [ "$(${pkgs.glibc.bin}/bin/getconf PAGESIZE)" = 16384 ]
         [ -r /dev/kvm ] && [ -w /dev/kvm ]
@@ -179,13 +215,14 @@
       steam-asahi-bootstrap = pkgs.writeShellScriptBin "steam-asahi-bootstrap" ''
         set -eu
 
+        ${shellHelpers}
+        steam_variant
+
         SOURCE=${config.home.homeDirectory}/nixos-config/steam-asahi
-        IMAGE=localhost/steam-asahi:44
-        CONTAINER=steam-asahi
         LABEL=io.uynx.steam-asahi.config
 
-        if [ ! -f "$SOURCE/Containerfile" ] \
-          || [ ! -f "$SOURCE/distrobox.ini" ] \
+        if [ ! -f "$SOURCE/$CFILE" ] \
+          || [ ! -f "$SOURCE/$INI" ] \
           || [ ! -f "$SOURCE/steam-guest-tune" ]; then
           ${pkgs.libnotify}/bin/notify-send \
             "Steam setup unavailable" \
@@ -195,7 +232,7 @@
 
         CONFIG_HASH=$(
           ${pkgs.coreutils}/bin/sha256sum \
-            "$SOURCE/Containerfile" "$SOURCE/distrobox.ini" \
+            "$SOURCE/$CFILE" "$SOURCE/$INI" \
             "$SOURCE/steam-guest-tune" \
             | ${pkgs.coreutils}/bin/sha256sum \
             | ${pkgs.coreutils}/bin/cut -d' ' -f1
@@ -211,7 +248,7 @@
           ${pkgs.docker}/bin/docker build \
             --label "$LABEL=$CONFIG_HASH" \
             --tag "$IMAGE" \
-            --file "$SOURCE/Containerfile" \
+            --file "$SOURCE/$CFILE" \
             "$SOURCE"
           REPLACE=1
         fi
@@ -222,7 +259,7 @@
         )
         if ! ${pkgs.docker}/bin/docker container inspect "$CONTAINER" >/dev/null 2>&1; then
           ${pkgs.distrobox}/bin/distrobox assemble create \
-            --file "$SOURCE/distrobox.ini"
+            --file "$SOURCE/$INI"
           REPLACE=0
         else
           CONTAINER_IMAGE_ID=$(
@@ -234,7 +271,7 @@
            { [ -n "''${CONTAINER_IMAGE_ID:-}" ] && [ "$CONTAINER_IMAGE_ID" != "$IMAGE_ID" ]; }; then
           ${pkgs.distrobox}/bin/distrobox assemble create \
             --replace \
-            --file "$SOURCE/distrobox.ini"
+            --file "$SOURCE/$INI"
         fi
 
         # No rpm -q here: the image carries the Containerfile's hash as a label
@@ -248,8 +285,9 @@
       # leave a second Steam client, FEX process, or Venus VM behind.
       steam-asahi-stop = pkgs.writeShellScriptBin "steam-asahi-stop" ''
         set -eu
+        ${shellHelpers}
+        steam_variant
 
-        CONTAINER=steam-asahi
         RUNTIME_DIR=''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
         if [ "$(${pkgs.docker}/bin/docker container inspect \
           --format '{{.State.Running}}' "$CONTAINER" 2>/dev/null || true)" = true ]; then
@@ -466,6 +504,8 @@
 
       steam-asahi-remote = pkgs.writeShellScriptBin "steam-asahi-remote" ''
         set -eu
+        ${shellHelpers}
+        steam_variant
 
         TARGET=$1
         case "$TARGET" in
@@ -485,17 +525,19 @@
         [ -p "$STEAM_HOME/steam.pipe" ] && [ -x "$STEAM_BIN" ]
 
         if [ "$TARGET" = 730 ]; then
-          exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- \
+          exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- \
             /usr/bin/muvm -i -- "$STEAM_BIN" -applaunch "$TARGET" \
               -condebug +r_csgo_player_occlusion_query 0
         fi
 
-        exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- \
+        exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- \
           /usr/bin/muvm -i -- "$STEAM_BIN" "$URL"
       '';
 
       steam-asahi-run = pkgs.writeShellScriptBin "steam-asahi-run" ''
         set -eu
+        ${shellHelpers}
+        steam_variant
 
         APP_ID=''${1:-}
         ${steam-asahi-bootstrap}/bin/steam-asahi-bootstrap
@@ -516,7 +558,7 @@
             | ${pkgs.coreutils}/bin/sha256sum -c -
           ${pkgs.coreutils}/bin/mv "$ROOTFS.part" "$ROOTFS"
         fi
-        ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- sudo sh -c \
+        ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- sudo sh -c \
           'grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
              mkdir -p /usr/share/guestos/fex-mesa
              mount -o loop,ro /home/uynx/.local/share/steam-asahi/ArchLinux.ero \
@@ -524,7 +566,11 @@
            }'
 
         ${steam-compat-config}/bin/steam-compat-config 32440 proton_10
-        ${steam-compat-config}/bin/steam-compat-config 674940 box64_stickfight
+        if [ "''${STEAM_VARIANT:-fedora}" = arch ]; then
+          ${steam-compat-config}/bin/steam-compat-config 674940 proton_10
+        else
+          ${steam-compat-config}/bin/steam-compat-config 674940 box64_stickfight
+        fi
         # Hogwarts is pinned to the 2023 build, which spins forever in ntdll
         # under Proton 10. Proton 8 is the closest release to that build that
         # still starts it. Do not "upgrade" this to match the other games.
@@ -607,7 +653,7 @@
         fi
 
         STATUS=0
-        ${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi -- "$@" || STATUS=$?
+        ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- "$@" || STATUS=$?
         ${steam-asahi-stop}/bin/steam-asahi-stop
         exit "$STATUS"
       '';
@@ -617,6 +663,7 @@
       steam-asahi = pkgs.writeShellScriptBin "steam-asahi" ''
         set -eu
         ${shellHelpers}
+        steam_variant
 
         STEAM_ID=$(window_id steam)
         if [ -n "$STEAM_ID" ]; then
@@ -624,7 +671,7 @@
         fi
 
         if [ "$(${pkgs.docker}/bin/docker container inspect \
-          --format '{{.State.Running}}' steam-asahi 2>/dev/null || true)" = true ] && \
+          --format '{{.State.Running}}' "$CONTAINER" 2>/dev/null || true)" = true ] && \
            [ -p ${guest}/.steam/steam.pipe ]; then
           ${steam-asahi-remote}/bin/steam-asahi-remote ui || true
           for _ in $(${pkgs.coreutils}/bin/seq 1 50); do
@@ -687,6 +734,7 @@
       steam-launch = pkgs.writeShellScriptBin "steam-launch" ''
         set -eu
         ${shellHelpers}
+        steam_variant
 
         APP_ID=$1
         case "$APP_ID" in
@@ -804,17 +852,19 @@
             "$REG_FILE"
         fi
 
-        # Two resolutions, and they must agree. Unity's Screenmanager pair is
-        # the window against which pointer coordinates are reported, and this
-        # stack's display query hands it a zero width that it then persists.
-        # `Resolution` is Stick Fight's own dropdown index; 0 means follow the
-        # desktop. Any other index renders at a size the pointer is not mapped
-        # to, so clicks land somewhere else entirely — hence forcing it back.
+        # Three keys, none of which the game can be trusted to set itself. The
+        # Screenmanager pair is the window, and follows the monitor like every
+        # other game here; this stack's display query hands Unity a zero width
+        # it then persists, and `Resolution` 0 ("follow the desktop") makes it
+        # ask that same broken query and fall back to 640x480. Fullscreen must
+        # stay 0: Unity locks the cursor in fullscreen and xwayland-satellite
+        # does not honour the constraint, which freezes the pointer outright.
         if [ "$APP_ID" = 674940 ] && [ -f "$REG_FILE" ]; then
           sed -i -E \
             -e "s/(\"Screenmanager Resolution Width_h182942802\"=dword:)[0-9a-fA-F]+/\1$(printf '%08x' "$WIDTH")/" \
             -e "s/(\"Screenmanager Resolution Height_h2627697771\"=dword:)[0-9a-fA-F]+/\1$(printf '%08x' "$HEIGHT")/" \
-            -e 's/"Resolution_h2981718891"=dword:[0-9a-fA-F]+/"Resolution_h2981718891"=dword:00000000/' \
+            -e 's/"Screenmanager Is Fullscreen mode_h3981298716"=dword:[0-9a-fA-F]+/"Screenmanager Is Fullscreen mode_h3981298716"=dword:00000000/' \
+            -e 's/"Resolution_h2981718891"=dword:[0-9a-fA-F]+/"Resolution_h2981718891"=dword:00000026/' \
             "$REG_FILE"
         fi
 
@@ -843,7 +893,7 @@
         WATCH_STARTED=1
 
         CONTAINER_RUNNING=$(${pkgs.docker}/bin/docker container inspect \
-          --format '{{.State.Running}}' steam-asahi 2>/dev/null || true)
+          --format '{{.State.Running}}' "$CONTAINER" 2>/dev/null || true)
         if [ "$CONTAINER_RUNNING" = true ]; then
           for _ in $(${pkgs.coreutils}/bin/seq 1 100); do
             [ -p ${guest}/.steam/steam.pipe ] && break
