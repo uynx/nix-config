@@ -32,6 +32,9 @@
       # Bitwarden's own "start on login" toggle writes this file with the running
       # build's store path baked in, so the next version bump plus a GC leaves an
       # autostart entry pointing at nothing. Declaring it re-resolves per rebuild.
+      #
+      # No `--autostart`: that flag is the app's "start to tray" switch, and its
+      # only effect is to skip the initial window.show() entirely.
       home.file = lib.mkIf isLinux {
         # Overwritten, not backed up: Bitwarden rewrites this every launch, so
         # a backup would collide with the previous one and fail the switch.
@@ -40,7 +43,7 @@
           [Desktop Entry]
           Type=Application
           Name=Bitwarden
-          Exec=${lib.getExe pkgs.bitwarden-desktop} --autostart
+          Exec=${lib.getExe pkgs.bitwarden-desktop}
           StartupNotify=false
           Terminal=false
         '';
