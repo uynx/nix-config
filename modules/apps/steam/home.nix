@@ -661,11 +661,18 @@
         fi
 
         # Only the aarch64 Proton path gets the HUD: the x86 one draws through
-        # the read-only FEX rootfs, which carries no MangoHud to load.
+        # the read-only FEX rootfs, which carries no MangoHud to load. Games see
+        # raw pixels rather than niri's logical size, so the default 24px font
+        # renders at half the size it looks like it should on this display.
         set -- /usr/bin/muvm \
           -e "BROWSER=$GUEST_BIN/xdg-open" \
           -e "MANGOHUD=''${STEAM_HUD:-1}" \
+          -e "MANGOHUD_CONFIG=font_size=''${STEAM_HUD_FONT:-48}" \
           --gpu-mode=venus
+        # Proton writes ~/steam-<appid>.log in the guest home when this is set.
+        if [ -n "''${STEAM_PROTON_LOG:-}" ]; then
+          set -- "$@" -e "PROTON_LOG=1"
+        fi
         if [ "$APP_ID" = 990080 ]; then
           # Hogwarts otherwise grows Venus past this 16 GiB host's headroom.
           set -- "$@" --vram=2048
