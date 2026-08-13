@@ -5,12 +5,15 @@
     nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-weekly/*";
     nixpkgs-stable.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-26.05-chilled/*";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
-    # Last revision carrying linux-asahi 7.0.13. The next one moves to 7.1.5,
-    # which the Fedora userspace Steam runs in cannot talk to — muvm fails with
-    # "could not connect vdrm" and every game dies. Unpin once Fedora ships a
-    # 7.1 stack (still virglrenderer 1.3.0 / muvm 0.6.0 as of 2026-08).
+    # Unpinned 2026-08-13, moving 7.0.13 → 7.1.5. The Fedora Steam container is
+    # expected to break on this — its userspace cannot talk to 7.1 and muvm
+    # fails with "could not connect vdrm". The Arch container is the reason this
+    # is worth trying: asahi-alarm ships its mesa and virglrenderer alongside
+    # linux-asahi 7.1.6, so that pairing should hold. Games ran on 7.0.13 under
+    # both, so anything that breaks now is the kernel. Roll back by booting the
+    # previous generation, or by re-pinning 3902c801.
     nixos-apple-silicon = {
-      url = "github:nix-community/nixos-apple-silicon/3902c801519264191a7c3dfec8dd1f9faeb38fd5";
+      url = "github:nix-community/nixos-apple-silicon";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {
