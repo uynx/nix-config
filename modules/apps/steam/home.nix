@@ -566,11 +566,10 @@
            }'
 
         ${steam-compat-config}/bin/steam-compat-config 32440 proton_10
-        if [ "''${STEAM_VARIANT:-fedora}" = arch ]; then
-          ${steam-compat-config}/bin/steam-compat-config 674940 proton_10
-        else
-          ${steam-compat-config}/bin/steam-compat-config 674940 box64_stickfight
-        fi
+        # Native aarch64 Wine, with FEX translating only the game's own x86.
+        # Both of these stalled under the old stack and run under this one.
+        ${steam-compat-config}/bin/steam-compat-config 674940 proton-experimental-arm64
+        ${steam-compat-config}/bin/steam-compat-config 3540 proton-experimental-arm64
         # Hogwarts is pinned to the 2023 build, which spins forever in ntdll
         # under Proton 10. Proton 8 is the closest release to that build that
         # still starts it. Do not "upgrade" this to match the other games.
@@ -776,8 +775,8 @@
           990080)
             ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton_8
             ;;
-          674940)
-            ${steam-compat-config}/bin/steam-compat-config "$APP_ID" box64_stickfight
+          674940|3540)
+            ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton-experimental-arm64
             ;;
         esac
 
