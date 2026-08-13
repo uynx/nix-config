@@ -46,7 +46,16 @@
         # guest home, so the Steam library and every prefix are shared and only
         # one may run at a time. `arch` is the experiment that can reach a 7.1
         # kernel; `fedora` stays the default until that is proven.
+        # Unset means "whichever client is already up", so the generated game
+        # entries follow the running container instead of dragging the session
+        # back to fedora mid-test.
         steam_variant() {
+          if [ -z "''${STEAM_VARIANT:-}" ]; then
+            if [ "$(${pkgs.docker}/bin/docker container inspect \
+              --format '{{.State.Running}}' steam-asahi-arch 2>/dev/null || true)" = true ]; then
+              STEAM_VARIANT=arch
+            fi
+          fi
           case "''${STEAM_VARIANT:-fedora}" in
             fedora)
               CONTAINER=steam-asahi
@@ -565,10 +574,12 @@
             | ${pkgs.coreutils}/bin/sha256sum -c -
           ${pkgs.coreutils}/bin/mv "$ROOTFS.part" "$ROOTFS"
         fi
-        # The MangoHud layer comes from the nix store rather than either image's
-        # package manager: /nix is visible in both containers, and asahi-alarm
-        # has no mangohud at all. It must sit in the standard layer directory —
+        # MangoHud and gtk2 come from the nix store rather than either image's
+        # package manager, because asahi-alarm ships neither and /nix is visible
+        # in both containers. The layer must sit in the standard directory —
         # pressure-vessel only captures layers it finds on that search path.
+        # The gtk2 link is gated so it cannot shadow Fedora's own copy, which
+        # lives in /usr/lib64 with /usr/lib symlinked onto it.
         ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- sudo sh -c \
           'grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
              mkdir -p /usr/share/guestos/fex-mesa
@@ -577,7 +588,10 @@
            }
            install -Dm444 \
              ${pkgs.mangohud}/share/vulkan/implicit_layer.d/MangoHud.aarch64.json \
-             /usr/share/vulkan/implicit_layer.d/MangoHud.aarch64.json'
+             /usr/share/vulkan/implicit_layer.d/MangoHud.aarch64.json
+           ldconfig -p | grep -q libgtk-x11-2.0.so.0 || ln -sfn \
+             ${pkgs.gtk2}/lib/libgtk-x11-2.0.so.0 \
+             ${pkgs.gtk2}/lib/libgdk-x11-2.0.so.0 /usr/lib/'
 
         # Native aarch64 Wine, with FEX translating only the game's own x86.
         # Everything that stalled under the emulated x86 Proton runs on this.
@@ -1019,6 +1033,21 @@
         name = "Steam";
         genericName = "Games Store";
         exec = "${steam-asahi}/bin/steam-asahi";
+        icon = "steam";
+        terminal = false;
+        categories = [
+          "Network"
+          "FileTransfer"
+          "Game"
+        ];
+      };
+
+      # The Arch container under test. Launching either one stops the other, so
+      # picking the wrong entry costs a restart, not a broken library.
+      xdg.desktopEntries.steam-arch = {
+        name = "Steam (Arch)";
+        genericName = "Games Store";
+        exec = "${pkgs.coreutils}/bin/env STEAM_VARIANT=arch ${steam-asahi}/bin/steam-asahi";
         icon = "steam";
         terminal = false;
         categories = [

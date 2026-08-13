@@ -7,8 +7,22 @@ FROM docker.io/menci/archlinuxarm@sha256:6549bc2de3848c482a4c411b5c29a356e9b5bcb
 # --init` is likewise required: the base image ships no local master key, so
 # the asahi-alarm keyring's install hook cannot sign it and the repo's own
 # signatures come back "unknown trust". No gtk2 either — Arch dropped it from
-# the repos, so the Fedora image's copy of that dependency cannot be matched.
-RUN pacman -Syu --noconfirm --disable-sandbox curl && \
+# the repos, so `steam-asahi-run` symlinks that one in from the nix store; the
+# rest of what Valve's arm64 steamui.so needs is here. The asahi-alarm repo
+# must come *before* core and extra, and its packages are written
+# `asahi-alarm/<name>` on top of that: pacman resolves a bare name by repo
+# order, so appending it left plain `mesa` meaning stock Arch's — no asahi
+# Vulkan driver, no venus ICD, no GPU in the guest. Ordering is what binds
+# distrobox's own pacman calls during container setup, which the explicit
+# prefixes cannot reach. Those setup calls also drag in Arch's split
+# `vulkan-mesa-implicit-layers`, whose two files asahi's monolithic mesa
+# already owns; installing it here with --overwrite is what stops distrobox
+# from dying on the file conflict every time the container is created.
+#
+# The two pacman steps are separate layers sharing one package cache: editing
+# the list below then costs an install, not a re-download of the whole distro.
+RUN --mount=type=cache,target=/var/cache/pacman/pkg,sharing=locked \
+    pacman -Syu --noconfirm --disable-sandbox curl && \
     pacman-key --init && \
     pacman-key --populate && \
     curl -fsSL -o /tmp/keyring.pkg.tar.xz \
@@ -17,19 +31,21 @@ RUN pacman -Syu --noconfirm --disable-sandbox curl && \
       | sha256sum -c - && \
     pacman -U --noconfirm --disable-sandbox /tmp/keyring.pkg.tar.xz && \
     rm /tmp/keyring.pkg.tar.xz && \
-    printf '\n[asahi-alarm]\nServer = https://github.com/asahi-alarm/asahi-alarm/releases/download/$arch\n' \
-      >>/etc/pacman.conf && \
+    sed -i '/^\[core\]/i [asahi-alarm]\nServer = https://github.com/asahi-alarm/asahi-alarm/releases/download/$arch\n' \
+      /etc/pacman.conf
+
+RUN --mount=type=cache,target=/var/cache/pacman/pkg,sharing=locked \
     pacman -Sy --noconfirm --disable-sandbox \
-      muvm \
-      libkrun \
-      libkrunfw \
-      virglrenderer \
-      mesa \
-      FEX-Emu \
-      fex-emu-rootfs-arch \
-      mesa-fex-emu-overlay-x86_64 \
-      mesa-fex-emu-overlay-i386 \
-      steam \
+      asahi-alarm/muvm \
+      asahi-alarm/libkrun \
+      asahi-alarm/libkrunfw \
+      asahi-alarm/virglrenderer \
+      asahi-alarm/mesa \
+      asahi-alarm/FEX-Emu \
+      asahi-alarm/fex-emu-rootfs-arch \
+      asahi-alarm/mesa-fex-emu-overlay-x86_64 \
+      asahi-alarm/mesa-fex-emu-overlay-i386 \
+      asahi-alarm/steam \
       xorg-xwayland \
       libglvnd \
       vulkan-icd-loader \
@@ -47,6 +63,11 @@ RUN pacman -Syu --noconfirm --disable-sandbox curl && \
       libxrender \
       libxxf86vm \
       libxkbcommon \
+      sdl3 \
+      sdl2-compat \
+      libpulse \
+      alsa-lib \
+      libsndfile \
       ibus \
       networkmanager \
       nss \
@@ -55,8 +76,11 @@ RUN pacman -Syu --noconfirm --disable-sandbox curl && \
       python \
       python-requests \
       sudo && \
-    pacman -Scc --noconfirm && \
-    rm -rf /var/cache/pacman/pkg/* /tmp/* /var/tmp/*
+    pacman -S --noconfirm --disable-sandbox \
+      --overwrite '/usr/lib/libVkLayer_MESA_device_select.so' \
+      --overwrite '/usr/share/vulkan/implicit_layer.d/VkLayer_MESA_device_select.json' \
+      vulkan-mesa-implicit-layers && \
+    rm -rf /tmp/* /var/tmp/*
 
 # No Box64 here on purpose. It exists in the Fedora image only because Stick
 # Fight stalled under FEX, which turned out to be the Fedora FEX rootfs rather
