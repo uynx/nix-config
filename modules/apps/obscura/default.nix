@@ -181,8 +181,13 @@
   flake.homeModules.obscura = {
     # obscura.service is restartIfChanged = false, so a switch is the one thing
     # that never lands a new daemon binary. It has to run after the switch:
-    # restarting it during one deadlocks activation.
-    shellHooks.rebPostSwitch = "sudo systemctl try-restart obscura.service";
+    # restarting it during one deadlocks activation. The restart leaves the
+    # tunnel down even though `auto_connect` is re-asserted in preStart, so ask
+    # for the tunnel explicitly rather than relying on daemon-owned state.
+    shellHooks.rebPostSwitch = ''
+      sudo systemctl try-restart obscura.service
+      obscura connect
+    '';
 
     # Escape hatch for the state where the daemon is down but obscura-lockdown
     # is still filtering, which is a machine with no network at all.
