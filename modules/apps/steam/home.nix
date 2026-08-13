@@ -42,41 +42,10 @@
           ${N} msg -j focused-output 2>/dev/null
         }
 
-        # Two container variants, selected by STEAM_VARIANT. Both mount the same
-        # guest home, so the Steam library and every prefix are shared and only
-        # one may run at a time. `arch` is the experiment that can reach a 7.1
-        # kernel; `fedora` stays the default until that is proven.
-        # Unset means "whichever client is already up", so the generated game
-        # entries follow the running container instead of dragging the session
-        # back to fedora mid-test.
-        steam_variant() {
-          if [ -z "''${STEAM_VARIANT:-}" ]; then
-            if [ "$(${pkgs.docker}/bin/docker container inspect \
-              --format '{{.State.Running}}' steam-asahi-arch 2>/dev/null || true)" = true ]; then
-              STEAM_VARIANT=arch
-            fi
-          fi
-          case "''${STEAM_VARIANT:-fedora}" in
-            fedora)
-              CONTAINER=steam-asahi
-              IMAGE=localhost/steam-asahi:44
-              CFILE=Containerfile
-              INI=distrobox.ini
-              OTHER=steam-asahi-arch
-              ;;
-            arch)
-              CONTAINER=steam-asahi-arch
-              IMAGE=localhost/steam-asahi-arch:1
-              CFILE=Containerfile.arch
-              INI=distrobox-arch.ini
-              OTHER=steam-asahi
-              ;;
-            *)
-              printf 'unknown STEAM_VARIANT: %s\n' "''${STEAM_VARIANT:-}" >&2
-              return 1
-              ;;
-          esac
-        }
+        CONTAINER=steam-asahi
+        IMAGE=localhost/steam-asahi:44
+        CFILE=Containerfile
+        INI=distrobox.ini
       '';
       x86-pkgs = import inputs.nixpkgs {
         system = "x86_64-linux";
@@ -86,20 +55,8 @@
       steam-asahi-doctor = pkgs.writeShellScriptBin "steam-asahi-doctor" ''
         set -eu
         ${shellHelpers}
-        steam_variant
 
         SOURCE=${config.home.homeDirectory}/nixos-config/steam-asahi
-
-        # The NEVRA audit below is dnf-shaped and Arch has no equivalent, so
-        # that variant gets the environment checks and nothing more.
-        if [ "''${STEAM_VARIANT:-fedora}" = arch ]; then
-          [ "$(${pkgs.glibc.bin}/bin/getconf PAGESIZE)" = 16384 ]
-          [ -r /dev/kvm ] && [ -w /dev/kvm ]
-          ${pkgs.docker}/bin/docker image inspect "$IMAGE" >/dev/null
-          ${pkgs.docker}/bin/docker container inspect "$CONTAINER" >/dev/null
-          printf '%-46s %s\n' "$CONTAINER" "ok (no package audit on arch)"
-          exit 0
-        fi
 
         [ "$(${pkgs.glibc.bin}/bin/getconf PAGESIZE)" = 16384 ]
         [ -r /dev/kvm ] && [ -w /dev/kvm ]
@@ -227,7 +184,6 @@
         set -eu
 
         ${shellHelpers}
-        steam_variant
 
         SOURCE=${config.home.homeDirectory}/nixos-config/steam-asahi
         LABEL=io.uynx.steam-asahi.config
@@ -297,7 +253,6 @@
       steam-asahi-stop = pkgs.writeShellScriptBin "steam-asahi-stop" ''
         set -eu
         ${shellHelpers}
-        steam_variant
 
         RUNTIME_DIR=''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
         if [ "$(${pkgs.docker}/bin/docker container inspect \
@@ -516,7 +471,6 @@
       steam-asahi-remote = pkgs.writeShellScriptBin "steam-asahi-remote" ''
         set -eu
         ${shellHelpers}
-        steam_variant
 
         TARGET=$1
         case "$TARGET" in
@@ -548,13 +502,8 @@
       steam-asahi-run = pkgs.writeShellScriptBin "steam-asahi-run" ''
         set -eu
         ${shellHelpers}
-        steam_variant
 
         APP_ID=''${1:-}
-
-        # Both variants mount the same guest home, so a second client on it
-        # would fight this one over the library and every prefix.
-        ${pkgs.docker}/bin/docker container stop --time 5 "$OTHER" >/dev/null 2>&1 || true
 
         ${steam-asahi-bootstrap}/bin/steam-asahi-bootstrap
 
@@ -700,7 +649,6 @@
       steam-asahi = pkgs.writeShellScriptBin "steam-asahi" ''
         set -eu
         ${shellHelpers}
-        steam_variant
 
         STEAM_ID=$(window_id steam)
         if [ -n "$STEAM_ID" ]; then
@@ -771,7 +719,6 @@
       steam-launch = pkgs.writeShellScriptBin "steam-launch" ''
         set -eu
         ${shellHelpers}
-        steam_variant
 
         APP_ID=$1
         case "$APP_ID" in
@@ -1040,21 +987,6 @@
         name = "Steam";
         genericName = "Games Store";
         exec = "${steam-asahi}/bin/steam-asahi";
-        icon = "steam";
-        terminal = false;
-        categories = [
-          "Network"
-          "FileTransfer"
-          "Game"
-        ];
-      };
-
-      # The Arch container under test. Launching either one stops the other, so
-      # picking the wrong entry costs a restart, not a broken library.
-      xdg.desktopEntries.steam-arch = {
-        name = "Steam (Arch)";
-        genericName = "Games Store";
-        exec = "${pkgs.coreutils}/bin/env STEAM_VARIANT=arch ${steam-asahi}/bin/steam-asahi";
         icon = "steam";
         terminal = false;
         categories = [
