@@ -80,12 +80,6 @@ window-rule {
     open-floating false
 }
 
-window-rule {
-    match app-id="^pinentry"
-    match app-id="^org\\.gnupg\\.pinentry"
-    open-floating true
-}
-
 // Proton VPN is a narrow app; a third of the screen suits it better than the
 // global 0.75.
 window-rule {
