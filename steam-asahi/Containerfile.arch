@@ -3,8 +3,14 @@ FROM docker.io/menci/archlinuxarm@sha256:6549bc2de3848c482a4c411b5c29a356e9b5bcb
 # pacman 7 sandboxes downloads with Landlock, which cannot be applied inside a
 # docker build; --disable-sandbox is required here, not a preference. Unlike
 # the Fedora image this cannot pin versions — pacman has no NEVRA equivalent —
-# so this variant tracks whatever asahi-alarm currently ships.
+# so this variant tracks whatever asahi-alarm currently ships. `pacman-key
+# --init` is likewise required: the base image ships no local master key, so
+# the asahi-alarm keyring's install hook cannot sign it and the repo's own
+# signatures come back "unknown trust". No gtk2 either — Arch dropped it from
+# the repos, so the Fedora image's copy of that dependency cannot be matched.
 RUN pacman -Syu --noconfirm --disable-sandbox curl && \
+    pacman-key --init && \
+    pacman-key --populate && \
     curl -fsSL -o /tmp/keyring.pkg.tar.xz \
       https://github.com/asahi-alarm/asahi-alarm/releases/download/aarch64/asahi-alarm-keyring-20241216-1-any.pkg.tar.xz && \
     echo '798f4b283ad2819aee950d042f26566ae1a68f87c12247301ce449bea3b2d81e  /tmp/keyring.pkg.tar.xz' \
@@ -41,7 +47,6 @@ RUN pacman -Syu --noconfirm --disable-sandbox curl && \
       libxrender \
       libxxf86vm \
       libxkbcommon \
-      gtk2 \
       ibus \
       networkmanager \
       nss \
