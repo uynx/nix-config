@@ -1,7 +1,7 @@
 {
   "claude-code": {
-    "version": "2.1.228",
-    "hash": "sha256-JmQAYhlJe/cCGsQxVlGc1C7aZM6ypm9DTsq4Pngx+UI="
+    "version": "2.1.229",
+    "hash": "sha256-ulMTCsvaPdsAs91WQfEXM4Z/XYN6JYt+bM70knzBpQk="
   },
   "codex": {
     "version": "0.147.0",
@@ -16,8 +16,8 @@
     "hash": "sha256-vGirMFL0qrTbLfHynmqCWFrNFUV/4Fn9H3iHioj/rFA="
   },
   "opencode": {
-    "version": "1.18.16",
-    "hash": "sha256-T9zl+byHfZdzBNccDJCtboPvo4H+Dt8KYeYUKmJeHEE="
+    "version": "1.18.17",
+    "hash": "sha256-dTHBoRBUaq8EtGXZijv1QBjhdA92kHfCUm/sat1fwjA="
   },
   "cursor-agent": {
     "version": "2026.08.11-e8db854",
