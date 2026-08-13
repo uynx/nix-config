@@ -804,12 +804,17 @@
             "$REG_FILE"
         fi
 
-        # Unity is handed a zero width by this stack's display query, saves it,
-        # and reuses it on every later launch; rewriting both keys is the undo.
+        # Two resolutions, and they must agree. Unity's Screenmanager pair is
+        # the window against which pointer coordinates are reported, and this
+        # stack's display query hands it a zero width that it then persists.
+        # `Resolution` is Stick Fight's own dropdown index; 0 means follow the
+        # desktop. Any other index renders at a size the pointer is not mapped
+        # to, so clicks land somewhere else entirely — hence forcing it back.
         if [ "$APP_ID" = 674940 ] && [ -f "$REG_FILE" ]; then
           sed -i -E \
             -e "s/(\"Screenmanager Resolution Width_h182942802\"=dword:)[0-9a-fA-F]+/\1$(printf '%08x' "$WIDTH")/" \
             -e "s/(\"Screenmanager Resolution Height_h2627697771\"=dword:)[0-9a-fA-F]+/\1$(printf '%08x' "$HEIGHT")/" \
+            -e 's/"Resolution_h2981718891"=dword:[0-9a-fA-F]+/"Resolution_h2981718891"=dword:00000000/' \
             "$REG_FILE"
         fi
 
