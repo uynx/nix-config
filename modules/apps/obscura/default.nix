@@ -7,7 +7,7 @@
 {
   flake.nixosModules.obscura = moduleWithSystem (
     { inputs', ... }:
-    { pkgs, lib, ... }:
+    { pkgs, ... }:
     let
       upstream = inputs'.obscuravpn.packages;
 
@@ -73,6 +73,12 @@
       obscura-gui-desktop = pkgs.runCommand "obscura-gui-desktop" { } ''
         install -Dm444 ${inputs.obscuravpn}/linux/common/net.obscura.vpn.gui.desktop \
           $out/share/applications/net.obscura.vpn.gui.desktop
+
+        # The tray icon lives in the GUI process, so the only way to have one is to
+        # run the GUI. /etc/xdg is not on XDG_CONFIG_DIRS here — the autostart
+        # generator scans the system profile's copy of it, which this lands in.
+        install -Dm444 ${inputs.obscuravpn}/linux/common/net.obscura.vpn.gui.desktop \
+          $out/etc/xdg/autostart/net.obscura.vpn.gui.desktop
         for px in 64 128 256; do
           install -Dm444 ${inputs.obscuravpn}/linux/common/icons/''${px}x''${px}/net.obscura.vpn.gui.png \
             $out/share/icons/hicolor/''${px}x''${px}/apps/net.obscura.vpn.gui.png
@@ -130,17 +136,6 @@
         # restarts it after the switch instead, where nothing else is waiting.
         restartIfChanged = false;
 
-        # auto_connect is daemon-owned state with no CLI or service flag, and the
-        # daemon rewrites the whole file on shutdown, so it has to be re-asserted
-        # here on every start. Redirecting into the original path rather than
-        # renaming a temp file over it keeps the file's mode and owner.
-        preStart = ''
-          cfg=/var/lib/obscura/config.json
-          [ -e "$cfg" ] || exit 0
-          patched=$(${lib.getExe pkgs.jq} '.auto_connect = true' "$cfg") \
-            && printf '%s' "$patched" > "$cfg"
-        '';
-
         serviceConfig = {
           ExecStart = "${obscura}/bin/obscura service --dns network-manager";
           # The daemon binds /run/obscura.sock without chowning it, so the socket
@@ -169,6 +164,32 @@
         };
       };
 
+      # The daemon can never bring up its own tunnel at boot: the Linux service
+      # hands Manager::new force_init_inactive = true, which clears the persisted
+      # `tunnel_active` before the socket is even served, and `auto_connect` is
+      # read only by the Apple and Android clients. Do not go back to patching
+      # `auto_connect` into config.json — nothing on this platform reads it.
+      systemd.services.obscura-connect = {
+        description = "Obscura VPN tunnel";
+        wantedBy = [ "multi-user.target" ];
+        requires = [ "obscura.service" ];
+        after = [ "obscura.service" ];
+
+        # A switch would otherwise stop and start this mid-activation, and the
+        # command below blocks, so an offline machine would stall there.
+        restartIfChanged = false;
+
+        serviceConfig = {
+          Type = "oneshot";
+          # `connect` sets the target state over IPC and only then blocks watching
+          # status, so the timeout cuts the watching short, not the request — the
+          # daemon keeps retrying the tunnel on its own afterwards.
+          ExecStart = "${obscura}/bin/obscura connect";
+          TimeoutStartSec = 90;
+          SuccessExitStatus = "SIGTERM";
+        };
+      };
+
       # Membership belongs beside the group, not in `system/user.nix`: a host
       # without this bundle would otherwise name a group nothing declares.
       users.groups.obscura = { };
@@ -181,9 +202,9 @@
   flake.homeModules.obscura = {
     # obscura.service is restartIfChanged = false, so a switch is the one thing
     # that never lands a new daemon binary. It has to run after the switch:
-    # restarting it during one deadlocks activation. The restart leaves the
-    # tunnel down even though `auto_connect` is re-asserted in preStart, so ask
-    # for the tunnel explicitly rather than relying on daemon-owned state.
+    # restarting it during one deadlocks activation. A restarted daemon always
+    # comes back disconnected, and obscura-connect.service only runs at boot, so
+    # the tunnel has to be asked for again here.
     shellHooks.rebPostSwitch = ''
       sudo systemctl try-restart obscura.service
       obscura connect
