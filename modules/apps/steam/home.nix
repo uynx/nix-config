@@ -565,15 +565,15 @@
                /usr/share/guestos/fex-mesa
            }'
 
-        ${steam-compat-config}/bin/steam-compat-config 32440 proton_10
         # Native aarch64 Wine, with FEX translating only the game's own x86.
-        # Both of these stalled under the old stack and run under this one.
-        ${steam-compat-config}/bin/steam-compat-config 674940 proton-experimental-arm64
-        ${steam-compat-config}/bin/steam-compat-config 3540 proton-experimental-arm64
-        # Hogwarts is pinned to the 2023 build, which spins forever in ntdll
-        # under Proton 10. Proton 8 is the closest release to that build that
-        # still starts it. Do not "upgrade" this to match the other games.
-        ${steam-compat-config}/bin/steam-compat-config 990080 proton_8
+        # Everything that stalled under the emulated x86 Proton runs on this.
+        # Hogwarts kept a proton_8 pin because the 2023 build it runs spins
+        # forever in ntdll under Proton *10* — that was the x86 build, so this
+        # is a genuine retest rather than an "upgrade"; put the pin back if it
+        # hangs, and expect Steam to rebuild the prefix on the version change.
+        for APP in 32440 3540 674940 990080; do
+          ${steam-compat-config}/bin/steam-compat-config "$APP" proton-experimental-arm64
+        done
 
         # The 2023 build refuses to start unless the VC++ redistributable is
         # registered, though Wine's builtin runtime DLLs serve it fine. Steam
@@ -769,13 +769,7 @@
         trap cleanup_launch EXIT
 
         case "$APP_ID" in
-          32440)
-            ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton_10
-            ;;
-          990080)
-            ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton_8
-            ;;
-          674940|3540)
+          32440|3540|674940|990080)
             ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton-experimental-arm64
             ;;
         esac
