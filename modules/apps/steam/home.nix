@@ -943,14 +943,14 @@
           -exec cp {} "$APPLICATIONS/" \;
       '';
 
-      steam-menu = pkgs.writeShellScriptBin "steam-menu" ''
+      steam-menu = pkgs.writers.writeDashBin "steam-menu" ''
         ${steam-game-entries}/bin/steam-game-entries
         exec ${pkgs.noctalia-shell}/bin/noctalia-shell ipc call launcher toggle
       '';
 
       # Bound to Mod+W and Mod+Q. niri's close-window is wrong for Steam: closing
       # the XWayland window leaves Proton and the game running headless in the VM.
-      close-active = pkgs.writeShellScriptBin "close-active" ''
+      close-active = pkgs.writers.writeDashBin "close-active" ''
         set -eu
 
         ACTIVE=$(${N} msg -j focused-window 2>/dev/null || echo '{}')
