@@ -552,15 +552,6 @@
           ${steam-compat-config}/bin/steam-compat-config "$APP" proton-experimental-arm64
         done
 
-        # The 2023 build refuses to start unless the VC++ redistributable is
-        # registered, though Wine's builtin runtime DLLs serve it fine. Steam
-        # rebuilds this prefix whenever the Proton version changes and takes
-        # the keys with it, so re-assert them on every launch.
-        HL_REG=${guest}/.local/share/Steam/steamapps/compatdata/990080/pfx/system.reg
-        if [ -f "$HL_REG" ] && ! ${pkgs.gnugrep}/bin/grep -q 'VC\\\\Runtimes' "$HL_REG"; then
-          printf '\n[Software\\\\Microsoft\\\\VisualStudio\\\\14.0\\\\VC\\\\Runtimes\\\\x64] %s\n"Installed"=dword:00000001\n"Major"=dword:0000000e\n"Minor"=dword:00000026\n"Bld"=dword:0000816a\n"RBld"=dword:00000000\n"Version"="14.38.33130.0"\n' \
-            "$(${pkgs.coreutils}/bin/date +%s)" >>"$HL_REG"
-        fi
 
         STEAM_ROOT=${steam}
         STEAM_HOME=${guest}/.steam
@@ -597,17 +588,6 @@
           esac
         fi
 
-        # Hogwarts is pinned to the 2023 build its mods need; an online client
-        # repatches it to current on every -applaunch. Only ever force offline,
-        # never force online: an online client also installs Valve's FEX compat
-        # tool, which has no RootFS here and breaks every Proton game.
-        LOGINUSERS=${steam}/config/loginusers.vdf
-        if [ "$APP_ID" = 990080 ] && [ -f "$LOGINUSERS" ]; then
-          ${pkgs.gnused}/bin/sed -i \
-            -e 's/\("WantsOfflineMode"[[:space:]]*"\)[01]/\11/' \
-            -e 's/\("SkipOfflineModeWarning"[[:space:]]*"\)[01]/\11/' \
-            "$LOGINUSERS"
-        fi
 
         # Only the aarch64 Proton path gets the HUD: the x86 one draws through
         # the read-only FEX rootfs, which carries no MangoHud to load. Games see
