@@ -53,12 +53,14 @@
               IMAGE=localhost/steam-asahi:44
               CFILE=Containerfile
               INI=distrobox.ini
+              OTHER=steam-asahi-arch
               ;;
             arch)
               CONTAINER=steam-asahi-arch
               IMAGE=localhost/steam-asahi-arch:1
               CFILE=Containerfile.arch
               INI=distrobox-arch.ini
+              OTHER=steam-asahi
               ;;
             *)
               printf 'unknown STEAM_VARIANT: %s\n' "''${STEAM_VARIANT:-}" >&2
@@ -540,6 +542,11 @@
         steam_variant
 
         APP_ID=''${1:-}
+
+        # Both variants mount the same guest home, so a second client on it
+        # would fight this one over the library and every prefix.
+        ${pkgs.docker}/bin/docker container stop --time 5 "$OTHER" >/dev/null 2>&1 || true
+
         ${steam-asahi-bootstrap}/bin/steam-asahi-bootstrap
 
         # Steam's FEX compat tool expects the OS to supply a combined FEX+Mesa
@@ -558,12 +565,19 @@
             | ${pkgs.coreutils}/bin/sha256sum -c -
           ${pkgs.coreutils}/bin/mv "$ROOTFS.part" "$ROOTFS"
         fi
+        # The MangoHud layer comes from the nix store rather than either image's
+        # package manager: /nix is visible in both containers, and asahi-alarm
+        # has no mangohud at all. It must sit in the standard layer directory —
+        # pressure-vessel only captures layers it finds on that search path.
         ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- sudo sh -c \
           'grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
              mkdir -p /usr/share/guestos/fex-mesa
              mount -o loop,ro /home/uynx/.local/share/steam-asahi/ArchLinux.ero \
                /usr/share/guestos/fex-mesa
-           }'
+           }
+           install -Dm444 \
+             ${pkgs.mangohud}/share/vulkan/implicit_layer.d/MangoHud.aarch64.json \
+             /usr/share/vulkan/implicit_layer.d/MangoHud.aarch64.json'
 
         # Native aarch64 Wine, with FEX translating only the game's own x86.
         # Everything that stalled under the emulated x86 Proton runs on this.
@@ -632,8 +646,11 @@
             "$LOGINUSERS"
         fi
 
+        # Only the aarch64 Proton path gets the HUD: the x86 one draws through
+        # the read-only FEX rootfs, which carries no MangoHud to load.
         set -- /usr/bin/muvm \
           -e "BROWSER=$GUEST_BIN/xdg-open" \
+          -e "MANGOHUD=''${STEAM_HUD:-1}" \
           --gpu-mode=venus
         if [ "$APP_ID" = 990080 ]; then
           # Hogwarts otherwise grows Venus past this 16 GiB host's headroom.
