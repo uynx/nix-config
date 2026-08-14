@@ -221,8 +221,17 @@
         fi
         if [ "$REPLACE" = 1 ] || \
            { [ -n "''${CONTAINER_IMAGE_ID:-}" ] && [ "$CONTAINER_IMAGE_ID" != "$IMAGE_ID" ]; }; then
+          # Not `--replace`: docker rm returns before the removal completes, so
+          # distrobox's immediate create loses the race and leaves a container
+          # it never runs its user-adding init on. Every later enter then fails
+          # with "unable to find user uynx: no matching entries in passwd file".
+          ${pkgs.docker}/bin/docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+          for _ in $(${pkgs.coreutils}/bin/seq 1 60); do
+            ${pkgs.docker}/bin/docker container inspect "$CONTAINER" \
+              >/dev/null 2>&1 || break
+            sleep 1
+          done
           ${pkgs.distrobox}/bin/distrobox assemble create \
-            --replace \
             --file "$SOURCE/$INI"
         fi
 
