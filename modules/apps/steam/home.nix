@@ -3,7 +3,6 @@
     {
       pkgs,
       lib,
-      inputs,
       config,
       ...
     }:
@@ -47,11 +46,6 @@
         CFILE=Containerfile
         INI=distrobox.ini
       '';
-      x86-pkgs = import inputs.nixpkgs {
-        system = "x86_64-linux";
-        config.allowUnfree = true;
-      };
-      x86-libgcc = x86-pkgs.stdenv.cc.cc.lib;
       steam-asahi-doctor = pkgs.writeShellScriptBin "steam-asahi-doctor" ''
         set -eu
         ${shellHelpers}
@@ -65,8 +59,7 @@
 
         # Read out of the Containerfile rather than restated: a second copy of
         # the NEVRA list is one more thing to edit on every Fedora bump. Stops
-        # at the first `dnf clean all`, so the box64 build deps removed in the
-        # next layer never enter the list.
+        # at the first `dnf clean all` so only the base install list is read.
         ${pkgs.gawk}/bin/awk '
           /dnf install -y/ { f = 1 }
           f && /fc44/ { gsub(/['"'"' \\&]/, ""); print }
@@ -80,8 +73,6 @@
           test -e /usr/lib64/libvulkan_asahi.so
         ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
           test -x /opt/steam-arm64/steamrtarm64/steam
-        ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
-          test -x /usr/local/bin/box64
         printf '%s\n' "Steam Asahi container checks passed."
       '';
 
@@ -543,11 +534,8 @@
              ${pkgs.gtk2}/lib/libgdk-x11-2.0.so.0 /usr/lib/'
 
         # Native aarch64 Wine, with FEX translating only the game's own x86.
-        # Everything that stalled under the emulated x86 Proton runs on this.
-        # Hogwarts kept a proton_8 pin because the 2023 build it runs spins
-        # forever in ntdll under Proton *10* — that was the x86 build, so this
-        # is a genuine retest rather than an "upgrade"; put the pin back if it
-        # hangs, and expect Steam to rebuild the prefix on the version change.
+        # Every game runs on this; the old per-game pins and the Box64 tool it
+        # replaced were all working around the emulated x86 Proton instead.
         for APP in 32440 3540 674940 990080; do
           ${steam-compat-config}/bin/steam-compat-config "$APP" proton-experimental-arm64
         done
@@ -982,69 +970,6 @@
           text = ''
             // Venus can lose CS2's player-occlusion query pool during match load.
             r_csgo_player_occlusion_query 0
-          '';
-        };
-        "${steamRel}/compatibilitytools.d/Box64-StickFight/compatibilitytool.vdf".text = ''
-          "compatibilitytools"
-          {
-            "compat_tools"
-            {
-              "box64_stickfight"
-              {
-                "install_path" "."
-                "display_name" "Box64 Stick Fight"
-                "from_oslist" "windows"
-                "to_oslist" "linux"
-              }
-            }
-          }
-        '';
-        "${steamRel}/compatibilitytools.d/Box64-StickFight/toolmanifest.vdf".text = ''
-          "manifest"
-          {
-            "commandline" "/proton run"
-            "commandline_getnativepath" "/proton getnativepath"
-            "commandline_getcompatpath" "/proton getcompatpath"
-            "commandline_waitforexitandrun" "/proton waitforexitandrun"
-          }
-        '';
-        "${steamRel}/compatibilitytools.d/Box64-StickFight/proton" = {
-          executable = true;
-          text = ''
-            #!/bin/sh
-            set -eu
-
-            ACTION=''${1:-run}
-            [ "$#" -eq 0 ] || shift
-            case "$ACTION" in
-              getnativepath|getcompatpath)
-                printf '%s\n' "''${1:-}"
-                exit 0
-                ;;
-              run|waitforexitandrun)
-                ;;
-              *)
-                exit 2
-                ;;
-            esac
-            [ "$#" -gt 0 ]
-            GAME=$1
-            export MESA_LOADER_DRIVER_OVERRIDE=zink
-            export VK_DRIVER_FILES=/usr/share/vulkan/icd.d/virtio_icd.aarch64.json
-            PROTON=${steam}/steamapps/common/Proton\ 10.0/files
-            export WINEPREFIX=${steam}/steamapps/compatdata/674940/pfx
-            export WINEDEBUG=-all
-            export WINEDLLPATH="$PROTON/lib/vkd3d:$PROTON/lib/wine"
-            export LD_LIBRARY_PATH="$PROTON/lib/x86_64-linux-gnu:$PROTON/lib/i386-linux-gnu:${x86-libgcc}/lib:/usr/lib64:/usr/lib:''${LD_LIBRARY_PATH:-}"
-            unset LD_PRELOAD
-            export SteamAppId=674940
-            export SteamGameId=674940
-            export BOX64_DYNAREC_STRONGMEM=1
-            export BOX64_DYNAREC_BIGBLOCK=0
-            export BOX64_NOGTK=1
-
-            exec /usr/local/bin/box64 "$PROTON/bin/wine" \
-              "$GAME" -force-d3d9 -popupwindow -screen-fullscreen 0
           '';
         };
       };

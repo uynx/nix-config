@@ -71,13 +71,15 @@ games:
   and Wine custom cursors disabled so pointer coordinates remain 1:1. Game
   watcher compositor-fullscreens that desktop too, leaving no windowed layer.
 - LEGO Star Wars: The Complete Saga (32440): exact monitor dimensions written
-  to `pcconfig.txt`; the launcher enforces the working Proton 10 compatibility
-  mapping before Steam starts. Experimental and Proton 11 render menus but not
-  the 3D scene on this Asahi/Venus stack.
-- Hogwarts Legacy (990080): Proton 10 compatibility mapping. Every main Steam
-  VM raises guest `vm.max_map_count` to `1048576` before launch; Proton warns
-  the muvm default of `65530` can prevent games from working. It also receives
-  a 4 GiB Venus VRAM budget so the renderer cannot exhaust this 16 GiB host.
+  to `pcconfig.txt`.
+- Hogwarts Legacy (990080): a 4 GiB Venus VRAM budget so the renderer cannot
+  exhaust this 16 GiB host, plus its own FEX config for Denuvo. Every main
+  Steam VM raises guest `vm.max_map_count` to `1048576` before launch; Proton
+  warns the muvm default of `65530` can prevent games from working.
+
+Compatibility tool is no longer per-game: every title is mapped to
+`proton-experimental-arm64`, which replaced the Proton 8/10 pins and the
+bespoke Box64 tool Stick Fight used to need.
 
 Modern or unknown games receive only the safe common defaults. Add a per-game
 exception to the `case` logic in `hosts/uynx/home.nix` only after proving that
