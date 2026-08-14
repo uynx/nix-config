@@ -104,4 +104,15 @@ in
       };
     }
   );
+
+  flake.homeModules.niri = {
+    shellHooks.rebPostSwitch = ''
+      if type -q niri; and niri msg version >/dev/null 2>&1
+          set -l niri_cfg (grep -o "/nix/store/[^\" ]*-niri-config.kdl" (type -p niri) | head -n1)
+          if test -n "$niri_cfg"
+              niri msg action load-config-file --path $niri_cfg
+          end
+      end
+    '';
+  };
 }
