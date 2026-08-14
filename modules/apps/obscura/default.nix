@@ -216,10 +216,12 @@
       switch "$argv[1]"
           case fix
               sudo systemctl restart obscura.service
+              obscura connect
           case off
               sudo systemctl stop obscura.service obscura-lockdown.service
           case on
               sudo systemctl start obscura-lockdown.service obscura.service
+              obscura connect
           case '*'
               echo "vpn fix  restart the daemon, kill switch stays on"
               echo "vpn off  daemon and kill switch off — unprotected network"
