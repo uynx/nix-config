@@ -587,7 +587,7 @@
         set -- /usr/bin/muvm \
           -e "BROWSER=$GUEST_BIN/xdg-open" \
           -e "MANGOHUD=''${STEAM_HUD:-1}" \
-          -e "MANGOHUD_CONFIG=position=top-right,font_size=''${STEAM_HUD_FONT:-32}" \
+          -e "MANGOHUD_CONFIG=font_size=''${STEAM_HUD_FONT:-48}" \
           --gpu-mode=venus
         # Proton writes ~/steam-<appid>.log in the guest home when this is set.
         if [ -n "''${STEAM_PROTON_LOG:-}" ]; then
