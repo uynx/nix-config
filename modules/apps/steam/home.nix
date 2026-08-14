@@ -583,7 +583,7 @@
           set -- "$@" -e "PROTON_LOG=1"
         fi
         if [ "$APP_ID" = 990080 ]; then
-          set -- "$@" --vram=2048
+          set -- "$@" --vram=4096
           # Per-game FEX tuning. Passed here rather than through Steam's launch
           # options, which live in localconfig.vdf and are rewritten by Steam.
         fi
