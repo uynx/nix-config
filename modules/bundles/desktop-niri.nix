@@ -13,6 +13,7 @@
         screenUtils
       ];
       home = with self.homeModules; [
+        niri
         noctalia
         theme
         screenUtils
