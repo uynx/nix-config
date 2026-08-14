@@ -8,12 +8,12 @@
     "hash": "sha256-TQm/AAWXdo36BwsOfGEvD8JYrH+rNk5XAQTqYl+RhUY="
   },
   "grok": {
-    "version": "1.0.3",
-    "hash": "sha256-7USVDquQVztvR1GR9XkXE6VpQ5ObO5pi4/TpXt0UrNk="
+    "version": "1.0.4",
+    "hash": "sha256-CK9SSZ97SkoJTGXslgvp+GLiUoobII5RQd65jB2FOI8="
   },
   "kimi": {
-    "version": "0.36.0",
-    "hash": "sha256-f8OHY7w+nXctMBbBsElPYC0whL2Yc8em2ITs6s9wEwA="
+    "version": "0.36.1",
+    "hash": "sha256-pI6Q9Jys7mADELSuu4ffQXv3r5/D3cKC5yHZ+4ETkaA="
   },
   "opencode": {
     "version": "1.18.18",
