@@ -64,26 +64,24 @@ Steam, FEX, and muvm. On a game, it preserves Steam when a Steam window or
 another game exists; otherwise it stops the headless container. On other
 windows it retains normal close behavior.
 
-Legacy settings are intentionally scoped instead of being forced on unknown
-games:
+`steam-launch` has no per-game display handling. Every title maps to
+`proton-experimental-arm64`, replacing the Proton 8/10 pins and the bespoke
+Box64 tool Stick Fight needed, and niri's window rules fullscreen every
+`steam_app_*` window. The launcher used to read the monitor and write that
+resolution into each game's own config format — Wine's virtual desktop for
+Peggle, Unity registry dwords for Stick Fight, `pcconfig.txt` for LEGO Star
+Wars, `cs2_video.txt` for CS2. All of it is gone; restore from git if a game
+comes up on the wrong monitor or at the wrong size.
 
-- Peggle Nights (3540): exact-size Wine virtual desktop, game `ScreenMode=1`,
-  and Wine custom cursors disabled so pointer coordinates remain 1:1. Game
-  watcher compositor-fullscreens that desktop too, leaving no windowed layer.
-- LEGO Star Wars: The Complete Saga (32440): exact monitor dimensions written
-  to `pcconfig.txt`.
+Three exceptions remain, none of them display-related:
+
 - Hogwarts Legacy (990080): a 4 GiB Venus VRAM budget so the renderer cannot
-  exhaust this 16 GiB host, plus its own FEX config for Denuvo. Every main
-  Steam VM raises guest `vm.max_map_count` to `1048576` before launch; Proton
-  warns the muvm default of `65530` can prevent games from working.
-
-Compatibility tool is no longer per-game: every title is mapped to
-`proton-experimental-arm64`, which replaced the Proton 8/10 pins and the
-bespoke Box64 tool Stick Fight used to need.
-
-Modern or unknown games receive only the safe common defaults. Add a per-game
-exception to the `case` logic in `hosts/uynx/home.nix` only after proving that
-the common path is insufficient.
+  exhaust this 16 GiB host, plus its own FEX config for Denuvo's 16-byte
+  atomics. Every main Steam VM raises guest `vm.max_map_count` to `1048576`;
+  Proton warns the muvm default of `65530` can prevent games working.
+- CS2 (730): `r_csgo_player_occlusion_query 0`, because Venus can lose the
+  occlusion query pool during match load. Also the one title deliberately
+  *not* mapped to Proton — it is a native Linux build.
 
 ## What remains mutable
 

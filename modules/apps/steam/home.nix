@@ -35,12 +35,6 @@
           ' >/dev/null 2>&1
         }
 
-        # niri opens windows on the focused output, so this cannot disagree
-        # with where the window ends up — unlike naming a connector.
-        target_output() {
-          ${N} msg -j focused-output 2>/dev/null
-        }
-
         CONTAINER=steam-asahi
         IMAGE=localhost/steam-asahi:44
         CFILE=Containerfile
@@ -682,8 +676,9 @@
         any_steam_window || ${steam-asahi-stop}/bin/steam-asahi-stop
       '';
 
-      # Match Wine's virtual desktop and each game's own config to the target
-      # monitor's exact size, then hand off to the client.
+      # No per-game display handling: niri's window rules fullscreen every
+      # steam_app_* window, and ARM64 Proton removed the reason the games each
+      # needed their resolution written into their own config format.
       steam-launch = pkgs.writeShellScriptBin "steam-launch" ''
         set -eu
         ${shellHelpers}
@@ -726,112 +721,6 @@
             ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton-experimental-arm64
             ;;
         esac
-
-        # Mode, not `logical`: these are X11 clients and xwayland-satellite does
-        # not scale, so they see raw pixels (3024x1890, not 1512x945). Hyprland's
-        # XWayland did scale, which is why logical was right before and is not now.
-        OUTPUT=$(target_output)
-        if ! RESOLUTION=$(printf '%s' "$OUTPUT" | ${J} -er '
-          .modes[.current_mode] | select(.width > 0 and .height > 0)
-          | "\(.width)x\(.height)"
-        ' 2>/dev/null); then
-          ${pkgs.libnotify}/bin/notify-send \
-            "Steam game not launched" \
-            "Could not read the target monitor resolution from niri."
-          exit 1
-        fi
-        WIDTH=''${RESOLUTION%x*}
-        HEIGHT=''${RESOLUTION#*x}
-
-        if [ "$APP_ID" = 730 ]; then
-          CS2_VIDEO=${steam}/userdata/483670283/730/local/cfg/cs2_video.txt
-          # CS2 indexes monitors in X's enumeration order, i.e. left to right.
-          CS2_MONITOR=$(${N} msg -j outputs 2>/dev/null | ${J} -r \
-            --arg name "$(printf '%s' "$OUTPUT" | ${J} -r '.name')" '
-              [to_entries[] | select(.value.logical) | {name: .key, x: .value.logical.x}]
-              | sort_by(.x) | map(.name) | index($name) // 0
-            ' 2>/dev/null || echo 0)
-          # niri reports refresh rate in millihertz; Hyprland reported Hz.
-          CS2_REFRESH=$(printf '%s' "$OUTPUT" | ${J} -r '
-            (.modes[.current_mode].refresh_rate / 1000) | round
-          ' 2>/dev/null || echo 60)
-          if [ -f "$CS2_VIDEO" ]; then
-            sed -i -E \
-              -e "s/(\"setting.defaultres\"[[:space:]]+\")[0-9]+/\1$WIDTH/" \
-              -e "s/(\"setting.defaultresheight\"[[:space:]]+\")[0-9]+/\1$HEIGHT/" \
-              -e "s/(\"setting.refreshrate_numerator\"[[:space:]]+\")[0-9]+/\1$((CS2_REFRESH * 1000))/" \
-              -e 's/("setting.refreshrate_denominator"[[:space:]]+")[0-9]+/\11000/' \
-              -e "s/(\"setting.monitor_index\"[[:space:]]+\")[0-9]+/\1$CS2_MONITOR/" \
-              -e 's/("setting.aspectratiomode"[[:space:]]+")[0-9]+/\11/' \
-              "$CS2_VIDEO"
-          fi
-        fi
-
-        COMPAT="${steam}/steamapps/compatdata"
-        PREFIX="$COMPAT/''${APP_ID}/pfx"
-        REG_FILE="$PREFIX/user.reg"
-        if [ "$APP_ID" = 3540 ] && [ -f "$REG_FILE" ]; then
-          STAMP=$(date +%s)
-          # An older version of this helper let printf eat the registry
-          # backslashes; drop those malformed sections before writing real keys.
-          sed -i -E \
-            -e '/^\[SoftwareWineExplorer\]/,/^$/d' \
-            -e '/^\[SoftwareWineExplorerDesktops\]/,/^$/d' \
-            "$REG_FILE"
-          if ! grep -Fq '[Software\\Wine\\Explorer]' "$REG_FILE"; then
-            printf '\n%s %s\n#time=%s\n"Desktop"="Default"\n' \
-              '[Software\\Wine\\Explorer]' "$STAMP" "$STAMP" >>"$REG_FILE"
-          fi
-          if grep -Fq '[Software\\Wine\\Explorer\\Desktops]' "$REG_FILE"; then
-            sed -i -E \
-              -e "s/\"Default\"=\"[0-9]+x[0-9]+\"/\"Default\"=\"''$RESOLUTION\"/g" \
-              -e "s/\"Peggle\"=\"[0-9]+x[0-9]+\"/\"Peggle\"=\"''$RESOLUTION\"/g" \
-              "$REG_FILE"
-          else
-            printf '\n%s %s\n#time=%s\n"Default"="%s"\n"Peggle"="%s"\n' \
-              '[Software\\Wine\\Explorer\\Desktops]' \
-              "$STAMP" "$STAMP" "$RESOLUTION" "$RESOLUTION" >>"$REG_FILE"
-          fi
-          sed -i -E \
-            -e 's/"ScreenMode"=dword:[0-9a-fA-F]+/"ScreenMode"=dword:00000001/' \
-            -e 's/"CustomCursors"=dword:[0-9a-fA-F]+/"CustomCursors"=dword:00000000/' \
-            "$REG_FILE"
-        fi
-
-        # Three keys, none of which the game can be trusted to set itself. The
-        # Screenmanager pair is the window, and follows the monitor like every
-        # other game here; this stack's display query hands Unity a zero width
-        # it then persists, and `Resolution` 0 ("follow the desktop") makes it
-        # ask that same broken query and fall back to 640x480. Fullscreen must
-        # stay 0: Unity locks the cursor in fullscreen and xwayland-satellite
-        # does not honour the constraint, which freezes the pointer outright.
-        if [ "$APP_ID" = 674940 ] && [ -f "$REG_FILE" ]; then
-          sed -i -E \
-            -e "s/(\"Screenmanager Resolution Width_h182942802\"=dword:)[0-9a-fA-F]+/\1$(printf '%08x' "$WIDTH")/" \
-            -e "s/(\"Screenmanager Resolution Height_h2627697771\"=dword:)[0-9a-fA-F]+/\1$(printf '%08x' "$HEIGHT")/" \
-            -e 's/"Screenmanager Is Fullscreen mode_h3981298716"=dword:[0-9a-fA-F]+/"Screenmanager Is Fullscreen mode_h3981298716"=dword:00000000/' \
-            -e 's/"Resolution_h2981718891"=dword:[0-9a-fA-F]+/"Resolution_h2981718891"=dword:00000026/' \
-            "$REG_FILE"
-        fi
-
-        PC_CONFIG=
-        if [ "$APP_ID" = 32440 ]; then
-          PC_CONFIG=$(find "$PREFIX/drive_c/users/steamuser/AppData/Local" \
-            -type f -name pcconfig.txt -print -quit 2>/dev/null || true)
-        fi
-        if [ -n "$PC_CONFIG" ] && [ -f "$PC_CONFIG" ]; then
-          chmod u+w "$PC_CONFIG"
-          sed -i -E \
-            -e "s/^ScreenWidth[[:space:]]+[0-9]+/ScreenWidth            ''$WIDTH/" \
-            -e "s/^ScreenHeight[[:space:]]+[0-9]+/ScreenHeight           ''$HEIGHT/" \
-            -e "s/^WindowWidth[[:space:]]+[0-9]+/WindowWidth            ''$WIDTH/" \
-            -e "s/^WindowHeight[[:space:]]+[0-9]+/WindowHeight           ''$HEIGHT/" \
-            -e "s/^WindowLeft[[:space:]]+[0-9]+/WindowLeft             0/" \
-            -e "s/^WindowTop[[:space:]]+[0-9]+/WindowTop              0/" \
-            -e "s/^Widescreen[[:space:]]+[0-9]+/Widescreen             1/" \
-            "$PC_CONFIG"
-          chmod u-w "$PC_CONFIG"
-        fi
 
         ${pkgs.util-linux}/bin/setsid \
           ${steam-game-watch}/bin/steam-game-watch "$APP_ID" "$LOCK" \
