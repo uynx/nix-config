@@ -595,7 +595,9 @@
         fi
         if [ "$APP_ID" = 990080 ]; then
           # Hogwarts otherwise grows Venus past this 16 GiB host's headroom.
-          set -- "$@" --vram=4096
+          # Do not raise. 4096 was tried 2026-08-14 for the video atlas and the
+          # game began crashing ~35 s into load; 2048 is the value that holds.
+          set -- "$@" --vram=2048
           # Per-game FEX tuning. Passed here rather than through Steam's launch
           # options, which live in localconfig.vdf and are rewritten by Steam.
           set -- "$@" -e "FEX_APP_CONFIG=${fex-hogwarts-config}"
