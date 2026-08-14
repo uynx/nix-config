@@ -17,12 +17,6 @@ input {
         accel-speed -0.2
         scroll-factor 0.7
 
-        // The Apple trackpad is wide enough that a resting palm sits on it while
-        // typing, and with bare `tap` every brush registers a click and drops the
-        // cursor wherever the palm is. dwt gates the touchpad for a moment after
-        // each keystroke, which is the actual palm-rejection lever niri exposes.
-        dwt
-
         // Decide a click by how many fingers are down rather than by which half
         // of the pad was pressed. On a trackpad this size, the bottom-corner
         // model reads a resting palm as a held right-click.
