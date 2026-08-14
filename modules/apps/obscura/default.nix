@@ -181,6 +181,10 @@
 
         serviceConfig = {
           Type = "oneshot";
+          # Without this the unit is inactive the moment it finishes, so every switch
+          # starts it again — and on a version bump that runs the new CLI against the
+          # daemon restartIfChanged deliberately left old, which fails the whole switch.
+          RemainAfterExit = true;
           # `connect` sets the target state over IPC and only then blocks watching
           # status, so the timeout cuts the watching short, not the request — the
           # daemon keeps retrying the tunnel on its own afterwards.
