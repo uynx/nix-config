@@ -14,6 +14,7 @@
         # half of the bundle casks OBS instead.
         ++ lib.optionals stdenv.hostPlatform.isLinux [
           (obs-studio.override { browserSupport = false; })
+          obs-cmd
           v4l-utils
         ];
     };
