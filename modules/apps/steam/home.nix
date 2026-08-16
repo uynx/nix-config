@@ -586,7 +586,7 @@
         # renders at half the size it looks like it should on this display.
         set -- /usr/bin/muvm \
           -e "BROWSER=$GUEST_BIN/xdg-open" \
-          -e "MANGOHUD=''${STEAM_HUD:-1}" \
+          -e "MANGOHUD=''${STEAM_HUD:-0}" \
           -e "MANGOHUD_CONFIG=font_size=''${STEAM_HUD_FONT:-48}" \
           --gpu-mode=venus
         # Proton writes ~/steam-<appid>.log in the guest home when this is set.
