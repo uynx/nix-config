@@ -173,5 +173,8 @@ binds {
     Mod+Ctrl+S  { screenshot-screen; }
     Mod+Alt+S   { screenshot-window; }
 
+    Mod+Ctrl+R { spawn "sh" "-c" "sleep 3 && obs-cmd -w 'obsws://192.168.1.135:4455' recording start"; }
+    Mod+Alt+R  { spawn "obs-cmd" "-w" "obsws://192.168.1.135:4455" "recording" "stop"; }
+
     Mod+Shift+Q { quit; }
 }
