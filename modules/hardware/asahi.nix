@@ -31,10 +31,19 @@
       # watchdog reboot after a hang leaves it readable in /sys/fs/pstore.
       # no_console_suspend is required or nothing is recorded across the
       # suspend/resume window, which is the window under investigation.
-      kernelModules = [ "ramoops" ];
+      initrd.kernelModules = [
+        "lz4"
+        "lz4_compress"
+      ];
+      kernelModules = [
+        "ramoops"
+        "lz4"
+        "lz4_compress"
+      ];
       kernelParams = [
         "zswap.enabled=1"
-        "zswap.compressor=zstd"
+        "zswap.compressor=lz4"
+        "zswap.max_pool_percent=25"
         "zswap.shrinker_enabled=1"
         "reserve_mem=8M:16384:oops"
         "ramoops.mem_name=oops"
