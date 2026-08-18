@@ -185,15 +185,14 @@
       "locked": {
         "lastModified": 1785627969,
         "narHash": "sha256-4dtXQk/NMePegK/nWp5NSeuZKLATItOq61lpEvmXqGw=",
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
         "rev": "427bf4bd9435fdf21321c8cc628c24efc14c0f7a",
-        "type": "github"
+        "revCount": 483,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/hercules-ci/flake-parts/0.1.483%2Brev-427bf4bd9435fdf21321c8cc628c24efc14c0f7a/019fc124-5bcc-79d1-a1e4-306df724dc0a/source.tar.gz"
       },
       "original": {
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://flakehub.com/f/hercules-ci/flake-parts/0.1.%2A"
       }
     },
     "flake-parts_3": {
@@ -287,15 +286,14 @@
       "locked": {
         "lastModified": 1786999651,
         "narHash": "sha256-MTGMFlLDTklsXhCp4r5GXB4VAVadPdalXLvUjd/K7h0=",
-        "owner": "nix-community",
-        "repo": "home-manager",
         "rev": "353742587cbaf079b3caee743115d037bc51fea6",
-        "type": "github"
+        "revCount": 7165,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/nix-community/home-manager/0.1.7165%2Brev-353742587cbaf079b3caee743115d037bc51fea6/01a01195-9c65-74d3-9077-b591e1817968/source.tar.gz"
       },
       "original": {
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://flakehub.com/f/nix-community/home-manager/0.1.%2A"
       }
     },
     "import-tree": {
@@ -383,15 +381,14 @@
       "locked": {
         "lastModified": 1786845137,
         "narHash": "sha256-oQFip+v0luP8NIxJzmiW4Wu8bILsbFWom5l0zonl8hQ=",
-        "owner": "nix-darwin",
-        "repo": "nix-darwin",
         "rev": "4cff07de74b50e64bdd68cd4e722ab5b6b35ee48",
-        "type": "github"
+        "revCount": 2406,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/nix-darwin/nix-darwin/0.1.2406%2Brev-4cff07de74b50e64bdd68cd4e722ab5b6b35ee48/01a00885-93b1-7882-80a4-71d83ce85819/source.tar.gz"
       },
       "original": {
-        "owner": "nix-darwin",
-        "repo": "nix-darwin",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.%2A"
       }
     },
     "nix-index-database": {
@@ -721,15 +718,14 @@
       "locked": {
         "lastModified": 1786629091,
         "narHash": "sha256-gkig4nPi1CWc4Z50GBsjE4ygSE7hMpl/TwID2an2Cck=",
-        "owner": "Mic92",
-        "repo": "sops-nix",
         "rev": "a8627b21b9107c5711c96b84f32a9a4b3d45295f",
-        "type": "github"
+        "revCount": 1236,
+        "type": "tarball",
+        "url": "https://api.flakehub.com/f/pinned/Mic92/sops-nix/0.1.1236%2Brev-a8627b21b9107c5711c96b84f32a9a4b3d45295f/019ffb65-6150-7103-92f8-6a032bd9ae17/source.tar.gz"
       },
       "original": {
-        "owner": "Mic92",
-        "repo": "sops-nix",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://flakehub.com/f/Mic92/sops-nix/0.1.%2A"
       }
     },
     "systems": {
