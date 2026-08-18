@@ -44,6 +44,10 @@
     {
       home.packages = [ self'.packages.nvim ];
 
+      # Only `v`: nvf's viAlias/vimAlias already ship `vi` and `vim` as real
+      # binaries in the package.
+      programs.fish.shellAliases.v = "nvim";
+
       # Here rather than per host: the editor is what decides these, and both
       # hosts were restating the same two lines.
       home.sessionVariables = {

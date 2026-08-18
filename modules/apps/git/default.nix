@@ -9,6 +9,12 @@ in
   # user, not one executable, so it belongs in ~/.config/git/config where any
   # git picks it up.
   flake.homeModules.git = {
+    programs.fish.shellAliases = {
+      wt = "git worktree list";
+      wta = "git worktree add";
+      wtr = "git worktree remove";
+    };
+
     programs.gh = {
       enable = true;
       settings = {
