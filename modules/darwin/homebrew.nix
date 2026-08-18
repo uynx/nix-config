@@ -1,3 +1,4 @@
+{ self, ... }:
 {
   # Homebrew is the escape hatch for everything nixpkgs cannot build for macOS:
   # signed .app bundles, notarized installers and the AI vendors' own binaries.
@@ -23,5 +24,9 @@
         cakewallet = 1334702542;
       };
     };
+
+    home-manager.users.${self.lib.user.name}.shellHooks.update = [
+      "brew update && brew upgrade"
+    ];
   };
 }
