@@ -29,8 +29,6 @@
       ];
       # ramoops keeps the kernel log in reserved RAM across a reset, so the
       # watchdog reboot after a hang leaves it readable in /sys/fs/pstore.
-      # no_console_suspend is required or nothing is recorded across the
-      # suspend/resume window, which is the window under investigation.
       initrd.kernelModules = [
         "lz4"
         "lz4_compress"
@@ -52,8 +50,12 @@
         # refuse to load at all, and pstore then records nothing.
         "ramoops.console_size=4194304"
         "ramoops.record_size=1048576"
-        "no_console_suspend"
       ];
+      # zswap keeps most reclaimed anon pages in RAM compressed, so paging one
+      # out is far cheaper than the default 60 assumes. 100 stops the kernel
+      # evicting file cache first. Revert if swap churn ever shows up on disk.
+      kernel.sysctl."vm.swappiness" = 100;
+
       extraModprobeConfig = ''
         options hid_apple iso_layout=0
         options uvcvideo quirks=0x80
@@ -79,25 +81,12 @@
       HandleLidSwitchExternalPower = "lock";
     };
 
-    # tps6598x_resume() never re-reads port status, so after s2idle the Type-C
-    # controller still believes the cable never left and emits no connect event
-    # — and every layer below it (mux, ATC PHY, dwc3 core, DP alt-mode) stays
-    # torn down until a physical replug. tps6598x_probe() *does* do that check,
-    # so rebinding is a replug in software. Rebinding dwc3-apple instead cannot
-    # work: its probe only arms a wait for the connect event that never comes.
-    # 0-003a is the charging port, left alone so resume never renegotiates PD.
-    powerManagement.resumeCommands = ''
-      for d in 0-0038 0-003b 0-003f; do
-        echo "$d" > /sys/bus/i2c/drivers/tps6598x/unbind || true
-        echo "$d" > /sys/bus/i2c/drivers/tps6598x/bind || true
-      done
-    '';
-
     # A wedge becomes a reboot instead of a held power button. systemd pings the
     # SoC watchdog from PID 1, so it fires even when the kernel stops scheduling.
     systemd.settings.Manager.RuntimeWatchdogSec = "2min";
 
-    # Headroom for Hogwarts / muvm guest memory pressure.
+    # Headroom for muvm guest memory pressure; Venus VRAM sits outside the
+    # guest RAM cap, so the host runs out first.
     swapDevices = [
       {
         device = "/swapfile";
