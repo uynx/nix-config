@@ -57,6 +57,10 @@
           fi
           export PATH="$PATH:${home}/.local/bin:${home}/.hermes/bin"
 
+          # hermes' installer pulls unicode-animations, whose postinstall writes
+          # a spinner demo to /dev/tty and never exits unless CI is set.
+          export CI=1
+
           # Counts pins and tools this run could not reach, for the summary at
           # the end. Declared out here so it spans the Linux-only pin section
           # and the rolling installs below, which both feed it.
@@ -166,9 +170,11 @@
             if [ -n "$missingOnly" ] && command -v "$name" >/dev/null 2>&1; then
               return
             fi
-            before=$(get_ver "$name")
+            # `|| true`: errexit plus pipefail would abort the whole run when a
+            # tool is present but its --version fails.
+            before=$(get_ver "$name" || true)
             if err=$("$@" 2>&1); then
-              after=$(get_ver "$name")
+              after=$(get_ver "$name" || true)
               if [ -n "$before" ] && [ -n "$after" ] && [ "$before" = "$after" ]; then
                 printf '  %-12s %s (up to date)\n' "$name" "$after"
               elif [ -n "$before" ] && [ -n "$after" ]; then
@@ -185,7 +191,13 @@
             fi
           }
 
-          roll agy      agy update
+          # `agy update` cannot run before agy exists, so a fresh machine needs
+          # the vendor installer once.
+          if command -v agy >/dev/null 2>&1; then
+            roll agy    agy update
+          else
+            roll agy    sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://antigravity.google/cli/install.sh | bash'
+          fi
           roll openclaw npm install -g --prefix "${home}/.local" openclaw
           roll t3       npm install -g --prefix "${home}/.local" t3
           roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
@@ -199,7 +211,7 @@
             roll hermes sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
               | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
           elif [ -z "$missingOnly" ]; then
-            ver=$(get_ver hermes)
+            ver=$(get_ver hermes || true)
             if hermes update --check 2>&1 | grep -q 'Already up to date'; then
               printf '  %-12s %s (up to date)\n' hermes "$ver"
             else
