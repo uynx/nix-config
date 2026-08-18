@@ -82,14 +82,16 @@ let
     vulkan-loader
     wayland
   ];
+  # Rewritten by `update-privacy-browsers`, which `update` runs.
+  pin = (builtins.fromJSON (builtins.readFile ./pins.json)).mullvad-browser;
 in
 stdenv.mkDerivation rec {
   pname = "mullvad-browser";
-  version = "16.0a9";
+  inherit (pin) version;
 
   src = fetchurl {
     url = "https://dist.torproject.org/mullvadbrowser/${version}/mullvad-browser-linux-aarch64-${version}.tar.xz";
-    hash = "sha256-z94GG0c1L9eZ6A1XaYkEu/CUTCn30imAa9g+6vlbWn8=";
+    inherit (pin) hash;
   };
 
   nativeBuildInputs = [
