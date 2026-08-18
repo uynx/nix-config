@@ -1,5 +1,4 @@
-{ lib, ... }:
-{
+_: {
   flake.nixosModules.hardwareAsahi = {
     hardware.asahi = {
       enable = true;
@@ -17,24 +16,13 @@
         # mid-write with ENOSPC.
         configurationLimit = 10;
       };
-      kernelPatches = [
-        {
-          name = "pstore-console";
-          patch = null;
-          # Without this, ramoops' console_size is silently inert — and the
-          # continuous console log is the only thing that survives a wake-up
-          # hang, since a hang never reaches the oops/panic dumper at all.
-          structuredExtraConfig.PSTORE_CONSOLE = lib.kernel.yes;
-        }
-      ];
-      # ramoops keeps the kernel log in reserved RAM across a reset, so the
-      # watchdog reboot after a hang leaves it readable in /sys/fs/pstore.
+      # lz4 must be in the initrd: zswap picks its compressor at init, and an
+      # absent module silently leaves it on the built-in default.
       initrd.kernelModules = [
         "lz4"
         "lz4_compress"
       ];
       kernelModules = [
-        "ramoops"
         "lz4"
         "lz4_compress"
       ];
@@ -43,13 +31,6 @@
         "zswap.compressor=lz4"
         "zswap.max_pool_percent=25"
         "zswap.shrinker_enabled=1"
-        "reserve_mem=8M:16384:oops"
-        "ramoops.mem_name=oops"
-        # Raw bytes. Module params are parsed with kstrtoul, which rejects the
-        # K/M/G suffixes that `reserve_mem` above accepts — "4M" makes ramoops
-        # refuse to load at all, and pstore then records nothing.
-        "ramoops.console_size=4194304"
-        "ramoops.record_size=1048576"
       ];
       # zswap keeps most reclaimed anon pages in RAM compressed, so paging one
       # out is far cheaper than the default 60 assumes. 100 stops the kernel
