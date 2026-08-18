@@ -64,7 +64,7 @@ A third rule keeps the shell out of it:
 
 * **The shell may not name a component.** `apps/fish/` holds no command that
   drives another program: `vpn` lives in `apps/obscura/`, `android` in
-  `apps/waydroid/`, `pass-find` in `apps/passwords/`. A component that needs to
+  `apps/waydroid/`. A component that needs to
   run something at `update` or `reb` time registers it through `shellHooks`
   (declared in `apps/fish/default.nix`, loaded for every Home Manager user by
   `homeManagerBase`), so a host that drops the component drops the command with
@@ -89,7 +89,7 @@ together.
 | `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
 | `comms` | vesktop, whatsapp | whatsapp only, no vesktop |
 | `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
-| `secrets` | sops, gpg agent, both password managers, `pass-find` | Bitwarden only; needs its own key in `.sops.yaml` |
+| `secrets` | sops, gpg agent, Bitwarden | Bitwarden only; needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
 | `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
