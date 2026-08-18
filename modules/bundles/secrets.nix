@@ -3,7 +3,6 @@ let
   bundle = self.lib.mkBundle {
     home = with self.homeModules; [
       sops
-      gpg
       passwords
     ];
     darwin = [ self.darwinModules.passwords ];
