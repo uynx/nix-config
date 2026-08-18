@@ -5,6 +5,15 @@
     # slow to associate, and nothing here needs the network that early.
     systemd.services.NetworkManager-wait-online.enable = false;
 
+    # NixOS' default pool is `*.nixos.pool.ntp.org`, which announces the distro
+    # to the pool operator and to anything watching the exit. Generic pools say
+    # only "a Linux host".
+    networking.timeServers = [
+      "time.cloudflare.com"
+      "0.pool.ntp.org"
+      "1.pool.ntp.org"
+    ];
+
     networking.networkmanager = {
       enable = true;
       wifi.backend = "iwd";

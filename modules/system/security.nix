@@ -28,13 +28,17 @@
     };
 
     boot = {
-      # No yama.ptrace_scope: it blocks attaching a debugger to an already
-      # running process that is not a child, which is exactly `gdb -p`.
       kernel.sysctl = {
         "kernel.dmesg_restrict" = 1;
         "kernel.kptr_restrict" = 2;
+        # Attaching to an already-running process that is not a child needs
+        # this off. Set it back to 1 when a debugger session is over.
+        "kernel.yama.ptrace_scope" = 1;
         "kernel.unprivileged_bpf_disabled" = 1;
-        "net.core.bpf_jit_harden" = 2;
+        # 1, not 2: unprivileged BPF is off above, so 2 would only add constant
+        # blinding to root's own programs — systemd's cgroup filters — for no
+        # attacker it excludes. The JIT stays on either way.
+        "net.core.bpf_jit_harden" = 1;
 
         "net.ipv4.conf.all.accept_redirects" = 0;
         "net.ipv4.conf.default.accept_redirects" = 0;
