@@ -122,8 +122,19 @@ stdenv.mkDerivation rec {
 
     fullLibPath="$out/lib/tor-browser:$out/lib/tor-browser/TorBrowser/Tor:${libPath}"
 
+    # The bundle's own fonts.conf makes its bundled fonts the *only* fonts the
+    # browser can see, which is the whole point — a system font list is one of
+    # the highest-entropy fingerprints there is, and this machine's is not the
+    # standard one. FONTCONFIG_FILE, not FONTCONFIG_PATH: upstream's variable
+    # loses to the system config here (verified in nixpkgs with FC_DEBUG=1024).
+    fontsConf=$out/lib/tor-browser/fonts/fonts.conf
+    substituteInPlace "$fontsConf" \
+      --replace-fail '<dir prefix="cwd">fonts</dir>' "<dir>$out/lib/tor-browser/fonts</dir>"
+
     makeWrapper $out/lib/tor-browser/firefox $out/bin/tor-browser \
-      --prefix LD_LIBRARY_PATH : "$fullLibPath"
+      --prefix LD_LIBRARY_PATH : "$fullLibPath" \
+      --set FONTCONFIG_FILE "$fontsConf" \
+      --set-default MOZ_ENABLE_WAYLAND 1
 
     # The browser spawns tor itself and reports only "unable to connect" if it
     # dies, so a missing library here is invisible at runtime.

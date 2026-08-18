@@ -6,6 +6,8 @@
   flake.darwinModules.nixSettings = {
     imports = [ inputs.determinate.darwinModules.default ];
 
+    nixpkgs.overlays = [ self.lib.determinateNixOverlay ];
+
     nixpkgs.config.allowUnfree = true;
 
     # `determinateNix.enable` defaults to true, same as the NixOS side.
