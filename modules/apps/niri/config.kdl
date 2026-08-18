@@ -17,9 +17,12 @@ input {
         accel-speed -0.2
         scroll-factor 0.7
 
-        // No dwt on purpose. It is the only palm-rejection lever niri exposes, but
-        // it also gates pointer motion while a key is held, which breaks games.
-        // Settled 2026-08-18: motion wins, stray taps are accepted. Do not re-add.
+        // The Apple trackpad is wide enough that a resting palm sits on it while
+        // typing, and with bare `tap` every brush registers a click. dwt gates the
+        // touchpad briefly after each keystroke — the only palm-rejection lever
+        // niri exposes. Settled 2026-08-18: keep it, accepting that it also gates
+        // pointer motion while a key is held, which is felt in games.
+        dwt
 
         // Decide a click by how many fingers are down rather than by which half
         // of the pad was pressed. On a trackpad this size, the bottom-corner
