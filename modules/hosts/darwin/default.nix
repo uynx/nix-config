@@ -23,10 +23,10 @@
       office
       latex
 
-      # Both need this machine's own key added to .sops.yaml and its own
-      # secrets/secrets.yaml; until then activation would fail on decryption.
-      # secrets
-      # cloud
+      # Both work off the same age identity and the same secrets/secrets.yaml as
+      # asahi — one recipient in .sops.yaml, restored from Bitwarden per machine.
+      secrets
+      cloud
 
       {
         networking = {

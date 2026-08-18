@@ -1,7 +1,7 @@
 { self, ... }:
 {
   flake.homeModules.rclone =
-    { config, ... }:
+    { config, pkgs, ... }:
     {
       imports = [ self.homeModules.sops ];
 
@@ -46,6 +46,11 @@
             mounts."" = {
               enable = true;
               mountPoint = "${config.home.homeDirectory}/gdrive";
+              # nfsmount runs an in-process NFS server and mounts it with the
+              # system NFS client, so macOS needs no macFUSE kext and no
+              # Recovery-mode security downgrade. Linux keeps plain FUSE, where
+              # mounting NFS would want root.
+              mountType = if pkgs.stdenv.hostPlatform.isDarwin then "nfsmount" else "mount";
             };
           };
         };
