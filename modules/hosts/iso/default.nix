@@ -19,7 +19,7 @@
       # substituters, which is the whole reason to build a custom image.
       self.nixosModules.nixSettings
 
-      # Bootstraps the flake clone and the GPG key restore without a
+      # Bootstraps the flake clone and the age key restore without a
       # `nix-shell` detour. CLI only — the image has no display server, so
       # bitwarden-desktop would just sit unopenable.
       {
@@ -30,8 +30,7 @@
           bitwarden-cli
           jq
           sops
-          gnupg
-          age
+          rage
           cryptsetup
           curl
         ];

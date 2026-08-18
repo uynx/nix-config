@@ -5,15 +5,24 @@
     {
       imports = [ inputs.sops-nix.homeModules.sops ];
 
-      home.packages = [ pkgs.sops ];
+      home.packages = [
+        pkgs.sops
+        pkgs.rage
+      ];
 
       sops = {
         defaultSopsFile = ../../../secrets/secrets.yaml;
 
-        # PGP backend rather than age. Setting gnupg.home also moves the
-        # activation service into graphical-session-pre.target, which is what
-        # lets pinentry-qt prompt for the passphrase at login.
-        gnupg.home = "${config.home.homeDirectory}/.gnupg";
+        # An unencrypted age identity, so decryption needs no passphrase and no
+        # prompt: with gnupg.home unset the upstream unit installs into
+        # default.target instead of graphical-session-pre.target, and secrets
+        # land before anything graphical starts.
+        #
+        # generateKey stays at its default false on purpose — true would let a
+        # fresh machine mint its own key and "succeed" while decrypting nothing.
+        # Restore the real one first:
+        #   bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.txt
+        age.keyFile = "${config.xdg.configHome}/sops/age/keys.txt";
 
         # Overwriting ~/.ssh/id_ed25519 is intended: sops-install-secrets
         # deletes whatever sits at a secret's path and symlinks the decrypted

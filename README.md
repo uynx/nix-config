@@ -89,7 +89,7 @@ together.
 | `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
 | `comms` | vesktop, whatsapp | whatsapp only, no vesktop |
 | `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
-| `secrets` | sops, gpg agent, Bitwarden | Bitwarden only; needs its own key in `.sops.yaml` |
+| `secrets` | sops (age), rage, Bitwarden | Bitwarden only; needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
 | `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
@@ -122,6 +122,25 @@ report nothing.
 Rebuilds need `--impure`, which `reb` passes: the Asahi firmware directory has
 to stay a real path, and the AI skills are read out of a working copy. See
 `modules/hardware/asahi.nix`.
+
+## Fresh install
+
+Everything except one file is in this repo. That file is the age identity that
+decrypts `secrets/`, and it has to be in place **before the first `reb`** —
+without it `sops-nix.service` fails while the rebuild still succeeds, so you
+get a working desktop with no SSH key and no Drive mount and nothing but an
+inactive unit to say why.
+
+```bash
+bw login && bw unlock                 # or run these from the installer ISO
+bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.txt
+gh auth login
+git clone https://github.com/uynx/nixos-config.git ~/nixos-config
+cd ~/nixos-config && reb
+```
+
+The HTTPS clone URL is deliberate — `git` rewrites GitHub HTTPS to SSH at
+connect time, which cannot work until the SSH key comes out of sops.
 
 ## First rebuild on a Mac
 

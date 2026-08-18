@@ -1,8 +1,8 @@
 keys:
-  - &brandon 8FEDC528770DC48853B2658D81DE261A67E8BB3C
+  - &brandon age1vmqnf3p4e82aq6fe8k8d8ga7s3euwhvmkvfdvw09jryd6t56zgvs543n2v
 
 creation_rules:
   - path_regex: secrets/[^/]+\.yaml$
     key_groups:
-      - pgp:
+      - age:
           - *brandon

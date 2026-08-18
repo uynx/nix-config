@@ -62,7 +62,6 @@ xwayland-satellite {
     path "@xwaylandSatellite@"
 }
 spawn-at-startup "noctalia-shell"
-spawn-at-startup "sh" "-c" "gpg-connect-agent updatestartuptty /bye && systemctl --user restart sops-nix.service"
 
 // Tile everything. A window-rule with no `match` applies to every window, so
 // apps that ask to be floating — Proton VPN, Steam's updater, assorted dialogs
