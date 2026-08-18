@@ -317,14 +317,16 @@
       # pointer. `full` is lowercase on purpose — the enum is case-sensitive and
       # an unrecognised value is ignored silently, which looks identical to the
       # setting not helping.
-      fex-hogwarts-config = pkgs.writeText "fex-hogwarts.json" (builtins.toJSON {
-        Config = {
-          SMCChecks = "full";
-          StrictInProcessSplitLocks = true;
-          Multiblock = false;
-        };
-        ThunksDB = { };
-      });
+      fex-hogwarts-config = pkgs.writeText "fex-hogwarts.json" (
+        builtins.toJSON {
+          Config = {
+            SMCChecks = "full";
+            StrictInProcessSplitLocks = true;
+            Multiblock = false;
+          };
+          ThunksDB = { };
+        }
+      );
 
       # Two Hogwarts installs live side by side: the current build, and the
       # 8 Mar 2023 one its skeletal-mesh mod set requires. Swapping renames
