@@ -74,11 +74,10 @@
         install -Dm444 ${inputs.obscuravpn}/linux/common/net.obscura.vpn.gui.desktop \
           $out/share/applications/net.obscura.vpn.gui.desktop
 
-        # The tray icon lives in the GUI process, so the only way to have one is to
-        # run the GUI. /etc/xdg is not on XDG_CONFIG_DIRS here — the autostart
-        # generator scans the system profile's copy of it, which this lands in.
-        install -Dm444 ${inputs.obscuravpn}/linux/common/net.obscura.vpn.gui.desktop \
-          $out/etc/xdg/autostart/net.obscura.vpn.gui.desktop
+        # No autostart entry on purpose. The tray icon lives in the GUI process and
+        # obscura-gui has no --hidden flag (only --version/--help), so autostarting
+        # it maps a window every login. The daemon brings the tunnel up on its own,
+        # so the GUI is only needed to change exit location. Launch it by hand.
         for px in 64 128 256; do
           install -Dm444 ${inputs.obscuravpn}/linux/common/icons/''${px}x''${px}/net.obscura.vpn.gui.png \
             $out/share/icons/hicolor/''${px}x''${px}/apps/net.obscura.vpn.gui.png
