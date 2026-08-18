@@ -316,13 +316,15 @@
       # pointer. `full` is lowercase on purpose — the enum is case-sensitive and
       # an unrecognised value is ignored silently, which looks identical to the
       # setting not helping.
-        Config = {
-          SMCChecks = "full";
-          StrictInProcessSplitLocks = true;
-          Multiblock = false;
-        };
-        ThunksDB = { };
-      });
+        builtins.toJSON {
+          Config = {
+            SMCChecks = "full";
+            StrictInProcessSplitLocks = true;
+            Multiblock = false;
+          };
+          ThunksDB = { };
+        }
+      );
 
       # 8 Mar 2023 one its skeletal-mesh mod set requires. Swapping renames
       # directories, so the *names* stop describing their contents after the

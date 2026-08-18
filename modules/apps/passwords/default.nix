@@ -11,7 +11,8 @@
     {
       home.packages = [
         pkgs.bitwarden-cli
-      ] ++ lib.optionals isLinux [
+      ]
+      ++ lib.optionals isLinux [
         pkgs.bitwarden-desktop
       ];
 
