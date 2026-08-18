@@ -21,6 +21,13 @@
       # it back. Hidden=true is the XDG spec's own "ignore this entry", and force
       # keeps Home Manager owning the path.
       home.file = lib.mkIf isLinux {
+        # PAM's enableGnomeKeyring only ever unlocks the keyring named `login` —
+        # that name is hardcoded, not "whatever the default is". This pointed at
+        # `Default_Keyring`, so every session gcr-prompter asked for it by hand.
+        # force, because the live file is real rather than a symlink.
+        ".local/share/keyrings/default".force = true;
+        ".local/share/keyrings/default".text = "login";
+
         ".config/autostart/bitwarden.desktop".force = true;
         ".config/autostart/bitwarden.desktop".text = ''
           [Desktop Entry]
