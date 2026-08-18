@@ -28,10 +28,11 @@
     };
 
     boot = {
+      # No yama.ptrace_scope: it blocks attaching a debugger to an already
+      # running process that is not a child, which is exactly `gdb -p`.
       kernel.sysctl = {
         "kernel.dmesg_restrict" = 1;
         "kernel.kptr_restrict" = 2;
-        "kernel.yama.ptrace_scope" = 1;
         "kernel.unprivileged_bpf_disabled" = 1;
         "net.core.bpf_jit_harden" = 2;
 
