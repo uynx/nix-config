@@ -13,12 +13,15 @@
       url = "github:nix-community/nixos-apple-silicon/3902c801519264191a7c3dfec8dd1f9faeb38fd5";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # FlakeHub inputs must pin the 0.1.* series, here and below. A bare `*`
+    # outranks it with the branch-derived 0.2605.* series, silently swapping
+    # master for release-26.05 against our unstable nixpkgs.
     home-manager = {
-      url = "github:nix-community/home-manager";
+      url = "https://flakehub.com/f/nix-community/home-manager/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     sops-nix = {
-      url = "github:Mic92/sops-nix";
+      url = "https://flakehub.com/f/Mic92/sops-nix/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-index-database = {
@@ -26,7 +29,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-darwin = {
-      url = "github:nix-darwin/nix-darwin";
+      url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -38,7 +41,7 @@
     };
 
     # Dendritic
-    flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-parts.url = "https://flakehub.com/f/hercules-ci/flake-parts/0.1.*";
     import-tree.url = "github:vic/import-tree";
     wrapper-modules = {
       url = "github:BirdeeHub/nix-wrapper-modules";
