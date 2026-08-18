@@ -1,18 +1,4 @@
 { moduleWithSystem, ... }:
-let
-  # niri's cargo constraint rejects libdisplay-info 0.4. Both the NixOS pkgs
-  # and perSystem's need the same substitution — perSystem does not see the
-  # overlay below — so the override is written once here and used by both.
-  overrideNiri =
-    prev:
-    let
-      downgrade = map (x: if (x.pname or "") == "libdisplay-info" then prev.libdisplay-info_0_2 else x);
-    in
-    prev.niri.overrideAttrs (old: {
-      buildInputs = downgrade (old.buildInputs or [ ]);
-      nativeBuildInputs = downgrade (old.nativeBuildInputs or [ ]);
-    });
-in
 {
   # KDL stays a real file rather than becoming the wrapper's structured
   # settings — niri takes --config, so there is nothing to translate.
@@ -30,7 +16,6 @@ in
       ...
     }:
     let
-      niri = overrideNiri pkgs;
       rendered =
         builtins.replaceStrings [ "@xwaylandSatellite@" ] [ (lib.getExe pkgs.xwayland-satellite) ]
           (builtins.readFile ./config.kdl);
@@ -38,7 +23,7 @@ in
     {
       imports = [ wlib.modules.default ];
 
-      package = niri;
+      package = pkgs.niri;
 
       # Wrapping drops passthru, and services.displayManager.sessionPackages
       # rejects any package that does not declare which sessions it provides.
@@ -59,7 +44,7 @@ in
       # leaving a compositor that will not start at the next login.
       env.NIRI_CONFIG = pkgs.runCommand "niri-config.kdl" { } ''
         cp ${pkgs.writeText "niri-config-unchecked.kdl" rendered} $out
-        ${lib.getExe niri} validate -c $out
+        ${lib.getExe pkgs.niri} validate -c $out
       '';
     };
 
@@ -67,7 +52,6 @@ in
     { self', ... }:
     { pkgs, ... }:
     {
-      nixpkgs.overlays = [ (_: prev: { niri = overrideNiri prev; }) ];
 
       programs.niri = {
         enable = true;
