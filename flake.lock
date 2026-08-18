@@ -663,11 +663,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1787055508,
-        "narHash": "sha256-aXSar4cdQYafceC6bBuwA0WW39nN3mHSV5cIJWaH88s=",
+        "lastModified": 1787076447,
+        "narHash": "sha256-xkJTbG7icQH6zK7QUkxYi94w0bVyZByXVdGxjdVKriw=",
         "owner": "Sovereign-Engineering",
         "repo": "obscuravpn-client",
-        "rev": "e0c3ad50531ed065d09a04e0c7b09e016bb78f0c",
+        "rev": "235c5633330e1b753abf7e1b2b23dd1a8a856ba4",
         "type": "github"
       },
       "original": {
