@@ -71,6 +71,11 @@ in
         # Home Manager ships no man package on darwin, where this only warns.
         man.generateCaches = pkgs.stdenv.hostPlatform.isLinux;
 
+        fish.shellAliases = {
+          tree = "eza --tree --icons";
+          ll = "eza -la --icons --group-directories-first --header --git-ignore";
+        };
+
         eza = {
           enable = true;
           icons = "auto";
