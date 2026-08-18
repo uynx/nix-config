@@ -43,14 +43,24 @@
         "net.ipv4.conf.default.accept_source_route" = 0;
         "net.ipv6.conf.all.accept_redirects" = 0;
         "net.ipv6.conf.default.accept_redirects" = 0;
+
+        # BBR paces from measured bandwidth and RTT instead of treating loss as
+        # congestion, which is the regime a VPN tunnel over Wi-Fi actually sits
+        # in. fq is its intended qdisc — under fq_codel the pacing is emulated.
+        "net.ipv4.tcp_congestion_control" = "bbr";
+        "net.core.default_qdisc" = "fq";
         # No use_tempaddr here: networking.tempAddresses already defaults it
         # to 2, and a second definition is a hard eval error.
       };
 
-      # Protocols nothing here speaks, each with its own CVE history.
+      # systemd-sysctl runs before anything writes to the congestion-control
+      # knob, and an unloaded tcp_bbr makes that write fail silently.
+      kernelModules = [ "tcp_bbr" ];
+
+      # Protocols nothing here speaks, each with its own CVE history. dccp and
+      # sctp are not in this kernel's config at all, so listing them would be a
+      # no-op; these two ship as modules and can actually be autoloaded.
       blacklistedKernelModules = [
-        "dccp"
-        "sctp"
         "rds"
         "tipc"
       ];
