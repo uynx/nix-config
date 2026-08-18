@@ -16,18 +16,17 @@
         pkgs.bitwarden-desktop
       ];
 
-      # Bitwarden's own "start on login" toggle writes this file with the running
-      # build's store path baked in, so the next version bump plus a GC leaves an
-      # autostart entry pointing at nothing. Declaring it re-resolves per rebuild.
+      # Masked, not deleted: Bitwarden's own "start on login" toggle rewrites this
+      # file whenever it is on, so simply removing the declaration lets the app put
+      # it back. Hidden=true is the XDG spec's own "ignore this entry", and force
+      # keeps Home Manager owning the path.
       home.file = lib.mkIf isLinux {
         ".config/autostart/bitwarden.desktop".force = true;
         ".config/autostart/bitwarden.desktop".text = ''
           [Desktop Entry]
           Type=Application
           Name=Bitwarden
-          Exec=${lib.getExe pkgs.bitwarden-desktop}
-          StartupNotify=false
-          Terminal=false
+          Hidden=true
         '';
       };
 
