@@ -84,14 +84,16 @@ let
     wayland
     zlib
   ];
+  # Rewritten by `update-privacy-browsers`, which `update` runs.
+  pin = (builtins.fromJSON (builtins.readFile ./pins.json)).tor-browser;
 in
 stdenv.mkDerivation rec {
   pname = "tor-browser";
-  version = "16.0a9";
+  inherit (pin) version;
 
   src = fetchurl {
     url = "https://dist.torproject.org/torbrowser/${version}/tor-browser-linux-aarch64-${version}.tar.xz";
-    hash = "sha256-/7CYkO6QSB/6fbWGU2ru9dkfcQZcowOLoLFSVqQb2u0=";
+    inherit (pin) hash;
   };
 
   nativeBuildInputs = [
