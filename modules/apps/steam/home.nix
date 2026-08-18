@@ -31,7 +31,7 @@
         any_steam_window() {
           ${N} msg -j windows 2>/dev/null | ${J} -e '
             any(.[]; ((.app_id // "") | ascii_downcase) as $c
-                     | $c == "steam" or $c == "cs2" or ($c | test("^steam_app_[0-9]+$")))
+                     | $c == "steam" or ($c | test("^steam_app_[0-9]+$")))
           ' >/dev/null 2>&1
         }
 
@@ -328,142 +328,6 @@
         }
       );
 
-      # Two Hogwarts installs live side by side: the current build, and the
-      # 8 Mar 2023 one its skeletal-mesh mod set requires. Swapping renames
-      # directories, so the *names* stop describing their contents after the
-      # first swap — that inversion has already cost one debugging session.
-      # A marker file inside each directory is the authority instead.
-      hogwarts-build = pkgs.writeShellScriptBin "hogwarts-build" ''
-        set -eu
-        C=${guest}/.local/share/Steam/steamapps/common
-        LIVE="$C/Hogwarts Legacy"
-        PARKED="$C/Hogwarts Legacy.parked"
-        id_of() { cat "$1/.hl-build" 2>/dev/null || echo unknown; }
-
-        case "''${1-status}" in
-          status)
-            printf 'live:   %s\nparked: %s\n' "$(id_of "$LIVE")" "$(id_of "$PARKED")"
-            exit 0
-            ;;
-          2023 | 2026) want=$1 ;;
-          *) echo "usage: hogwarts-build [2023|2026|status]" >&2; exit 2 ;;
-        esac
-
-        [ -d "$LIVE" ] && [ -d "$PARKED" ] || {
-          echo "need both '$LIVE' and '$PARKED'" >&2; exit 1; }
-        for d in "$LIVE" "$PARKED"; do
-          [ -f "$d/.hl-build" ] || {
-            echo "missing $d/.hl-build — label each install once, by hand" >&2; exit 1; }
-        done
-
-        if [ "$(id_of "$LIVE")" = "$want" ]; then
-          echo "already on $want"
-          exit 0
-        fi
-        mv "$LIVE" "$C/.hl-swap"
-        mv "$PARKED" "$LIVE"
-        mv "$C/.hl-swap" "$PARKED"
-        printf 'live:   %s\nparked: %s\n' "$(id_of "$LIVE")" "$(id_of "$PARKED")"
-      '';
-
-      steam-compat-config = pkgs.writers.writePython3Bin "steam-compat-config" { } ''
-        import re
-        import sys
-        from pathlib import Path
-
-        # Split to stay under flake8's E501, which writePython3Bin enforces.
-        config = Path(
-            "${guest}/"
-            ".local/share/Steam/config/config.vdf"
-        )
-        app_id, tool = sys.argv[1:3]
-        if config.is_file():
-            text = config.read_text()
-        else:
-            config.parent.mkdir(parents=True, exist_ok=True)
-            text = (
-                '"InstallConfigStore"\n{\n'
-                '\t"Software"\n\t{\n'
-                '\t\t"Valve"\n\t\t{\n'
-                '\t\t\t"Steam"\n\t\t\t{\n'
-                '\t\t\t}\n\t\t}\n\t}\n}\n'
-            )
-
-
-        def block_for_key(source, key, low=0, high=None):
-            if high is None:
-                high = len(source)
-            match = re.search(r'"' + re.escape(key) + r'"\s*\{', source[low:high])
-            if not match:
-                return None
-            opening = low + match.end() - 1
-            depth = 0
-            quoted = False
-            escaped = False
-            for pos in range(opening, high):
-                char = source[pos]
-                if quoted:
-                    if escaped:
-                        escaped = False
-                    elif char == "\\":
-                        escaped = True
-                    elif char == '"':
-                        quoted = False
-                elif char == '"':
-                    quoted = True
-                elif char == "{":
-                    depth += 1
-                elif char == "}":
-                    depth -= 1
-                    if depth == 0:
-                        return opening, pos
-            return None
-
-
-        region = (0, len(text))
-        for key in ("InstallConfigStore", "Software", "Valve", "Steam"):
-            found = block_for_key(text, key, region[0], region[1])
-            if found is None:
-                raise SystemExit(0)
-            region = found
-
-        mapping = block_for_key(text, "CompatToolMapping", region[0], region[1])
-        entry = (
-            f'\n\t\t\t\t\t"{app_id}"\n'
-            "\t\t\t\t\t{\n"
-            f'\t\t\t\t\t\t"name"\t\t"{tool}"\n'
-            '\t\t\t\t\t\t"config"\t\t""\n'
-            '\t\t\t\t\t\t"priority"\t\t"250"\n'
-            "\t\t\t\t\t}\n\t\t\t\t"
-        )
-        if mapping is None:
-            insertion = (
-                '\n\t\t\t\t"CompatToolMapping"\n'
-                "\t\t\t\t{" + entry + "}\n\t\t\t"
-            )
-            text = text[:region[1]] + insertion + text[region[1]:]
-        else:
-            app = block_for_key(text, app_id, mapping[0], mapping[1])
-            if app is None:
-                text = text[:mapping[0] + 1] + entry + text[mapping[0] + 1:]
-            else:
-                body = text[app[0]:app[1]]
-                updated, count = re.subn(
-                    r'("name"\s*")[^"]*(")',
-                    rf'\g<1>{tool}\g<2>',
-                    body,
-                    count=1,
-                )
-                if count == 0:
-                    updated = body[:1] + f'\n\t"name"\t\t"{tool}"' + body[1:]
-                text = text[:app[0]] + updated + text[app[1]:]
-
-        temporary = config.with_suffix(".vdf.tmp")
-        if not config.is_file() or config.read_text() != text:
-            temporary.write_text(text)
-            temporary.replace(config)
-      '';
-
       steam-asahi-remote = pkgs.writeShellScriptBin "steam-asahi-remote" ''
         set -eu
         ${shellHelpers}
@@ -484,12 +348,6 @@
         STEAM_HOME=${guest}/.steam
         STEAM_BIN="$STEAM_HOME/root/steamrtarm64/steam"
         [ -p "$STEAM_HOME/steam.pipe" ] && [ -x "$STEAM_BIN" ]
-
-        if [ "$TARGET" = 730 ]; then
-          exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- \
-            /usr/bin/muvm -i -- "$STEAM_BIN" -applaunch "$TARGET" \
-              -condebug +r_csgo_player_occlusion_query 0
-        fi
 
         exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- \
           /usr/bin/muvm -i -- "$STEAM_BIN" "$URL"
@@ -538,12 +396,9 @@
              ${pkgs.gtk2}/lib/libgtk-x11-2.0.so.0 \
              ${pkgs.gtk2}/lib/libgdk-x11-2.0.so.0 /usr/lib/'
 
-        # Native aarch64 Wine, with FEX translating only the game's own x86.
-        # Every game runs on this; the old per-game pins and the Box64 tool it
-        # replaced were all working around the emulated x86 Proton instead.
-        for APP in 32440 3540 674940 990080; do
-          ${steam-compat-config}/bin/steam-compat-config "$APP" proton-experimental-arm64
-        done
+        # No compat tool is written from here: Steam Play is set once in the
+        # client (all titles -> Proton ARM64 Experimental), which is native
+        # aarch64 Wine with FEX translating only the game's own x86.
 
 
         STEAM_ROOT=${steam}
@@ -603,10 +458,7 @@
         fi
         set -- "$@" --execute-pre=/usr/local/libexec/steam-guest-tune -- \
           "$STEAM_BIN"
-        if [ "$APP_ID" = 730 ]; then
-          set -- "$@" -silent -applaunch "$APP_ID" \
-            -condebug +r_csgo_player_occlusion_query 0
-        elif [ -n "$APP_ID" ]; then
+        if [ -n "$APP_ID" ]; then
           set -- "$@" -silent -applaunch "$APP_ID"
         fi
 
@@ -655,11 +507,7 @@
 
         APP_ID=$1
         LOCK=$2
-        if [ "$APP_ID" = 730 ]; then
-          APP=cs2
-        else
-          APP=steam_app_$APP_ID
-        fi
+        APP=steam_app_$APP_ID
         cleanup() { rm -rf "$LOCK"; }
         trap cleanup EXIT
         printf '%s\n' "$$" >"$LOCK/pid"
@@ -698,11 +546,7 @@
           *[!0-9]*|"") exit 2 ;;
         esac
 
-        if [ "$APP_ID" = 730 ]; then
-          APP=cs2
-        else
-          APP=steam_app_$APP_ID
-        fi
+        APP=steam_app_$APP_ID
         GAME_ID=$(window_id "$APP")
         if [ -n "$GAME_ID" ]; then
           exec ${N} msg action focus-window --id "$GAME_ID"
@@ -725,12 +569,6 @@
           [ "$WATCH_STARTED" = 1 ] || rm -rf "$LOCK"
         }
         trap cleanup_launch EXIT
-
-        case "$APP_ID" in
-          32440|3540|674940|990080)
-            ${steam-compat-config}/bin/steam-compat-config "$APP_ID" proton-experimental-arm64
-            ;;
-        esac
 
         ${pkgs.util-linux}/bin/setsid \
           ${steam-game-watch}/bin/steam-game-watch "$APP_ID" "$LOCK" \
@@ -823,7 +661,7 @@
         ACTIVE=$(${N} msg -j focused-window 2>/dev/null || echo '{}')
         APP=$(printf '%s' "$ACTIVE" | ${J} -r '.app_id // ""' 2>/dev/null || true)
         case "$APP" in
-          steam|Steam|steam_app_[0-9]*|cs2)
+          steam|Steam|steam_app_[0-9]*)
             exec ${steam-asahi-stop}/bin/steam-asahi-stop
             ;;
           *)
@@ -840,7 +678,6 @@
         steam-asahi-stop
         steam-game-entries
         steam-menu
-        hogwarts-build
         update-steam-asahi-pins
         distrobox
         dive
@@ -861,16 +698,6 @@
           "FileTransfer"
           "Game"
         ];
-      };
-
-      home.file = {
-        "${steamRel}/steamapps/common/Counter-Strike Global Offensive/game/csgo/cfg/autoexec.cfg" = {
-          force = true;
-          text = ''
-            // Venus can lose CS2's player-occlusion query pool during match load.
-            r_csgo_player_occlusion_query 0
-          '';
-        };
       };
 
       home.activation.generateSteamGameEntries = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
