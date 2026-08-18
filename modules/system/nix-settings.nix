@@ -5,6 +5,8 @@
     # module's `determinate.enable` already defaults to true.
     imports = [ inputs.determinate.nixosModules.default ];
 
+    nixpkgs.overlays = [ self.lib.determinateNixOverlay ];
+
     nixpkgs.config.allowUnfree = true;
     nix = {
       # Without this, `nix-shell -p` and `nix repl '<nixpkgs>'` resolve against

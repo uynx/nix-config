@@ -115,8 +115,17 @@ stdenv.mkDerivation rec {
       fi
     done
 
+    # Same reason as the tor-browser package: without this the browser reads
+    # the system fontconfig and every font installed on this machine becomes
+    # part of its fingerprint. The bundle's own fonts.conf says as much.
+    fontsConf=$out/lib/mullvad-browser/fonts/fonts.conf
+    substituteInPlace "$fontsConf" \
+      --replace-fail '<dir prefix="cwd">fonts</dir>' "<dir>$out/lib/mullvad-browser/fonts</dir>"
+
     makeWrapper $out/lib/mullvad-browser/mullvadbrowser $out/bin/mullvad-browser \
-      --prefix LD_LIBRARY_PATH : "$out/lib/mullvad-browser:${libPath}"
+      --prefix LD_LIBRARY_PATH : "$out/lib/mullvad-browser:${libPath}" \
+      --set FONTCONFIG_FILE "$fontsConf" \
+      --set-default MOZ_ENABLE_WAYLAND 1
 
     runHook postInstall
   '';

@@ -49,18 +49,13 @@
         "net.ipv6.conf.all.accept_redirects" = 0;
         "net.ipv6.conf.default.accept_redirects" = 0;
 
-        # BBR paces from measured bandwidth and RTT instead of treating loss as
-        # congestion, which is the regime a VPN tunnel over Wi-Fi actually sits
-        # in. fq is its intended qdisc — under fq_codel the pacing is emulated.
-        "net.ipv4.tcp_congestion_control" = "bbr";
-        "net.core.default_qdisc" = "fq";
         # No use_tempaddr here: networking.tempAddresses already defaults it
         # to 2, and a second definition is a hard eval error.
       };
 
-      # systemd-sysctl runs before anything writes to the congestion-control
-      # knob, and an unloaded tcp_bbr makes that write fail silently.
-      kernelModules = [ "tcp_bbr" ];
+      # No BBR: its pacing is distinguishable from cubic's by any destination
+      # server, and cubic is what almost every Linux client sends. Blending in
+      # beats the throughput on this machine. Do not re-add.
 
       # Protocols nothing here speaks, each with its own CVE history. dccp and
       # sctp are not in this kernel's config at all, so listing them would be a
