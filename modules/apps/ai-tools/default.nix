@@ -325,14 +325,6 @@
           '';
         };
 
-      home.activation.createRequiredDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        mkdir -p \
-          "${home}/ai_memory/topics" \
-          "${home}/ai_memory/journal" \
-          "${home}/dotfiles" \
-          "${home}/nixos-config"
-      '';
-
       # hermes finds extra skills through a config key rather than a path, and
       # writes that config itself, so it cannot be a store symlink. Appending is
       # safe only while it has no `skills:` block of its own; if it grows one,
