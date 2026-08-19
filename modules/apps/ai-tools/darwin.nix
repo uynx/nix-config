@@ -9,6 +9,7 @@
       # The same coding agent the Linux hosts pin. Not `kimi-cli`, which is a
       # different product — the Kimi platform agent, not the terminal one.
       "kimi-code"
+      "hermes-agent"
     ];
 
     casks = [

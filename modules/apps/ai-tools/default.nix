@@ -55,7 +55,7 @@
           if [ "''${1:-}" = --missing-only ]; then
             missingOnly=1
           fi
-          export PATH="$PATH:${home}/.local/bin:${home}/.hermes/bin"
+          export PATH="$PATH:${home}/.local/bin${lib.optionalString isLinux ":${home}/.hermes/bin"}"
 
           # hermes' installer pulls unicode-animations, whose postinstall writes
           # a spinner demo to /dev/tty and never exits unless CI is set.
@@ -203,23 +203,21 @@
           roll openclaw npm install -g --prefix "${home}/.local" openclaw
           roll t3       npm install -g --prefix "${home}/.local" t3
           roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
-          # Vendor installer, not `uv tool install`: upstream marks every pypi
-          # install unsupported. It brings its own node and uv under ~/.hermes,
-          # so it costs minutes and is only worth running when hermes is absent.
-          # Afterwards `hermes update` maintains itself, and `--check` settles it
-          # in about a second. --check always exits 0, hence the string match; if
-          # upstream reworded it we would merely go back to updating every run.
-          if ! command -v hermes >/dev/null 2>&1; then
-            roll hermes sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
-              | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
-          elif [ -z "$missingOnly" ]; then
-            ver=$(get_ver hermes || true)
-            if hermes update --check 2>&1 | grep -q 'Already up to date'; then
-              printf '  %-12s %s (up to date)\n' hermes "$ver"
-            else
-              roll hermes hermes update --yes
+          ${lib.optionalString isLinux ''
+            # On Linux, hermes is maintained by its vendor installer / self-updater.
+            # On macOS, the `hermes-agent` Homebrew formula manages it.
+            if ! command -v hermes >/dev/null 2>&1; then
+              roll hermes sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
+                | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
+            elif [ -z "$missingOnly" ]; then
+              ver=$(get_ver hermes || true)
+              if hermes update --check 2>&1 | grep -q 'Already up to date'; then
+                printf '  %-12s %s (up to date)\n' hermes "$ver"
+              else
+                roll hermes hermes update --yes
+              fi
             fi
-          fi
+          ''}
 
           # Exits 0 even with skips. Every pin is written atomically, so a
           # skipped one leaves the file consistent and there is no reason to
