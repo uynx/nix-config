@@ -26,6 +26,7 @@
       "cursor"
       "antigravity"
       "kimi"
+      "t3-code"
     ];
   };
 }
