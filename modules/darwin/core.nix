@@ -32,9 +32,9 @@
       launchd.daemons.sntp-sync = {
         serviceConfig = {
           ProgramArguments = [
-            "/usr/bin/sntp"
-            "-sS"
-            "time.apple.com"
+            "/bin/sh"
+            "-c"
+            "for i in $(seq 1 30); do /usr/bin/sntp -sS time.apple.com && exit 0; sleep 2; done"
           ];
           RunAtLoad = true;
           StartInterval = 3600;
