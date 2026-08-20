@@ -187,9 +187,17 @@
           # `connect` sets the target state over IPC and only then blocks watching
           # status, so the timeout cuts the watching short, not the request — the
           # daemon keeps retrying the tunnel on its own afterwards.
-          ExecStart = "${obscura}/bin/obscura connect";
-          TimeoutStartSec = 90;
-          SuccessExitStatus = "SIGTERM";
+          #
+          # The 90 s bound is `timeout`'s, not TimeoutStartSec's, because a
+          # systemd start-timeout fails the unit whatever SuccessExitStatus says.
+          # A boot that finds no internet then leaves this failed, RemainAfterExit
+          # cannot hold a failed unit active, and the next switch restarts it —
+          # running the new CLI against the daemon restartIfChanged deliberately
+          # left old, which is what fails the whole rebuild. Exiting 124 keeps the
+          # unit active instead, so that landmine is never armed.
+          ExecStart = "${pkgs.coreutils}/bin/timeout 90 ${obscura}/bin/obscura connect";
+          TimeoutStartSec = 120;
+          SuccessExitStatus = "SIGTERM 124";
         };
       };
 
