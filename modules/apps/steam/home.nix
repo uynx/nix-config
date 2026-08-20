@@ -691,8 +691,21 @@
         close-active
       ];
 
-      # Reports only, so it cannot half-update a pin set and abort the relock.
+      # Rewrites the Containerfile but never installs: `update` runs its hooks
+      # as `; or return 1`, so a container rebuild failing on a Fedora mirror
+      # hiccup would abort the flake relock behind it.
       shellHooks.update = [ "update-steam-asahi-pins" ];
+
+      # Installing the bumped pins is instead reb's job, after a successful
+      # switch, where a failure cannot wedge anything. Bootstrap self-gates on
+      # the Containerfile hash, so this is a sub-second no-op on the rebuilds
+      # that did not touch it -- which is nearly all of them. Without this the
+      # first launch after a bump pays for a 34-package dnf install, and a bad
+      # bump surfaces mid-launch instead of here.
+      shellHooks.rebPostSwitch = ''
+        ${steam-asahi-bootstrap}/bin/steam-asahi-bootstrap
+        or echo "steam-asahi container rebuild failed -- run steam-asahi-bootstrap by hand"
+      '';
 
       xdg.desktopEntries.steam = {
         name = "Steam";
