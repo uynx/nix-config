@@ -75,7 +75,10 @@
     autopairs.nvim-autopairs.enable = true;
     comments.comment-nvim.enable = true;
     binds.whichKey.enable = true;
-    statusline.lualine.enable = true;
+    statusline.lualine = {
+      enable = true;
+      integrations.breadcrumbs.nvim-navic.enable = true;
+    };
     filetree.neo-tree.enable = true;
     dashboard.alpha.enable = true;
     terminal.toggleterm.enable = true;
@@ -90,7 +93,6 @@
       noice.enable = true;
       illuminate.enable = true;
       colorizer.enable = true;
-      breadcrumbs.enable = true;
     };
 
     visuals = {
