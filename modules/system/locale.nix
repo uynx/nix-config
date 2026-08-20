@@ -1,6 +1,6 @@
 {
   flake.nixosModules.locale = {
-    time.timeZone = "America/Chicago";
+    time.timeZone = "America/New_York";
     console.useXkbConfig = true;
     # xkb lives under services.xserver even on Wayland; console.useXkbConfig
     # reads it, and the server itself stays off at its own default.
