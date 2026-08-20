@@ -25,7 +25,12 @@
         file=$HOME/nixos-config/modules/apps/brave-origin/pins.json
 
         current=$(jq -r .version "$file")
-        latest=$(curl -fsSL "$base/dists/stable/main/binary-arm64/Packages" \
+        # Bounded like every lookup in update-ai-clis, and for the same reason:
+        # curl's default connect timeout is 300 s and a stalled transfer has no
+        # bound at all, so one unreachable host hangs the whole `update` chain
+        # with no output instead of failing.
+        latest=$(curl -fsSL --connect-timeout 10 --max-time 60 \
+          "$base/dists/stable/main/binary-arm64/Packages" \
           | grep -A20 '^Package: brave-origin$' \
           | sed -n 's/^Version: \([0-9.]*\).*/\1/p' \
           | head -1)
