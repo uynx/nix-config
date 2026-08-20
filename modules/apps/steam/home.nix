@@ -70,10 +70,11 @@
         printf '%s\n' "Steam Asahi container checks passed."
       '';
 
-      # Rewrites the ordinary pins, holds the graphics/emulation ones. The two
-      # dnf calls are per-list, not per-package: an exact-NEVRA query drops
-      # pins that aged off the mirrors, which is the failure that stops the
-      # image building at all and is invisible to steam-asahi-doctor.
+      # Every pin auto-bumps to the newest build in the repos; nothing is held
+      # back. Names are derived from the NEVRAs rather than queried, because a
+      # pin that has aged off the mirrors resolves to nothing and would then be
+      # the one entry the updater could not fix -- which is the exact failure
+      # this exists to prevent.
       update-steam-asahi-pins = pkgs.writeShellScriptBin "update-steam-asahi-pins" ''
         set -eu
 
@@ -81,7 +82,7 @@
         ENTER="${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi --"
 
         if ! ${pkgs.docker}/bin/docker container inspect steam-asahi >/dev/null 2>&1; then
-          printf '%-46s %s\n' steam-asahi "no container, skipped"
+          printf '%-52s %s\n' steam-asahi "no container, skipped"
           exit 0
         fi
 
@@ -97,43 +98,41 @@
           ' "$FILE"
         )
 
-        # Unquoted on purpose: the NEVRA list is the argument vector, and no
-        # NEVRA contains whitespace.
+        # RPM forbids a dash in version and release, so dropping the arch
+        # suffix and then the last two dash-fields leaves exactly the name.
+        NAMES=$(
+          printf '%s\n' "$PINS" \
+            | ${pkgs.gnused}/bin/sed -e 's/\.[^.]*$//' -e 's/-[^-]*-[^-]*$//' \
+            | ${pkgs.coreutils}/bin/sort -u
+        )
+
+        # Unquoted on purpose: the name list is the argument vector, and no
+        # package name contains whitespace.
         # shellcheck disable=SC2086
         # %{version}-%{release}, not %{evr}: evr prefixes the epoch that the
         # pins omit, and NetworkManager (epoch 1) then never matches itself.
         # --arch keeps --latest-limit off the .src RPMs, which sort newest.
         # The format stays inline and quoted. Held in a variable it word-splits
         # on its own space, and dnf reads half the format as a package name.
-        HAVE=$($ENTER dnf -q repoquery --available --arch aarch64,noarch \
-          --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $PINS 2>/dev/null || true)
-        NAMES=$(printf '%s\n' "$HAVE" | ${pkgs.gawk}/bin/awk '{ print $1 }' | ${pkgs.coreutils}/bin/sort -u)
-        # shellcheck disable=SC2086
         LATEST=$($ENTER dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
           --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES 2>/dev/null || true)
 
-        PLAN=$(printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v have="$HAVE" -v latest="$LATEST" '
+        PLAN=$(printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v latest="$LATEST" '
           BEGIN {
-            n = split(have, h, "\n")
-            for (i = 1; i <= n; i++) { split(h[i], a, " "); if (a[2] != "") name[a[2]] = a[1] }
             n = split(latest, l, "\n")
             for (i = 1; i <= n; i++) { split(l[i], a, " "); if (a[1] != "") newest[a[1]] = a[2] }
           }
           $0 == "" { next }
-          !($0 in name) { print "GONE", $0, "-"; next }
           {
-            new = newest[name[$0]]
-            # Graphics and emulation are a matched set against the pinned host
-            # kernel — moving them unattended is what killed every game on
-            # 7.1.5. They always print, with or without an update, because
-            # their standing versions are the thing worth watching.
-            if (name[$0] ~ /^(virglrenderer|muvm|libkrun|mesa-|fex-|asahi-|steam|vulkan-loader)/) {
-              if (new == "" || new == $0) print "HOLD", $0, "-"
-              else print "HOLDNEW", $0, new
-              next
-            }
-            if (new == "" || new == $0) next
-            print "BUMP", $0, new
+            nm = $0
+            sub(/\.[^.]*$/, "", nm)
+            sub(/-[^-]*-[^-]*$/, "", nm)
+            # No entry at all means the package itself left the repos, not just
+            # this build of it. Renamed or retired upstream, so only a human can
+            # decide what replaces it.
+            if (!(nm in newest)) { print "MISSING", $0, nm; next }
+            if (newest[nm] == $0) { print "SAME", $0, "-"; next }
+            print "BUMP", $0, newest[nm]
           }
         ')
 
@@ -141,26 +140,34 @@
 
         TMP=$(${pkgs.coreutils}/bin/mktemp)
         ${pkgs.coreutils}/bin/cp "$FILE" "$TMP"
+        # An arrow means that Containerfile line changed, and nothing else
+        # prints one. The old output used the same arrow for held pins that
+        # moved nothing, which is what made it unreadable.
         printf '%s\n' "$PLAN" | while read -r kind old new; do
           case $kind in
             BUMP)
               ${pkgs.gnused}/bin/sed -i "s|$old|$new|" "$TMP"
-              printf '  %-46s -> %s\n' "$old" "$new"
+              printf '  %-52s -> %s\n' "$old" "$new"
               ;;
-            HOLD) printf '  %-46s %s\n' "$old" "(up to date, held)" ;;
-            HOLDNEW) printf '  %-46s -> %s (held, kernel-coupled)\n' "$old" "$new" ;;
-            GONE) printf '  %-46s %s\n' "$old" "GONE from the repos, pin by hand" ;;
+            SAME) printf '  %-52s    already newest\n' "$old" ;;
+            MISSING) printf '  %-52s    !! package %s NO LONGER EXISTS in any enabled repo\n' "$old" "$new" ;;
           esac
         done
 
+        BUMPED=$(printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -c '^BUMP' || true)
+        MISSED=$(printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -c '^MISSING' || true)
+
         # Only rewrite when something actually moved, so an unchanged run
         # leaves the file's mtime and the container config hash alone.
-        if printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -q '^BUMP'; then
+        if [ "$BUMPED" -gt 0 ]; then
           # Written back through cat so the file keeps its own permissions.
           ${pkgs.coreutils}/bin/cat "$TMP" >"$FILE"
-          printf '  %s\n' "updated — next game launch rebuilds the container"
+          printf '  %s\n' "$BUMPED pin(s) rewritten -- next game launch rebuilds the container"
         else
-          printf '  %s\n' "nothing to update"
+          printf '  %s\n' "every pin already newest, Containerfile untouched"
+        fi
+        if [ "$MISSED" -gt 0 ]; then
+          printf '  %s\n' "$MISSED pin(s) CANNOT be fixed automatically -- the container will not rebuild until they are edited by hand in $FILE"
         fi
         ${pkgs.coreutils}/bin/rm -f "$TMP"
       '';
