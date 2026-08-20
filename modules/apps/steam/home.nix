@@ -117,6 +117,16 @@
         LATEST=$($ENTER dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
           --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES 2>/dev/null || true)
 
+        # An unreachable mirror returns nothing, which is indistinguishable from
+        # "no package resolved" further down and would report all 34 pins as
+        # retired. Pins are untouched either way, so this reports and leaves the
+        # relock behind it alone rather than failing the whole `update`.
+        if [ -z "$LATEST" ]; then
+          printf 'steam-asahi pins\n  %s\n' \
+            "could not reach the Fedora repos -- pins left untouched, rerun when back online"
+          exit 0
+        fi
+
         PLAN=$(printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v latest="$LATEST" '
           BEGIN {
             n = split(latest, l, "\n")
