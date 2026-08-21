@@ -4,6 +4,10 @@ let
     home = with self.homeModules; [
       sops
       passwords
+      enteAuth
+    ];
+    darwin = with self.darwinModules; [
+      enteAuth
     ];
   };
 in
