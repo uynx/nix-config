@@ -7,21 +7,17 @@
   # `domain-suffix-match` is the only thing between a rogue "eduroam" AP and the
   # password. Do not drop it, and do not swap the pin for the system CA bundle.
   #
-  # Credentials live in /var/lib/secrets/eduroam.env, created empty by tmpfiles
-  # and filled in by hand once per machine, like the sops age key. envsubst
-  # substitutes them at boot into a 0600 file under /run, so neither the store
-  # nor git ever sees them. Until filled in, NetworkManager rejects the profile
-  # outright with "802-1x.identity: property is empty" — the file is created
-  # empty rather than omitted so the unit still starts.
+  # Credentials come from the `eduroam-env` sops secret, decrypted to /run as
+  # root-only and substituted by envsubst at unit start, so the store and git
+  # hold only ciphertext. Its plaintext is exactly two lines:
   #   EDUROAM_IDENTITY=<netid>@umass.edu
   #   EDUROAM_PASSWORD=<netid password>
+  # Rotating the NetID password means re-editing the secret and rebuilding —
+  # until then the connection fails, it does not fall back.
   flake.nixosModules.eduroam =
-    { pkgs, ... }:
+    { config, pkgs, ... }:
     {
-      systemd.tmpfiles.rules = [
-        "d /var/lib/secrets 0700 root root -"
-        "f /var/lib/secrets/eduroam.env 0600 root root"
-      ];
+      sops.secrets.eduroam-env = { };
 
       # NM converts a profile into iwd's format only when it sees that profile as
       # NEW. A rebuild that changes a setting below rewrites /run and reloads, which
@@ -36,7 +32,7 @@
       '';
 
       networking.networkmanager.ensureProfiles = {
-        environmentFiles = [ "/var/lib/secrets/eduroam.env" ];
+        environmentFiles = [ config.sops.secrets.eduroam-env.path ];
 
         profiles.eduroam = {
           connection = {

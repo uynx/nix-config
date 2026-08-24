@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, self, ... }:
 {
   flake.homeModules.sops =
     { config, pkgs, ... }:
@@ -31,4 +31,25 @@
       };
 
     };
+
+  # System tier, Linux only. NetworkManager reads the eduroam credentials as
+  # root at unit start, before any user service could have decrypted them, so
+  # the home tier above cannot serve them.
+  #
+  # Keyed to the same age identity as the home tier rather than an SSH host key,
+  # which is sops-nix's usual system bootstrap: this machine runs no sshd, so
+  # /etc/ssh/ssh_host_* does not exist, and enabling one purely to mint a key
+  # would reopen a service the firewall audit deliberately closed. One identity,
+  # one .sops.yaml entry, one manual restore covering both tiers.
+  #
+  # A secret declared here but absent from secrets.yaml fails activation, so add
+  # the value before the rebuild that references it.
+  flake.nixosModules.sops = {
+    imports = [ inputs.sops-nix.nixosModules.sops ];
+
+    sops = {
+      defaultSopsFile = ../../../secrets/secrets.yaml;
+      age.keyFile = "${self.lib.user.home}/.config/sops/age/keys.txt";
+    };
+  };
 }
