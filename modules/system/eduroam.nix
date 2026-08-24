@@ -10,8 +10,9 @@
   # Credentials live in /var/lib/secrets/eduroam.env, created empty by tmpfiles
   # and filled in by hand once per machine, like the sops age key. envsubst
   # substitutes them at boot into a 0600 file under /run, so neither the store
-  # nor git ever sees them. Until filled in, the profile exists and simply fails
-  # to authenticate.
+  # nor git ever sees them. Until filled in, NetworkManager rejects the profile
+  # outright with "802-1x.identity: property is empty" — the file is created
+  # empty rather than omitted so the unit still starts.
   #   EDUROAM_IDENTITY=<netid>@umass.edu
   #   EDUROAM_PASSWORD=<netid password>
   flake.nixosModules.eduroam = {
