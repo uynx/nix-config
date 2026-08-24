@@ -157,7 +157,10 @@
               openclaw) openclaw --version 2>/dev/null | head -1 | sed 's/OpenClaw //' ;;
               t3) t3 --version 2>/dev/null | head -1 | sed 's/t3 //' ;;
               qwen) (qwen --version 2>/dev/null || qwen-code --version 2>/dev/null) | head -1 ;;
-              hermes) hermes --version 2>/dev/null | head -1 | sed 's/Hermes Agent //' ;;
+              # Drop the local-commit suffix. hermes carries local modifications
+              # as a commit and `hermes update` resets them away, so comparing
+              # the raw strings reported a version change on every single run.
+              hermes) hermes --version 2>/dev/null | head -1 | sed -e 's/Hermes Agent //' -e 's/ · local .*//' ;;
               *) echo "" ;;
             esac
           }
