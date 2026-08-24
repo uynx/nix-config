@@ -41,7 +41,14 @@
           identity = "$EDUROAM_IDENTITY";
           anonymous-identity = "anonymous@umass.edu";
           ca-cert = "${./umass-eduroam-ca.pem}";
-          domain-suffix-match = "clearpass.it.umass.edu";
+          # Deliberately the parent domain, not the server's own name. Under the
+          # iwd backend NM rewrites this to iwd's ServerDomainMask by prepending
+          # "*.", and "*.clearpass.it.umass.edu" matches only subdomains OF that
+          # host, never the host itself — the connection then dies with
+          # "Peer certificate's subject domain doesn't match mask". "it.umass.edu"
+          # becomes "*.it.umass.edu", which matches the CN and every SAN
+          # (clearpass, clearpass1 ... clearpass12).
+          domain-suffix-match = "it.umass.edu";
           password = "$EDUROAM_PASSWORD";
         };
         ipv4.method = "auto";
