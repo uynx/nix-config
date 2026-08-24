@@ -51,7 +51,49 @@
 
         # No use_tempaddr here: networking.tempAddresses already defaults it
         # to 2, and a second definition is a hard eval error.
+
+        # Below: parity with Kicksecure's security-misc, minus everything that
+        # contradicts a decision already made in this repo — bpf_jit_harden
+        # stays 1, tcp_timestamps stays on, swappiness stays 100 for zswap, and
+        # rp_filter stays off because Obscura routes by fwmark.
+        "kernel.sysrq" = 0;
+        "kernel.perf_event_paranoid" = 3;
+        # Autoloading a line discipline from an unprivileged ioctl has been a
+        # recurring privilege-escalation path.
+        "dev.tty.ldisc_autoload" = 0;
+        "fs.suid_dumpable" = 0;
+        "fs.protected_fifos" = 2;
+        "fs.protected_regular" = 2;
+        "vm.mmap_min_addr" = 65536;
+        "net.ipv4.tcp_rfc1337" = 1;
+        # io_uring is a large and repeatedly exploited surface that nothing
+        # here uses. 2 disables it outright rather than for unprivileged only.
+        "kernel.io_uring_disabled" = 2;
       };
+
+      # The x86-only half of the usual hardened cmdline is deliberately absent:
+      # vsyscall, vdso32, ia32_emulation, intel_iommu/amd_iommu and mem_encrypt
+      # do not exist on this SoC. An unrecognised param is ignored, but listing
+      # dead ones invites someone to "fix" them later.
+      kernelParams = [
+        "slab_nomerge"
+        "init_on_alloc=1"
+        "page_alloc.shuffle=1"
+        "randomize_kstack_offset=on"
+        "debugfs=off"
+        "bdev_allow_write_mounted=0"
+        "proc_mem.force_override=never"
+
+        # DMA from a malicious peripheral is the one physical attack that lands
+        # against a machine that is running and locked, which is this laptop's
+        # normal unattended state since it cannot suspend at all.
+        "iommu.passthrough=0"
+        "efi=disable_early_pci_dma"
+
+        # Not taken: init_on_free=1 (real cost, little over init_on_alloc) and
+        # oops=panic/panic=-1, which would turn any Asahi driver oops into an
+        # immediate reboot and lose work on a machine whose GPU stack is young.
+      ];
 
       # No BBR: its pacing is distinguishable from cubic's by any destination
       # server, and cubic is what almost every Linux client sends. Blending in
@@ -65,6 +107,17 @@
         "tipc"
       ];
     };
+
+    # A core dump is a process's memory written to an unencrypted disk, keys
+    # included. Nothing here debugs from them.
+    systemd.coredump.enable = false;
+
+    # GrapheneOS' hardened_malloc: guard pages, isolated size classes, freed-
+    # memory poisoning. The closest thing Linux has to OpenBSD's allocator.
+    # "light" rather than the full variant because the full one's cost and
+    # breakage are what made Kicksecure drop it. If something segfaults oddly
+    # after this, suspect it first and boot the previous generation.
+    environment.memoryAllocator.provider = "graphene-hardened-light";
 
     security = {
       # Adds `nohibernate` and blocks kexec. Asahi cannot hibernate anyway.
