@@ -28,6 +28,9 @@
       # wrapping it would only restate the name.
       virt
 
+      # Campus Wi-Fi, laptop only — the other hosts are never at UMass.
+      eduroam
+
       ./_hardware-configuration.nix
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
 
