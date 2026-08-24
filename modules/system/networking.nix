@@ -32,6 +32,13 @@
           "ipv6.ip6-privacy" = 2;
         };
 
+        # NM learns where to write iwd's provisioning files by asking iwd over
+        # D-Bus when the default "auto" is in effect. NetworkManager-ensure-profiles
+        # runs moments after NM starts and lost that race at every boot: no path
+        # meant no conversion, and an 802.1X profile without a provisioning file
+        # cannot activate at all. Naming the directory removes the query.
+        settings.main.iwd-config-path = "/var/lib/iwd";
+
         # Probes nmcheck.gnome.org on every association — before the VPN is up, so
         # it hands the real IP to a third party on each boot. Interval 0 is NM's
         # documented off switch; the egress lockdown would block it anyway and

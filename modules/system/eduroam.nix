@@ -26,6 +26,10 @@
       # that owns the interface. Clearing both files and making NM forget the
       # profile first is what makes this module actually declarative rather than
       # declarative-until-the-next-reboot.
+      # Its preStart deletes an iwd file and expects NM to rewrite it, so iwd
+      # must already be running.
+      systemd.services.NetworkManager-ensure-profiles.after = [ "iwd.service" ];
+
       systemd.services.NetworkManager-ensure-profiles.preStart = ''
         rm -f /var/lib/iwd/eduroam.8021x /run/NetworkManager/system-connections/eduroam.nmconnection
         ${pkgs.networkmanager}/bin/nmcli connection reload || true
