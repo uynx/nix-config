@@ -15,25 +15,13 @@
   # Rotating the NetID password means re-editing the secret and rebuilding —
   # until then the connection fails, it does not fall back.
   flake.nixosModules.eduroam =
-    { config, pkgs, ... }:
+    { config, ... }:
     {
       sops.secrets.eduroam-env = { };
 
-      # NM converts a profile into iwd's format only when it sees that profile as
-      # NEW. A rebuild that changes a setting below rewrites /run and reloads, which
-      # NM treats as merely modified — it keeps using the stale
-      # /var/lib/iwd/eduroam.8021x, so the change silently never reaches the daemon
-      # that owns the interface. Clearing both files and making NM forget the
-      # profile first is what makes this module actually declarative rather than
-      # declarative-until-the-next-reboot.
-      # Its preStart deletes an iwd file and expects NM to rewrite it, so iwd
-      # must already be running.
+      # Its ordering only matters because NM hands iwd this profile's EAP config;
+      # iwd must be up for that to land.
       systemd.services.NetworkManager-ensure-profiles.after = [ "iwd.service" ];
-
-      systemd.services.NetworkManager-ensure-profiles.preStart = ''
-        rm -f /var/lib/iwd/eduroam.8021x /run/NetworkManager/system-connections/eduroam.nmconnection
-        ${pkgs.networkmanager}/bin/nmcli connection reload || true
-      '';
 
       networking.networkmanager.ensureProfiles = {
         environmentFiles = [ config.sops.secrets.eduroam-env.path ];
