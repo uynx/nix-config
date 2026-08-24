@@ -84,7 +84,11 @@
         script = ''
           shopt -s nullglob
           for f in /var/lib/iwd/*.psk /var/lib/iwd/*.open /var/lib/iwd/*.8021x; do
-            grep -q '^AlwaysRandomizeAddress' "$f" && continue
+            # NetworkManager rewrites .8021x files in place, so one can vanish
+          # between the glob and the read. Without this guard grep fails and
+          # errexit takes the whole unit down mid-activation.
+          [ -e "$f" ] || continue
+          if grep -q '^AlwaysRandomizeAddress' "$f"; then continue; fi
             # Append-only/insert-only: never rewrite the file, it holds the PSK.
             if grep -q '^\[Settings\]' "$f"; then
               sed -i '/^\[Settings\]/a AlwaysRandomizeAddress=true' "$f"
