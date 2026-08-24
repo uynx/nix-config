@@ -1,6 +1,9 @@
 { self, ... }:
 let
   bundle = self.lib.mkBundle {
+    # Linux only: the system tier exists for secrets root needs at unit start.
+    # Darwin has no such consumer and keeps the home tier alone.
+    nixos = [ self.nixosModules.sops ];
     home = with self.homeModules; [
       sops
       passwords
