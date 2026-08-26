@@ -119,7 +119,16 @@
       systemd.services.obscura = {
         description = "Obscura VPN";
         wantedBy = [ "multi-user.target" ];
-        after = [ "network.target" ];
+        # `--dns network-manager` makes NetworkManager a hard runtime dependency:
+        # without it the daemon exits "No supported DNS manager detected", its
+        # at-exit log hook then panics, and Restart=always with no start limit
+        # spins that abort forever. Wants, not Requires — Requires would propagate
+        # NetworkManager's mid-switch stop and take the daemon down with it.
+        wants = [ "NetworkManager.service" ];
+        after = [
+          "network.target"
+          "NetworkManager.service"
+        ];
 
         # The kill-switch nftables table is owner-flagged, so the kernel destroys it
         # with the daemon — a daemon that gives up leaves the machine unfiltered, not
