@@ -1,9 +1,19 @@
 { self, ... }:
 {
   flake.homeModules.rclone =
-    { config, pkgs, ... }:
+    { config, lib, pkgs, ... }:
     {
       imports = [ self.homeModules.sops ];
+
+      # A switch that bumps NetworkManager has already stopped it (and iwd) by
+      # the time sd-switch runs, and cannot restart either until sd-switch
+      # returns — so this Type=notify mount blocks the whole rebuild for its
+      # 90 s start timeout with the machine offline. Restarted after the switch.
+      systemd.user.services."rclone-mount:@gcrypt".Unit.X-SwitchMethod = "keep-old";
+
+      shellHooks.rebPostSwitch = lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
+        systemctl --user try-restart rclone-mount:@gcrypt.service
+      '';
 
       sops.secrets = {
         rclone-gdrive-token = { };
