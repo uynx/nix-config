@@ -329,10 +329,9 @@
       # Each hermes update snapshots its whole state dir, and that state dir
       # holds .env and auth.json — so every run leaves another plaintext copy of
       # its credentials lying around indefinitely. Keep a week for rollback.
-      systemd.user.tmpfiles.rules = [
+      systemd.user.tmpfiles.rules = lib.optionals isLinux [
         "e ${home}/.hermes/state-snapshots - - - 7d"
       ];
-
       # hermes finds extra skills through a config key rather than a path, and
       # writes that config itself, so it cannot be a store symlink. Appending is
       # safe only while it has no `skills:` block of its own; if it grows one,
