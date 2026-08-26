@@ -5,15 +5,21 @@
     {
       imports = [ self.homeModules.sops ];
 
-      # A switch that bumps NetworkManager has already stopped it (and iwd) by
-      # the time sd-switch runs, and cannot restart either until sd-switch
-      # returns — so this Type=notify mount blocks the whole rebuild for its
-      # 90 s start timeout with the machine offline. Restarted after the switch.
+      # sd-switch starts changed user units synchronously inside activation, and
+      # this one is Type=notify against Google Drive: with no network it blocks
+      # for its 90 s start timeout and stalls the whole rebuild. Rebuilding
+      # offline is reason enough on its own, so activation must never wait on it.
       systemd.user.services."rclone-mount:@gcrypt".Unit.X-SwitchMethod = "keep-old";
 
-      shellHooks.rebPostSwitch = lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
-        systemctl --user try-restart rclone-mount:@gcrypt.service
-      '';
+      # keep-old means nothing else ever lands a new rclone on the running mount.
+      # This runs on every Home Manager activation rather than only under `reb`,
+      # and --no-block keeps it off activation's critical path, so it stays safe
+      # on a rebuild with no network at all.
+      home.activation.restartRcloneMount = lib.mkIf pkgs.stdenv.hostPlatform.isLinux (
+        lib.hm.dag.entryAfter [ "reloadSystemd" ] ''
+          run systemctl --user --no-block try-restart rclone-mount:@gcrypt.service || true
+        ''
+      );
 
       sops.secrets = {
         rclone-gdrive-token = { };
