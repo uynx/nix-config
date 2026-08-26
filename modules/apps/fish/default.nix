@@ -143,7 +143,13 @@ in
             # A flake build cannot see untracked files, so an unstaged new module is
             # silently skipped.
             git -C $repo add -A
-
+            ${lib.optionalString isDarwin ''
+              # Auto-remove rogue standalone binary left by agy background self-updater
+              # before brew bundle runs to prevent cask symlink collisions.
+              if test -f /opt/homebrew/bin/agy -a ! -L /opt/homebrew/bin/agy
+                  rm -f /opt/homebrew/bin/agy
+              end
+            ''}
             # nh elevates itself, so no sudo here.
             if nh $platform switch $repo -H $target -- --impure
                 ${config.shellHooks.rebPostSwitch}

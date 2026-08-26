@@ -203,6 +203,11 @@
               roll agy    sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://antigravity.google/cli/install.sh | bash'
             fi
           ''}
+          ${lib.optionalString (!isLinux) ''
+            if [ -f /opt/homebrew/bin/agy ] && [ ! -L /opt/homebrew/bin/agy ]; then
+              rm -f /opt/homebrew/bin/agy
+            fi
+          ''}
           roll openclaw npm install -g --prefix "${home}/.local" openclaw
           roll t3       npm install -g --prefix "${home}/.local" t3
           roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
@@ -247,7 +252,6 @@
         DISABLE_AUTOUPDATER = "1";
         GROK_DISABLE_AUTOUPDATER = "1";
         OPENCODE_DISABLE_AUTOUPDATE = "1";
-        AGY_CLI_DISABLE_AUTO_UPDATE = "1";
 
         # Appended, not home.sessionPath: that prepends, letting a self-installed
         # binary here silently outrank its pinned version.
