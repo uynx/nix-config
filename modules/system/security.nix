@@ -112,13 +112,6 @@
     # included. Nothing here debugs from them.
     systemd.coredump.enable = false;
 
-    # GrapheneOS' hardened_malloc: guard pages, isolated size classes, freed-
-    # memory poisoning. The closest thing Linux has to OpenBSD's allocator.
-    # "light" rather than the full variant because the full one's cost and
-    # breakage are what made Kicksecure drop it. If something segfaults oddly
-    # after this, suspect it first and boot the previous generation.
-    environment.memoryAllocator.provider = "graphene-hardened-light";
-
     security = {
       # Adds `nohibernate` and blocks kexec. Asahi cannot hibernate anyway.
       protectKernelImage = true;
