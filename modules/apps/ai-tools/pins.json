@@ -1,11 +1,11 @@
 {
   "claude-code": {
-    "version": "2.1.241",
-    "hash": "sha256-LbDLiT6+2O+K7kZlbaRbxoAfolhik9rmSr+jreiUov4="
+    "version": "2.1.246",
+    "hash": "sha256-+YKW5uYcUHWJ0alzsmKXa3NHAOxOBVy2Sv2/bZozfbc="
   },
   "codex": {
-    "version": "0.149.1",
-    "hash": "sha256-gfbeuKRE4LZhvvhdXeiUUJ7612/B3sToImdlnhRf8TE="
+    "version": "0.150.0",
+    "hash": "sha256-Tlr+zDHtopWiwJPVEjjd4d7e/gwqDKqQHW+FIslcomA="
   },
   "grok": {
     "version": "1.0.5",
@@ -16,11 +16,11 @@
     "hash": "sha256-RgNlLX7I8CeLVtFZSlUdolTCFAdmRfHrugYJLMy04RY="
   },
   "opencode": {
-    "version": "1.18.21",
-    "hash": "sha256-0w0sunRhf057luJVY8lXL/5FP56ucPwN8WKGgTU37nI="
+    "version": "1.18.23",
+    "hash": "sha256-htOvr06HhPmtqxib4qMVwSsn7ECgS3De++cFlcPMfGU="
   },
   "cursor-agent": {
-    "version": "2026.08.11-e8db854",
-    "hash": "sha256-6hP5LilfUjqZzo2PV9aJTSHl0eLQMP+tcYzNWVXKLu0="
+    "version": "2026.08.25-3e8eec8",
+    "hash": "sha256-8cHCMw2J+k71tswE/P+6FQEv9Q6s0H4PO67AcW8lrF0="
   }
 }

@@ -80,6 +80,11 @@
         description = "Force per-connection MAC randomization on every known network";
         wantedBy = [ "multi-user.target" ];
         after = [ "iwd.service" ];
+        # The unit edits the directory its own .path unit watches, so each run
+        # retriggers it until every profile is patched. That convergence burst
+        # trips the default 5-starts-per-10 s limit and fails a unit whose work
+        # succeeded every time, which is enough to exit a rebuild non-zero.
+        startLimitIntervalSec = 0;
         serviceConfig.Type = "oneshot";
         script = ''
           shopt -s nullglob
