@@ -1,3 +1,4 @@
+{ self, ... }:
 {
   # hostName is per-host, set in modules/hosts/<name>/default.nix
   flake.nixosModules.networking =
@@ -6,6 +7,23 @@
       # Boot otherwise blocks on this unit until it times out whenever Wi-Fi is
       # slow to associate, and nothing here needs the network that early.
       systemd.services.NetworkManager-wait-online.enable = false;
+
+      # A changed unit is stopped in the switch's stop phase and started again
+      # only in its start phase, which is *after* the restart phase where Home
+      # Manager activation runs. Left default, every bump of either daemon takes
+      # the machine offline for the whole activation and anything in it that
+      # touches the network deadlocks the rebuild. False moves them into the
+      # restart phase instead: one `systemctl restart`, seconds of downtime.
+      # Its documented cost is running the new ExecStop; neither unit has one.
+      systemd.services.NetworkManager.stopIfChanged = false;
+      systemd.services.iwd.stopIfChanged = false;
+
+      # Restarted in that same phase, so order it behind them — user units are
+      # started from inside this one and must never land in the restart gap.
+      systemd.services."home-manager-${self.lib.user.name}".after = [
+        "NetworkManager.service"
+        "iwd.service"
+      ];
 
       # NixOS' default pool is `*.nixos.pool.ntp.org`, which announces the distro
       # to the pool operator and to anything watching the exit. Generic pools say
