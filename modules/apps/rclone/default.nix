@@ -2,6 +2,9 @@
 {
   flake.homeModules.rclone =
     { config, lib, pkgs, ... }:
+    let
+      mountPoint = "${config.home.homeDirectory}/gdrive";
+    in
     {
       imports = [ self.homeModules.sops ];
 
@@ -9,7 +12,17 @@
       # this one is Type=notify against Google Drive: with no network it blocks
       # for its 90 s start timeout and stalls the whole rebuild. Rebuilding
       # offline is reason enough on its own, so activation must never wait on it.
-      systemd.user.services."rclone-mount:@gcrypt".Unit.X-SwitchMethod = "keep-old";
+      systemd.user.services."rclone-mount:@gcrypt" = {
+        Unit.X-SwitchMethod = "keep-old";
+
+        # rclone unmounts itself on SIGTERM by exec'ing fusermount, but the
+        # default KillMode=control-group signals that child too — "Failed to
+        # unmount: signal: terminated" — leaving a mount the next ExecStartPre
+        # cannot even stat. Clear it from a process the kill cannot reach; the
+        # leading `-` is what makes it a no-op when there is nothing to unmount.
+        # Needs the setuid wrapper: unprivileged unmount from the store fails.
+        Service.ExecStopPost = "-/run/wrappers/bin/fusermount3 -uz ${mountPoint}";
+      };
 
       # keep-old means nothing else ever lands a new rclone on the running mount.
       # This runs on every Home Manager activation rather than only under `reb`,
@@ -61,7 +74,7 @@
             };
             mounts."" = {
               enable = true;
-              mountPoint = "${config.home.homeDirectory}/gdrive";
+              inherit mountPoint;
               # nfsmount runs an in-process NFS server and mounts it with the
               # system NFS client, so macOS needs no macFUSE kext and no
               # Recovery-mode security downgrade. Linux keeps plain FUSE, where
