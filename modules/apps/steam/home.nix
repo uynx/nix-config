@@ -121,7 +121,7 @@
         LATEST=$(${pkgs.coreutils}/bin/timeout 240 \
           $ENTER dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
           --setopt=timeout=15 --setopt=retries=1 \
-          --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES 2>/dev/null || true)
+          --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES < /dev/null 2>/dev/null || true)
 
         # An unreachable mirror returns nothing, which is indistinguishable from
         # "no package resolved" further down and would report all 34 pins as
