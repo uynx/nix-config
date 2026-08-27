@@ -34,6 +34,23 @@
         "1.pool.ntp.org"
       ];
 
+      services.resolved = {
+        enable = true;
+        settings.Resolve = {
+          DNS = [
+            "194.242.2.9#all.dns.mullvad.net"
+            "2a07:e340::9#all.dns.mullvad.net"
+          ];
+          FallbackDNS = [
+            "194.242.2.9#all.dns.mullvad.net"
+            "2a07:e340::9#all.dns.mullvad.net"
+          ];
+          DNSOverTLS = "yes";
+          DNSSEC = "false";
+          Domains = [ "~." ];
+        };
+      };
+
       networking.networkmanager = {
         enable = true;
         wifi.backend = "iwd";
