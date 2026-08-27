@@ -4,8 +4,8 @@
     "hash": "sha256-pou2M/heSg5zRllS6mJM8YmSw/pNthX+65Qv+tV9CCo="
   },
   "codex": {
-    "version": "0.150.0",
-    "hash": "sha256-Tlr+zDHtopWiwJPVEjjd4d7e/gwqDKqQHW+FIslcomA="
+    "version": "0.150.1",
+    "hash": "sha256-oFZ3rPTA3W2+0B/+qoLcpjN/BoVuhDeHt0znv2IBn7Q="
   },
   "grok": {
     "version": "1.0.5",
