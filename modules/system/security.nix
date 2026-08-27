@@ -12,15 +12,16 @@
     # A fresh install decrypts the SSH key from sops but has an empty
     # known_hosts, so the first push stops on a host-key prompt — and takes the
     # trust-on-first-use decision with it. Keys are GitHub's published set.
-    # The travel router runs dropbear from 2019: no post-quantum key exchange, and
-    # an ssh-rsa host key modern OpenSSH refuses outright. Both relaxations are
-    # scoped to that one LAN address rather than loosened globally. The warning
-    # it silences is real but inapplicable — "store now, decrypt later" needs a
-    # recorded transcript, and this link never leaves the room.
+    # The travel router's dropbear (2017.75) offers only an ssh-rsa host key,
+    # which modern OpenSSH refuses outright, so connecting needs this exception —
+    # scoped to that one LAN address rather than loosened globally.
+    #
+    # Its lack of post-quantum key exchange is deliberately NOT silenced. The
+    # warning is accurate: that device cannot do PQ and never will, and a visible
+    # reminder every session is worth more than a quiet config line.
     programs.ssh.extraConfig = ''
       Host 192.168.8.1
         HostKeyAlgorithms +ssh-rsa
-        WarnWeakCrypto no-pq-kex
     '';
 
     programs.ssh.knownHosts = {
