@@ -62,6 +62,8 @@
             udp dport 53 accept
             tcp dport 53 accept
             tcp dport 853 accept
+            ip daddr 194.242.2.9 tcp dport 443 accept
+            ip6 daddr 2a07:e340::9 tcp dport 443 accept
 
             ip daddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 224.0.0.0/24, 239.0.0.0/8, 255.255.255.255 } accept
             ip6 daddr { fe80::/10, fc00::/7, ff01::/16, ff02::/16, ff03::/16, ff04::/16, ff05::/16 } accept

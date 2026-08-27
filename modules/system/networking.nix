@@ -34,20 +34,25 @@
         "1.pool.ntp.org"
       ];
 
-      services.resolved = {
+      services.dnscrypt-proxy = {
         enable = true;
-        settings.Resolve = {
-          DNS = [
-            "194.242.2.9#all.dns.mullvad.net"
-            "2a07:e340::9#all.dns.mullvad.net"
+        settings = {
+          listen_addresses = [
+            "127.0.0.1:53"
+            "[::1]:53"
           ];
-          FallbackDNS = [
-            "194.242.2.9#all.dns.mullvad.net"
-            "2a07:e340::9#all.dns.mullvad.net"
+          server_names = [
+            "mullvad-all-doh"
+            "mullvad-all-doh-v6"
           ];
-          DNSOverTLS = "yes";
-          DNSSEC = "false";
-          Domains = [ "~." ];
+          doh_servers = true;
+          require_dnssec = false;
+          static = {
+            mullvad-all-doh.stamp =
+              "sdns://AgIAAAAAAAAADzE5NC4yNDIuMi45OjQ0MwATYWxsLmRucy5tdWxsdmFkLm5ldAovZG5zLXF1ZXJ5";
+            mullvad-all-doh-v6.stamp =
+              "sdns://AgIAAAAAAAAAElsyYTA3OmUzNDA6OjldOjQ0MwATYWxsLmRucy5tdWxsdmFkLm5ldAovZG5zLXF1ZXJ5";
+          };
         };
       };
 
