@@ -114,7 +114,13 @@
         # --arch keeps --latest-limit off the .src RPMs, which sort newest.
         # The format stays inline and quoted. Held in a variable it word-splits
         # on its own space, and dnf reads half the format as a package name.
-        LATEST=$($ENTER dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
+        # Offline, dnf retries each unreachable mirror on its own schedule and
+        # `update` sits here with nothing printed. The setopts make dnf give up
+        # and exit, which is what reaches the empty-LATEST path below; the outer
+        # timeout is the backstop for a stall dnf does not bound, such as DNS.
+        LATEST=$(${pkgs.coreutils}/bin/timeout 240 \
+          $ENTER dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
+          --setopt=timeout=15 --setopt=retries=1 \
           --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES 2>/dev/null || true)
 
         # An unreachable mirror returns nothing, which is indistinguishable from
