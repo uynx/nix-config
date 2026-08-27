@@ -35,6 +35,7 @@
             nodejs
             uv
             git # hermes' installer clones its own repo
+            coreutils # timeout, bounding hermes below
 
             # t3 pulls node-pty, which has no linux-arm64 prebuild and compiles on
             # install. Without these npm dies on `c++: not found`.
@@ -219,10 +220,19 @@
                 | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
             elif [ -z "$missingOnly" ]; then
               ver=$(get_ver hermes || true)
-              if hermes update --check 2>&1 | grep -q 'Already up to date'; then
+              # hermes does its own network I/O and bounds none of it, so a
+              # stalled lookup parks the whole run here with nothing printed.
+              # Only 124 means the bound fired: any other non-zero exit is
+              # hermes answering, and the grep below still decides what it meant.
+              rc=0
+              check=$(timeout 60 hermes update --check 2>&1) || rc=$?
+              if [ "$rc" -eq 124 ]; then
+                printf '  %-12s SKIPPED (update check timed out)\n' hermes
+                skipped=$((skipped + 1))
+              elif printf '%s' "$check" | grep -q 'Already up to date'; then
                 printf '  %-12s %s (up to date)\n' hermes "$ver"
               else
-                roll hermes hermes update --yes
+                roll hermes timeout 300 hermes update --yes
               fi
             fi
           ''}
