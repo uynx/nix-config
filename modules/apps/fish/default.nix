@@ -45,6 +45,9 @@ in
       shellAliases = {
         gen = "nix-env --list-generations";
       }
+      // lib.optionalAttrs (!isDarwin) {
+        uynx = "nmcli connection up uynx";
+      }
       // lib.optionalAttrs isDarwin {
         unb = "xattr -d com.apple.quarantine";
       };

@@ -90,6 +90,7 @@
       kernelParams = [
         "slab_nomerge"
         "init_on_alloc=1"
+        "init_on_free=1"
         "page_alloc.shuffle=1"
         "randomize_kstack_offset=on"
         "debugfs=off"
@@ -102,9 +103,8 @@
         "iommu.passthrough=0"
         "efi=disable_early_pci_dma"
 
-        # Not taken: init_on_free=1 (real cost, little over init_on_alloc) and
-        # oops=panic/panic=-1, which would turn any Asahi driver oops into an
-        # immediate reboot and lose work on a machine whose GPU stack is young.
+        # Not taken: oops=panic/panic=-1, which would turn any Asahi driver oops
+        # into an immediate reboot and lose work on a machine whose GPU stack is young.
       ];
 
       # No BBR: its pacing is distinguishable from cubic's by any destination
