@@ -60,12 +60,12 @@
           /dnf clean all/ { exit }
         ' "$SOURCE/Containerfile" \
           | ${pkgs.findutils}/bin/xargs \
-            ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- rpm -q >/dev/null
-        ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
+            ${pkgs.distrobox}/bin/distrobox enter --no-tty "$CONTAINER" -- rpm -q >/dev/null
+        ${pkgs.distrobox}/bin/distrobox enter --no-tty "$CONTAINER" -- \
           test -e /usr/lib64/dri/asahi_dri.so
-        ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
+        ${pkgs.distrobox}/bin/distrobox enter --no-tty "$CONTAINER" -- \
           test -e /usr/lib64/libvulkan_asahi.so
-        ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
+        ${pkgs.distrobox}/bin/distrobox enter --no-tty "$CONTAINER" -- \
           test -x /opt/steam-arm64/steamrtarm64/steam
         printf '%s\n' "Steam Asahi container checks passed."
       '';
@@ -79,7 +79,7 @@
         set -eu
 
         FILE=${config.home.homeDirectory}/nixos-config/steam-asahi/Containerfile
-        ENTER="${pkgs.distrobox}/bin/distrobox enter --no-workdir steam-asahi --"
+        ENTER="${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir steam-asahi --"
 
         if ! ${pkgs.docker}/bin/docker container inspect steam-asahi >/dev/null 2>&1; then
           printf '%-52s %s\n' steam-asahi "no container, skipped"
@@ -261,7 +261,7 @@
         # No rpm -q here: the image carries the Containerfile's hash as a label
         # and is rebuilt whenever that changes, and dnf installs those exact
         # NEVRAs or fails the build. `steam-asahi-doctor` checks them.
-        ${pkgs.distrobox}/bin/distrobox enter "$CONTAINER" -- \
+        ${pkgs.distrobox}/bin/distrobox enter --no-tty "$CONTAINER" -- \
           test -x /opt/steam-arm64/steamrtarm64/steam
       '';
 
@@ -372,7 +372,7 @@
         STEAM_BIN="$STEAM_HOME/root/steamrtarm64/steam"
         [ -p "$STEAM_HOME/steam.pipe" ] && [ -x "$STEAM_BIN" ]
 
-        exec ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- \
+        exec ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir "$CONTAINER" -- \
           /usr/bin/muvm -i -- "$STEAM_BIN" "$URL"
       '';
 
@@ -406,7 +406,7 @@
         # pressure-vessel only captures layers it finds on that search path.
         # The gtk2 link is gated so it cannot shadow Fedora's own copy, which
         # lives in /usr/lib64 with /usr/lib symlinked onto it.
-        ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- sudo sh -c \
+        ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir "$CONTAINER" -- sudo sh -c \
           'grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
              mkdir -p /usr/share/guestos/fex-mesa
              mount -o loop,ro /home/uynx/.local/share/steam-asahi/ArchLinux.ero \
@@ -486,7 +486,7 @@
         fi
 
         STATUS=0
-        ${pkgs.distrobox}/bin/distrobox enter --no-workdir "$CONTAINER" -- "$@" || STATUS=$?
+        ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir "$CONTAINER" -- "$@" || STATUS=$?
         ${steam-asahi-stop}/bin/steam-asahi-stop
         exit "$STATUS"
       '';
