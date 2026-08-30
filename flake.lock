@@ -394,11 +394,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787457452,
-        "narHash": "sha256-FJh4esFS3zqNNuKwvN3t6wrJGewqp1AUF9DAEvoKPD8=",
+        "lastModified": 1788080100,
+        "narHash": "sha256-n14luQo3F/ZLfCEHk1QieiI1nGnW92ZQZeZ0UIb0UMQ=",
         "owner": "nix-community",
         "repo": "nix-index-database",
-        "rev": "c51d5c2ba69c907a34e90c9b6b80cd2b93811745",
+        "rev": "dbb978fa87faf13398e90ccbc52c343d21c7dd6d",
         "type": "github"
       },
       "original": {
@@ -656,11 +656,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1787845111,
-        "narHash": "sha256-QbOuIPM53lbSN5SQvbkHdEeyR6ba4gYJIOC7BOKvn7A=",
+        "lastModified": 1787958843,
+        "narHash": "sha256-eVbgGaDQjoUKtnoC6ALEbWDsjqp3GHrlKruttzzZvoU=",
         "owner": "Sovereign-Engineering",
         "repo": "obscuravpn-client",
-        "rev": "94ccc24d83dbc7ecd9877d87da4d0eefbd2fa2ad",
+        "rev": "871c5d9712713f6b3269aff5a577234ea58ff7e9",
         "type": "github"
       },
       "original": {
