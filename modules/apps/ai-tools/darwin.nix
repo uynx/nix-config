@@ -1,6 +1,6 @@
 {
   # The macOS half of the AI tooling. Nothing is pinned here: the pins in
-  # linux.nix are aarch64-linux artifacts, and every vendor that ships a macOS
+  # linux.nix are Linux artifacts, and every vendor that ships a macOS
   # build ships it through Homebrew, which greedyCasks keeps current on every
   # rebuild.
   flake.darwinModules.aiTools.homebrew = {

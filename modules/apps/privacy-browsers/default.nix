@@ -111,14 +111,26 @@
       '';
     in
     {
-      home.packages = [
-        (pkgs.callPackage ./_tor-browser.nix { })
-        (pkgs.callPackage ./_mullvad-browser.nix { })
-        update-privacy-browsers
-      ];
+      # The two derivations beside this file exist only because nixpkgs has no
+      # aarch64 build. On x86_64 it has both, on the stable series rather than
+      # the alpha these pins are stuck on — so take them and skip the updater,
+      # which has nothing left to maintain there.
+      home.packages =
+        if pkgs.stdenv.hostPlatform.isAarch64 then
+          [
+            (pkgs.callPackage ./_tor-browser.nix { })
+            (pkgs.callPackage ./_mullvad-browser.nix { })
+            update-privacy-browsers
+          ]
+        else
+          with pkgs;
+          [
+            tor-browser
+            mullvad-browser
+          ];
 
       # Registered rather than named by `update` itself, so a host without these
       # browsers does not get an `update` that calls a missing command.
-      shellHooks.update = [ "update-privacy-browsers" ];
+      shellHooks.update = lib.optional pkgs.stdenv.hostPlatform.isAarch64 "update-privacy-browsers";
     };
 }

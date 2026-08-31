@@ -9,10 +9,19 @@
 let
   pins = builtins.fromJSON (builtins.readFile ./pins.json);
 
+  inherit (stdenvNoCC.hostPlatform) system;
+  # Two spellings of the same architecture, because the six vendors do not agree
+  # on one. `cpu` is nixpkgs' own name, `short` the npm/GitHub-release one.
+  cpu = stdenvNoCC.hostPlatform.parsed.cpu.name;
+  short = if cpu == "aarch64" then "arm64" else "x64";
+
   meta = homepage: desc: {
     inherit homepage;
     description = desc;
-    platforms = [ "aarch64-linux" ];
+    platforms = [
+      "aarch64-linux"
+      "x86_64-linux"
+    ];
     sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
   };
 
@@ -35,7 +44,7 @@ let
         inherit (pins.${pname}) version;
         src = fetchurl {
           url = url pins.${pname}.version;
-          inherit (pins.${pname}) hash;
+          hash = pins.${pname}.hash.${system};
         };
         installPhase = ''
           runHook preInstall
@@ -56,7 +65,7 @@ in
   claude-code = mkPin {
     pname = "claude-code";
     bin = "claude";
-    url = v: "https://downloads.claude.ai/claude-code-releases/${v}/linux-arm64/claude";
+    url = v: "https://downloads.claude.ai/claude-code-releases/${v}/linux-${short}/claude";
     homepage = "https://code.claude.com";
     desc = "Anthropic's Claude Code CLI";
   };
@@ -68,8 +77,8 @@ in
   # negotiating with the code-mode host". The `codex` binaries are identical.
   codex = mkPin {
     pname = "codex";
-    url = v: "https://registry.npmjs.org/@openai/codex/-/codex-${v}-linux-arm64.tgz";
-    sourceRoot = "package/vendor/aarch64-unknown-linux-musl";
+    url = v: "https://registry.npmjs.org/@openai/codex/-/codex-${v}-linux-${short}.tgz";
+    sourceRoot = "package/vendor/${cpu}-unknown-linux-musl";
     install = ''install -Dm755 bin/codex bin/codex-code-mode-host -t "$out/bin"'';
     homepage = "https://github.com/openai/codex";
     desc = "OpenAI's Codex CLI";
@@ -77,7 +86,7 @@ in
 
   grok = mkPin {
     pname = "grok";
-    url = v: "https://x.ai/cli/grok-${v}-linux-aarch64";
+    url = v: "https://x.ai/cli/grok-${v}-linux-${cpu}";
     homepage = "https://x.ai/cli";
     desc = "x.ai's official Grok CLI";
   };
@@ -89,14 +98,14 @@ in
   # publishing the old 1.x line.
   kimi = mkPin {
     pname = "kimi";
-    url = v: "https://code.kimi.com/kimi-code/binaries/${v}/kimi-code-linux-arm64";
+    url = v: "https://code.kimi.com/kimi-code/binaries/${v}/kimi-code-linux-${short}";
     homepage = "https://code.kimi.com";
     desc = "Moonshot's Kimi Code CLI";
   };
 
   opencode = mkPin {
     pname = "opencode";
-    url = v: "https://github.com/sst/opencode/releases/download/v${v}/opencode-linux-arm64.tar.gz";
+    url = v: "https://github.com/sst/opencode/releases/download/v${v}/opencode-linux-${short}.tar.gz";
     sourceRoot = ".";
     install = ''install -Dm755 opencode "$out/bin/opencode"'';
     homepage = "https://github.com/sst/opencode";
@@ -107,7 +116,7 @@ in
   # the launcher gets linked into bin.
   cursor-agent = mkPin {
     pname = "cursor-agent";
-    url = v: "https://downloads.cursor.com/lab/${v}/linux/arm64/agent-cli-package.tar.gz";
+    url = v: "https://downloads.cursor.com/lab/${v}/linux/${short}/agent-cli-package.tar.gz";
     sourceRoot = "dist-package";
     install = ''
       mkdir -p "$out/libexec" "$out/bin"
