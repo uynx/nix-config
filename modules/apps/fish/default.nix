@@ -135,7 +135,10 @@ in
           reb.body = ''
             # `nh os` drives NixOS, `nh darwin` drives nix-darwin; everything
             # else about a rebuild is the same on both.
-            set -l target ${if isDarwin then "darwin" else "asahi"}
+            # The flake attribute and the hostname are the same word on every
+            # NixOS host here, so this needs no per-host branch. darwin is the
+            # exception: its hostName is MacBook-Pro.
+            set -l target ${if isDarwin then "darwin" else "$hostname"}
             set -l platform ${if isDarwin then "darwin" else "os"}
             set -l repo ~/nixos-config
             if test (count $argv) -gt 0; set target $argv[1]; end

@@ -25,7 +25,13 @@
               # its own host — a Linux path and `asahi` leave a Mac with no
               # option completion at all, and silently.
               flakePath = "${self.lib.user.homeFor system}/nixos-config";
-              hostAttr = if isDarwin then "darwinConfigurations.darwin" else "nixosConfigurations.asahi";
+              hostAttr =
+                if isDarwin then
+                  "darwinConfigurations.darwin"
+                else if system == "x86_64-linux" then
+                  "nixosConfigurations.x86"
+                else
+                  "nixosConfigurations.asahi";
               inherit isDarwin;
             })
           ]
