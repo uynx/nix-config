@@ -25,13 +25,17 @@
               # its own host — a Linux path and `asahi` leave a Mac with no
               # option completion at all, and silently.
               flakePath = "${self.lib.user.homeFor system}/nixos-config";
+              # nixd evaluates this string at edit time on the machine running
+              # neovim, so the host resolves from that machine's own
+              # /etc/hostname rather than from a table here every new host would
+              # have to be added to. The file carries a trailing newline, which
+              # would make the attribute name miss. Darwin has exactly one
+              # configuration and no /etc/hostname, so it stays a literal.
               hostAttr =
                 if isDarwin then
                   "darwinConfigurations.darwin"
-                else if system == "x86_64-linux" then
-                  "nixosConfigurations.x86"
                 else
-                  "nixosConfigurations.asahi";
+                  ''nixosConfigurations.''${builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile /etc/hostname)}'';
               inherit isDarwin;
             })
           ]
