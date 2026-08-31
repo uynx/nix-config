@@ -112,8 +112,10 @@ update && reb    # relock every input + bump pinned tools, then rebuild
 update nvf       # relock one input only
 ```
 
-`reb` targets `asahi` on Linux and `darwin` on macOS, and drives `nh os` or
-`nh darwin` accordingly; pass a host name to override it. Both commands are
+`reb` targets the machine's own hostname on Linux and `darwin` on macOS, and
+drives `nh os` or `nh darwin` accordingly; pass a host name to override it. The
+hostname doubles as the flake attribute on every NixOS host here, which is why
+that needs no per-host branch. Both commands are
 assembled per host: `update` runs the pin updaters this host installed and
 `reb` runs its post-switch hooks, so neither names a component this host may
 not have. `nix fmt` formats the tree with nixfmt, and `statix check .` should
