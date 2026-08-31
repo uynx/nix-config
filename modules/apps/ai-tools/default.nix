@@ -105,10 +105,11 @@
 
               # Both or neither: a pin carrying one new hash beside one stale one
               # would build a mismatched binary on the machine that was skipped.
-              hash_arm=$(prefetch "$url_arm") && hash_x86=$(prefetch "$url_x86") || {
+              # `||` short-circuits, so a failed aarch64 fetch skips the x86 one.
+              if ! hash_arm=$(prefetch "$url_arm") || ! hash_x86=$(prefetch "$url_x86"); then
                 printf '%-12s SKIPPED (prefetch failed)\n' "$name"
                 return 1
-              }
+              fi
 
               # Written via mktemp and mv, so a pin is either fully updated or
               # untouched. That is what makes skipping one safe to continue past.
