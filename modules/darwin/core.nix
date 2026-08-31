@@ -9,6 +9,7 @@
       imports = with self.darwinModules; [
         nixSettings
         defaults
+        dnscrypt
         security
         fonts
         homebrew
@@ -29,15 +30,18 @@
       documentation.enable = false;
       time.timeZone = "America/Chicago";
 
+      # Cloudflare's NTP anycast IP, not a hostname: dnscrypt rejects Mullvad's
+      # cert when the clock is wrong, so resolving here deadlocks. The retry
+      # loop this replaces ran out before Wi-Fi associated and exited 0 anyway.
       launchd.daemons.sntp-sync = {
         serviceConfig = {
           ProgramArguments = [
-            "/bin/sh"
-            "-c"
-            "for i in $(seq 1 30); do /usr/bin/sntp -sS time.apple.com && exit 0; sleep 2; done"
+            "/usr/bin/sntp"
+            "-sS"
+            "162.159.200.123"
           ];
           RunAtLoad = true;
-          StartInterval = 3600;
+          StartInterval = 300;
         };
       };
 

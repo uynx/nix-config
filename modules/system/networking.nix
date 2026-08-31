@@ -34,28 +34,6 @@
         "1.pool.ntp.org"
       ];
 
-      services.dnscrypt-proxy = {
-        enable = true;
-        settings = {
-          listen_addresses = [
-            "127.0.0.1:53"
-            "[::1]:53"
-          ];
-          server_names = [
-            "mullvad-all-doh"
-            "mullvad-all-doh-v6"
-          ];
-          doh_servers = true;
-          require_dnssec = false;
-          static = {
-            mullvad-all-doh.stamp =
-              "sdns://AgIAAAAAAAAADzE5NC4yNDIuMi45OjQ0MwATYWxsLmRucy5tdWxsdmFkLm5ldAovZG5zLXF1ZXJ5";
-            mullvad-all-doh-v6.stamp =
-              "sdns://AgIAAAAAAAAAElsyYTA3OmUzNDA6OjldOjQ0MwATYWxsLmRucy5tdWxsdmFkLm5ldAovZG5zLXF1ZXJ5";
-          };
-        };
-      };
-
       networking.networkmanager = {
         enable = true;
         wifi.backend = "iwd";
