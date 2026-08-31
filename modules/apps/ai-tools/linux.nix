@@ -1,6 +1,7 @@
 {
-  # The Linux half of the AI tooling: the six CLIs that ship an aarch64-linux
-  # artifact worth pinning.
+  # The Linux half of the AI tooling: the six CLIs worth pinning. Each ships an
+  # aarch64-linux and an x86_64-linux artifact, so pins.json holds one hash per
+  # architecture and the same list serves both asahi and x86.
   # `update-ai-clis` (in default.nix) rewrites pins.json; a rebuild follows.
   flake.homeModules.aiToolsPinned =
     { pkgs, lib, ... }:

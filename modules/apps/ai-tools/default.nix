@@ -70,12 +70,14 @@
           ${lib.optionalString isLinux ''
             file=${home}/nixos-config/modules/apps/ai-tools/pins.json
 
-            # bump <name> <latest-version> <download-url>
-            # One unreachable vendor must not cost every later pin. Under
-            # errexit a failed prefetch would abort the whole run, so each step
-            # reports and returns instead, and callers use `try_bump`.
+            # bump <name> <latest-version> <aarch64-url> <x86_64-url>
+            # Both architectures are pinned from whichever machine runs this, so
+            # the other one can rebuild without a prefetch of its own. One
+            # unreachable vendor must not cost every later pin. Under errexit a
+            # failed prefetch would abort the whole run, so each step reports and
+            # returns instead, and callers use `try_bump`.
             bump() {
-              name=$1 latest=$2 url=$3
+              name=$1 latest=$2 url_arm=$3 url_x86=$4
 
               # An empty or null version means the lookup failed, and pasting it
               # into the URL would prefetch a 404 page rather than the artifact.
@@ -96,8 +98,14 @@
                 return 0
               fi
 
-              hash=$(nix hash convert --hash-algo sha256 --to sri \
-                "$(nix-prefetch-url --type sha256 "$url")") || {
+              prefetch() {
+                nix hash convert --hash-algo sha256 --to sri \
+                  "$(nix-prefetch-url --type sha256 "$1")"
+              }
+
+              # Both or neither: a pin carrying one new hash beside one stale one
+              # would build a mismatched binary on the machine that was skipped.
+              hash_arm=$(prefetch "$url_arm") && hash_x86=$(prefetch "$url_x86") || {
                 printf '%-12s SKIPPED (prefetch failed)\n' "$name"
                 return 1
               }
@@ -105,8 +113,9 @@
               # Written via mktemp and mv, so a pin is either fully updated or
               # untouched. That is what makes skipping one safe to continue past.
               tmp=$(mktemp)
-              jq --arg n "$name" --arg v "$latest" --arg h "$hash" \
-                '.[$n] = { version: $v, hash: $h }' "$file" >"$tmp"
+              jq --arg n "$name" --arg v "$latest" --arg a "$hash_arm" --arg x "$hash_x86" \
+                '.[$n] = { version: $v, hash: { "aarch64-linux": $a, "x86_64-linux": $x } }' \
+                "$file" >"$tmp"
               mv "$tmp" "$file"
 
               printf '%-12s %s -> %s\n' "$name" "$current" "$latest"
@@ -122,29 +131,35 @@
             if [ -z "$missingOnly" ]; then
             claude=$(curl -fsSL --connect-timeout 10 --max-time 30 https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]' || true)
             try_bump claude-code "$claude" \
-              "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude"
+              "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude" \
+              "https://downloads.claude.ai/claude-code-releases/$claude/linux-x64/claude"
 
             # npm, not the GitHub feed — the GitHub tarball omits the code-mode
             # host binary, so the feed has to match the source we actually fetch.
             codex=$(curl -fsSL --connect-timeout 10 --max-time 30 https://registry.npmjs.org/@openai/codex/latest | jq -r '.version' || true)
             try_bump codex "$codex" \
-              "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-arm64.tgz"
+              "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-arm64.tgz" \
+              "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-x64.tgz"
 
             grok=$(curl -fsSL --connect-timeout 10 --max-time 30 https://x.ai/cli/stable | tr -d '[:space:]' || true)
-            try_bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64"
+            try_bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64" \
+              "https://x.ai/cli/grok-$grok-linux-x86_64"
 
             kimi=$(curl -fsSL --connect-timeout 10 --max-time 30 https://code.kimi.com/kimi-code/latest | tr -d '[:space:]' || true)
             try_bump kimi "$kimi" \
-              "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-arm64"
+              "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-arm64" \
+              "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-x64"
 
             opencode=$(curl -fsSL --connect-timeout 10 --max-time 30 https://api.github.com/repos/sst/opencode/releases/latest \
               | jq -r '.tag_name | ltrimstr("v")' || true)
             try_bump opencode "$opencode" \
-              "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-arm64.tar.gz"
+              "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-arm64.tar.gz" \
+              "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-x64.tar.gz"
 
             cursor=$(curl -fsSL --connect-timeout 10 --max-time 30 --compressed https://cursor.com/install | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1 || true)
             try_bump cursor-agent "$cursor" \
-              "https://downloads.cursor.com/lab/$cursor/linux/arm64/agent-cli-package.tar.gz"
+              "https://downloads.cursor.com/lab/$cursor/linux/arm64/agent-cli-package.tar.gz" \
+              "https://downloads.cursor.com/lab/$cursor/linux/x64/agent-cli-package.tar.gz"
 
             echo
             echo 'rolling (takes effect now, no rebuild):'
