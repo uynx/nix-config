@@ -5,6 +5,7 @@
       nixSettings
       locale
       networking
+      dnscrypt
       security
       audio
       bluetooth
