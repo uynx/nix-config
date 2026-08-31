@@ -30,18 +30,22 @@
       documentation.enable = false;
       time.timeZone = "America/Chicago";
 
-      # Cloudflare's NTP anycast IP, not a hostname: dnscrypt rejects Mullvad's
-      # cert when the clock is wrong, so resolving here deadlocks. The retry
-      # loop this replaces ran out before Wi-Fi associated and exited 0 anyway.
+      # Steps the clock an Asahi session leaves days behind. Cloudflare's NTP
+      # anycast IP, because a hostname needs dnscrypt, which needs a valid
+      # cert, which needs the clock. `until`, because the `for` loop this
+      # replaces ran out before Wi-Fi associated and then exited 0 on its
+      # trailing `sleep`. The log is the only per-boot record of the drift.
       launchd.daemons.sntp-sync = {
         serviceConfig = {
           ProgramArguments = [
-            "/usr/bin/sntp"
-            "-sS"
-            "162.159.200.123"
+            "/bin/sh"
+            "-c"
+            "until /usr/bin/sntp -sS 162.159.200.123; do sleep 10; done"
           ];
           RunAtLoad = true;
-          StartInterval = 300;
+          StartInterval = 3600;
+          StandardOutPath = "/var/log/sntp-sync.log";
+          StandardErrorPath = "/var/log/sntp-sync.log";
         };
       };
 
