@@ -30,6 +30,15 @@
       documentation.enable = false;
       time.timeZone = "America/Chicago";
 
+      # `timed` owns the clock and overwrites whatever sntp sets. With no
+      # /etc/ntp.conf it has no server to reach ("_address:(null)") and falls
+      # back to TMTimeSynthesizer, which predicts from the RTC an Asahi session
+      # corrupted — measured stepping the clock -609514 s on 2026-09-01.
+      environment.etc."ntp.conf".text = ''
+        server 162.159.200.123 iburst
+        server 162.159.200.1 iburst
+      '';
+
       # Steps the clock an Asahi session leaves days behind. Cloudflare's NTP
       # anycast IP, because a hostname needs dnscrypt, which needs a valid
       # cert, which needs the clock. `until`, because the `for` loop this
