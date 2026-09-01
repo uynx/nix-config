@@ -31,9 +31,10 @@
       time.timeZone = "America/Chicago";
 
       # `timed` owns the clock and overwrites whatever sntp sets. With no
-      # /etc/ntp.conf it has no server to reach ("_address:(null)") and falls
-      # back to TMTimeSynthesizer, which predicts from the RTC an Asahi session
-      # corrupted — measured stepping the clock -609514 s on 2026-09-01.
+      # /etc/ntp.conf it has no server to reach ("_address:(null)") and instead
+      # extrapolates from its last trusted time plus elapsed counter — which
+      # does not count the days this machine spends booted into Asahi. On
+      # 2026-09-01 that overwrote an already-correct clock by -609514 s.
       environment.etc."ntp.conf".text = ''
         server 162.159.200.123 iburst
         server 162.159.200.1 iburst
