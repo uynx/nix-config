@@ -1,7 +1,12 @@
 { self, ... }:
 {
   flake.homeModules.rclone =
-    { config, lib, pkgs, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     let
       mountPoint = "${config.home.homeDirectory}/gdrive";
     in
