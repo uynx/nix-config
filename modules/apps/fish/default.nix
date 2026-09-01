@@ -129,7 +129,7 @@ in
           # unrelated edits.
           update.body = ''
             ${updateTools}
-            nix flake update --flake ~/nixos-config --commit-lock-file $argv
+            nix flake update --flake ~/nix-config --commit-lock-file $argv
           '';
 
           reb.body = ''
@@ -140,7 +140,7 @@ in
             # exception: its hostName is MacBook-Pro.
             set -l target ${if isDarwin then "darwin" else "$hostname"}
             set -l platform ${if isDarwin then "darwin" else "os"}
-            set -l repo ~/nixos-config
+            set -l repo ~/nix-config
             if test (count $argv) -gt 0; set target $argv[1]; end
 
             # A flake build cannot see untracked files, so an unstaged new module is

@@ -44,7 +44,7 @@
         set -eu
         ${shellHelpers}
 
-        SOURCE=${config.home.homeDirectory}/nixos-config/steam-asahi
+        SOURCE=${config.home.homeDirectory}/nix-config/steam-asahi
 
         [ "$(${pkgs.glibc.bin}/bin/getconf PAGESIZE)" = 16384 ]
         [ -r /dev/kvm ] && [ -w /dev/kvm ]
@@ -78,7 +78,7 @@
       update-steam-asahi-pins = pkgs.writeShellScriptBin "update-steam-asahi-pins" ''
         set -eu
 
-        FILE=${config.home.homeDirectory}/nixos-config/steam-asahi/Containerfile
+        FILE=${config.home.homeDirectory}/nix-config/steam-asahi/Containerfile
         ENTER="${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir steam-asahi --"
 
         if ! ${pkgs.docker}/bin/docker container inspect steam-asahi >/dev/null 2>&1; then
@@ -193,7 +193,7 @@
 
         ${shellHelpers}
 
-        SOURCE=${config.home.homeDirectory}/nixos-config/steam-asahi
+        SOURCE=${config.home.homeDirectory}/nix-config/steam-asahi
         LABEL=io.uynx.steam-asahi.config
 
         if [ ! -f "$SOURCE/$CFILE" ] \

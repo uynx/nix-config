@@ -28,7 +28,7 @@
   flake.lib.selfRegistry = home: {
     ${self.lib.user.name}.to = {
       type = "git";
-      url = "file://${home}/nixos-config";
+      url = "file://${home}/nix-config";
     };
   };
 }

@@ -24,7 +24,7 @@
         }
 
         base=https://dist.torproject.org
-        file=$HOME/nixos-config/modules/apps/privacy-browsers/pins.json
+        file=$HOME/nix-config/modules/apps/privacy-browsers/pins.json
         skipped=0
 
         # Newest first. The server lists only live releases, so this is a

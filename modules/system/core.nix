@@ -22,7 +22,7 @@
     # string rather than a path literal, so the working copy is linked instead
     # of copied into the store. Here rather than in `nixSettings` because the
     # installer ISO takes that module and has no home directory to point at.
-    environment.etc.nixos.source = "${self.lib.user.home}/nixos-config";
+    environment.etc.nixos.source = "${self.lib.user.home}/nix-config";
 
     environment.systemPackages = with pkgs; [
       git
