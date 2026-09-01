@@ -68,7 +68,11 @@ curl https://alx.sh | sh     # resize APFS, UEFI environment only
 ```
 
 Take the **UEFI environment only** option — the NixOS partitions get made by
-hand in step 2. This is also the run that writes a fresh `vendorfw/`, which is
+hand in step 2. Leave FileVault **off** until after this run, then turn it on
+(`sudo fdesetup enable`, local recovery key rather than iCloud escrow, key into
+Bitwarden). It is near-instant on Apple Silicon, so deferring costs nothing and
+keeps the resize from needing a `diskutil apfs unlockVolume` first. FileVault is
+the only option for the macOS side — LUKS covers p5 and nothing else. This is also the run that writes a fresh `vendorfw/`, which is
 the only way that blob ever refreshes.
 
 Bootstrap the Mac itself while you are there. Neither Nix nor Homebrew is
