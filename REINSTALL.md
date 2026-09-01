@@ -1,22 +1,86 @@
-# Reinstalling NixOS on this machine
+# Reinstalling this machine
 
-Assembled 2026-08-18. The only thing not in this repo is the age identity that
-decrypts `secrets/`; everything else converges from `reb`.
+Assembled 2026-08-18, macOS half added 2026-09-01. The only thing not in this
+repo is the age identity that decrypts `secrets/`; everything else converges
+from `reb`.
+
+## -1. Back up what the repo does not contain
+
+The repo reproduces the *system*, not the files. Nothing below is in git, in
+Drive or in iCloud, and `tmutil` has no destination configured — copy it to an
+external disk first.
+
+| macOS | Asahi |
+|---|---|
+| `~/513 ~/514 ~/546 ~/589 ~/comps` | anything outside the three repos |
+| `~/Documents ~/Pictures ~/Music ~/Downloads` | Steam library, if worth 236 GB of copying |
+| `~/.local/share/atuin` (shell history) | `~/.local/share/atuin` |
+
+`~/gdrive` is an rclone mount, not a backup — its contents live in Drive and
+come back on their own.
+
+Confirm from a *phone*, not from this machine, that the Bitwarden secure note
+`sops age key` is reachable and non-empty. That note is the entire recovery for
+both hosts — one age identity, one recipient in `.sops.yaml`. The older
+`GPG master key` note decrypts nothing since the age migration and can be
+ignored.
+
+## 0. Build the stick — on the Asahi side only
 
 **This ISO has only ever booted in QEMU, never on real hardware.** Keep a stock
 Asahi ISO on a second stick. If the custom image fails, boot the stock one and
 run Determinate's installer inside the live environment — you lose only faster
 eval and preconfigured substituters.
 
-## 0. Build the stick, from the working machine
+The flake has no `linux-builder` and no `extra-platforms`, so the
+`aarch64-linux` ISO **cannot be built from the Mac**. It has to come off the
+running NixOS install, which means getting that install online first — USB-C
+ethernet or phone tethering is enough, and is the fallback for a dead `wlan0`
+anyway. No Linux box, no custom ISO: use the stock Asahi one.
 
 ```bash
 nix build .#nixosConfigurations.iso.config.system.build.isoImage --impure
 sudo dd if=result/iso/*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-Confirm from a browser, not from the machine being wiped, that the Bitwarden
-secure note `sops age key` is reachable. That note is the entire recovery.
+## 0.5 Reinstall macOS
+
+Do the whole macOS reinstall **before** touching the Linux side. A macOS
+install pushes shared Apple SFR, and m1n1 has to be newer than the SFR it boots
+against — installing NixOS first and macOS second can leave a stub that no
+longer boots.
+
+Erase All Content and Settings is enough and keeps the recovery path short; a
+DFU restore from another Mac is only needed if the machine will not boot at
+all. Either way the Asahi partitions go with it, so this is a full
+p3/p4/p5 rebuild, not the p5-only case in step 1.
+
+Then, still in macOS:
+
+```bash
+curl https://alx.sh | sh     # resize APFS, UEFI environment only
+```
+
+Take the **UEFI environment only** option — the NixOS partitions get made by
+hand in step 2. This is also the run that writes a fresh `vendorfw/`, which is
+the only way that blob ever refreshes.
+
+Bootstrap the Mac itself while you are there. Neither Nix nor Homebrew is
+declarative at this stage, and `mas` needs you signed into the App Store or
+`cakewallet` silently never installs:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+bw login && bw unlock
+bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.txt
+gh auth login
+git clone https://github.com/uynx/nixos-config.git ~/nixos-config
+nix run nix-darwin -- switch --flake ~/nixos-config#darwin --impure
+```
+
+The age key goes in before the first switch here for the same reason it does on
+Linux — see step 5. After that first switch `reb` works normally.
 
 ## 1. Decide how deep the wipe goes
 
@@ -30,8 +94,8 @@ and `EFI/`. The installer mounts it by the partuuid at
 Reformat it and the installer loses Wi-Fi *and* the installed system loses its
 bootloader — recoverable only by redoing the macOS-side install.
 
-Going back to bare macOS first: `alx.sh` → resize APFS → **UEFI environment
-only** → then boot the USB.
+A macOS reinstall wipes all three, so after step 0.5 this is always the deep
+case: p3 and p4 come back from `alx.sh`, p5 is made by hand below.
 
 ## 2. Live environment
 
