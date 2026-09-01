@@ -7,10 +7,10 @@
     }
   },
   "codex": {
-    "version": "0.151.0",
+    "version": "0.152.0",
     "hash": {
-      "aarch64-linux": "sha256-yfCmQV9Y3e+JCNNsOIgdJzusQX1Xtcd2jdn7/rkrai0=",
-      "x86_64-linux": "sha256-s7zywRaT18gVXeY33WViuhnZFroTRxp8hzfeVeUyj8Y="
+      "aarch64-linux": "sha256-JF91yc2870vM8E0fd+OJqaZu7Ko5WR9ngyuSYeTtxbs=",
+      "x86_64-linux": "sha256-nkxKJbiNnJPODuT2T7oj/FWUn2bZ7LeeQZxUG2S4CZc="
     }
   },
   "grok": {
@@ -35,10 +35,10 @@
     }
   },
   "cursor-agent": {
-    "version": "2026.08.25-3e8eec8",
+    "version": "2026.08.31-4057e58",
     "hash": {
-      "aarch64-linux": "sha256-8cHCMw2J+k71tswE/P+6FQEv9Q6s0H4PO67AcW8lrF0=",
-      "x86_64-linux": "sha256-eiEuWhf/kxb1rMeICOM8U2lA1UVWRQIuY4jZm6SMhCU="
+      "aarch64-linux": "sha256-z122tQR7MoDYpJRxz9Qb6x1eR1d0F3313yhRhXq2UUo=",
+      "x86_64-linux": "sha256-fjBttXUCGamcAO1Rf+iyNdPFTkyl934v8WDMl85wd5g="
     }
   }
 }
