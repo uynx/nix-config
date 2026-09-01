@@ -189,5 +189,17 @@
         end,
       })
     '';
+
+    # Undo files are 0644 and unencrypted; keys.txt is 0600. Never let the
+    # private age identity leak into ~/.local/state/nvf/undo.
+    luaConfigRC.noUndoForSecrets = ''
+      vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
+        group = vim.api.nvim_create_augroup("uynx_no_undo_secrets", { clear = true }),
+        pattern = "*/.config/sops/*",
+        callback = function()
+          vim.bo.undofile = false
+        end,
+      })
+    '';
   };
 }
