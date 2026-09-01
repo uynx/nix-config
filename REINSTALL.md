@@ -43,6 +43,12 @@ nix build .#nixosConfigurations.iso.config.system.build.isoImage --impure
 sudo dd if=result/iso/*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
+The image carries `claude` alongside `vim`, `git`, `gh`, `bw`, `rg` and `fd`,
+so the whole install can be driven from an agent session. Two things it does
+not carry: a browser, so Claude Code's login is the paste-the-code flow on a
+phone, same as `gh auth login` in step 3; and `~/dotfiles`, so until that is
+cloned the session runs with no `CLAUDE.md` and no skills.
+
 ## 0.5 Reinstall macOS
 
 Do the whole macOS reinstall **before** touching the Linux side. A macOS
