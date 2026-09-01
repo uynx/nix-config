@@ -137,7 +137,7 @@ inactive unit to say why.
 bw login && bw unlock                 # or run these from the installer ISO
 bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.txt
 gh auth login
-git clone https://github.com/uynx/nixos-config.git ~/nixos-config
+git clone https://github.com/uynx/nix-config.git ~/nixos-config
 cd ~/nixos-config && reb
 ```
 

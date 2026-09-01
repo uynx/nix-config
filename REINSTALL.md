@@ -75,7 +75,7 @@ curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix 
 bw login && bw unlock
 bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.txt
 gh auth login
-git clone https://github.com/uynx/nixos-config.git ~/nixos-config
+git clone https://github.com/uynx/nix-config.git ~/nixos-config
 nix run nix-darwin -- switch --flake ~/nixos-config#darwin --impure
 ```
 
@@ -123,7 +123,7 @@ browser flow over HTTPS is the only way in.
 ```bash
 gh auth login                     # HTTPS, browser flow
 mkdir -p /mnt/home/uynx
-git clone https://github.com/uynx/nixos-config.git /mnt/home/uynx/nixos-config
+git clone https://github.com/uynx/nix-config.git /mnt/home/uynx/nixos-config
 ```
 
 Clone into the target home so no second clone is needed later. The HTTPS URL is
