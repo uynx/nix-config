@@ -1,4 +1,4 @@
-# nixos-config
+# nix-config
 
 Dendritic flake: `flake-parts` + `import-tree`. Every `.nix` under `modules/` is
 imported automatically and modules find each other by output name, never by
@@ -137,8 +137,8 @@ inactive unit to say why.
 bw login && bw unlock                 # or run these from the installer ISO
 bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.txt
 gh auth login
-git clone https://github.com/uynx/nix-config.git ~/nixos-config
-cd ~/nixos-config && reb
+git clone https://github.com/uynx/nix-config.git ~/nix-config
+cd ~/nix-config && reb
 ```
 
 The HTTPS clone URL is deliberate — `git` rewrites GitHub HTTPS to SSH at
@@ -151,7 +151,7 @@ with `command not found`:
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-nix run nix-darwin -- switch --flake ~/nixos-config#darwin --impure
+nix run nix-darwin -- switch --flake ~/nix-config#darwin --impure
 ```
 
 After that first switch `reb` works like it does on Linux.

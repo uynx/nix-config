@@ -38,7 +38,7 @@ in
         ++ lib.optional stdenv.hostPlatform.isLinux fetch;
 
       # nh reads this instead of taking a flake path on every invocation.
-      home.sessionVariables.NH_FLAKE = "${config.home.homeDirectory}/nixos-config";
+      home.sessionVariables.NH_FLAKE = "${config.home.homeDirectory}/nix-config";
 
       programs = {
         # Not wrapped, for the same reason as git: a devshell's bat should still

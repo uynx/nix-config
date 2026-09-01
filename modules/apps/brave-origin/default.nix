@@ -22,7 +22,7 @@
         }
 
         base=https://brave-browser-apt-release.s3.brave.com
-        file=$HOME/nixos-config/modules/apps/brave-origin/pins.json
+        file=$HOME/nix-config/modules/apps/brave-origin/pins.json
 
         current=$(jq -r .version "$file")
         # Bounded like every lookup in update-ai-clis, and for the same reason:

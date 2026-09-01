@@ -38,7 +38,7 @@
         or return 1
 
         set -x QEMU_OPTS "-device virtio-gpu-gl-pci,xres=$size[1],yres=$size[2] -display gtk,gl=on,show-menubar=off -full-screen"
-        nix run ~/nixos-config#nixosConfigurations.waydroid.config.system.build.vm
+        nix run ~/nix-config#nixosConfigurations.waydroid.config.system.build.vm
       '';
     };
 }

@@ -24,7 +24,7 @@
               # neovim, so both halves have to name that machine's own home and
               # its own host — a Linux path and `asahi` leave a Mac with no
               # option completion at all, and silently.
-              flakePath = "${self.lib.user.homeFor system}/nixos-config";
+              flakePath = "${self.lib.user.homeFor system}/nix-config";
               # nixd evaluates this string at edit time on the machine running
               # neovim, so the host resolves from that machine's own
               # /etc/hostname rather than from a table here every new host would

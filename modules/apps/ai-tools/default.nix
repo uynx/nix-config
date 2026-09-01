@@ -68,7 +68,7 @@
           skipped=0
 
           ${lib.optionalString isLinux ''
-            file=${home}/nixos-config/modules/apps/ai-tools/pins.json
+            file=${home}/nix-config/modules/apps/ai-tools/pins.json
 
             # bump <name> <latest-version> <aarch64-url> <x86_64-url>
             # Both architectures are pinned from whichever machine runs this, so

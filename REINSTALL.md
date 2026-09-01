@@ -75,8 +75,8 @@ curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix 
 bw login && bw unlock
 bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.txt
 gh auth login
-git clone https://github.com/uynx/nix-config.git ~/nixos-config
-nix run nix-darwin -- switch --flake ~/nixos-config#darwin --impure
+git clone https://github.com/uynx/nix-config.git ~/nix-config
+nix run nix-darwin -- switch --flake ~/nix-config#darwin --impure
 ```
 
 The age key goes in before the first switch here for the same reason it does on
@@ -123,7 +123,7 @@ browser flow over HTTPS is the only way in.
 ```bash
 gh auth login                     # HTTPS, browser flow
 mkdir -p /mnt/home/uynx
-git clone https://github.com/uynx/nix-config.git /mnt/home/uynx/nixos-config
+git clone https://github.com/uynx/nix-config.git /mnt/home/uynx/nix-config
 ```
 
 Clone into the target home so no second clone is needed later. The HTTPS URL is
@@ -135,7 +135,7 @@ fires at connect time, not clone time.
 ```bash
 nixos-generate-config --root /mnt
 cp /mnt/etc/nixos/hardware-configuration.nix \
-   /mnt/home/uynx/nixos-config/modules/hosts/asahi/_hardware-configuration.nix
+   /mnt/home/uynx/nix-config/modules/hosts/asahi/_hardware-configuration.nix
 ```
 
 Do not skip this because the repo already has that file. It pins the old root
@@ -148,8 +148,8 @@ Commit before building — the flake cannot see untracked files, and under
 `import-tree` that failure is silent.
 
 ```bash
-cd /mnt/home/uynx/nixos-config && git add -A && git commit -m "hardware config"
-nixos-install --flake /mnt/home/uynx/nixos-config#asahi --impure
+cd /mnt/home/uynx/nix-config && git add -A && git commit -m "hardware config"
+nixos-install --flake /mnt/home/uynx/nix-config#asahi --impure
 chown -R 1000:100 /mnt/home/uynx
 reboot
 ```
@@ -187,7 +187,7 @@ GitHub since 2026-01-17; the private half is ciphertext already in
 ## 6. Converge
 
 ```fish
-cd ~/nixos-config && reb
+cd ~/nix-config && reb
 ```
 
 Then reboot once. AI CLIs self-install via `home.activation.installRollingAiClis`
