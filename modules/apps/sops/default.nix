@@ -1,7 +1,12 @@
 { inputs, self, ... }:
 {
   flake.homeModules.sops =
-    { config, pkgs, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     {
       imports = [ inputs.sops-nix.homeModules.sops ];
 
@@ -9,6 +14,23 @@
         pkgs.sops
         pkgs.rage
       ];
+
+      # Git's SSH commit signing (modules/apps/git) needs id_ed25519.pub, but
+      # sops-nix only ever restores the private half. Derived here rather than
+      # committed: it's cheap to regenerate and doesn't need to be a secret.
+      # Guarded on the private key existing because sops-nix's own darwin
+      # activation (below in its module) only *triggers* the launchd agent
+      # that decrypts secrets — it doesn't wait for it — so on a fresh
+      # machine's first activation the private key may not be written yet.
+      # Skipping is safe: every activation retries, and once the key lands
+      # once this never has to run again.
+      home.activation.deriveSshPublicKey = lib.hm.dag.entryAfter [ "sops-nix" ] ''
+        privateKey=${config.home.homeDirectory}/.ssh/id_ed25519
+        publicKey="$privateKey.pub"
+        if [[ -e "$privateKey" && ! -e "$publicKey" ]]; then
+          run ${pkgs.openssh}/bin/ssh-keygen -y -f "$privateKey" > "$publicKey"
+        fi
+      '';
 
       sops = {
         defaultSopsFile = ../../../secrets/secrets.yaml;
