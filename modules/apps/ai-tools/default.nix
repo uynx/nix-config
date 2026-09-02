@@ -27,7 +27,10 @@
         name = "update-ai-clis";
         runtimeInputs =
           with pkgs;
-          [
+          [ coreutils ] # timeout, bounding hermes below
+          # Everything else this script runs is Linux-only now — macOS takes its
+          # whole AI toolchain from Homebrew.
+          ++ lib.optionals isLinux [
             curl
             nix
             gnused
@@ -35,16 +38,11 @@
             nodejs
             uv
             git # hermes' installer clones its own repo
-            coreutils # timeout, bounding hermes below
 
             # t3 pulls node-pty, which has no linux-arm64 prebuild and compiles on
             # install. Without these npm dies on `c++: not found`.
             python3
             gnumake
-          ]
-          # macOS builds these against the Xcode toolchain instead; a nix gcc in
-          # PATH there makes node-gyp pick the wrong compiler entirely.
-          ++ lib.optionals isLinux [
             gcc
             binutils
           ];
@@ -225,9 +223,13 @@
               rm -f /opt/homebrew/bin/agy
             fi
           ''}
-          roll openclaw npm install -g --prefix "${home}/.local" openclaw
-          roll t3       npm install -g --prefix "${home}/.local" t3
-          roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
+          ${lib.optionalString isLinux ''
+            # macOS gets all three from Homebrew instead: `openclaw-cli` and
+            # `qwen-code` as formulas, t3 as the `t3-code` desktop app.
+            roll openclaw npm install -g --prefix "${home}/.local" openclaw
+            roll t3       npm install -g --prefix "${home}/.local" t3
+            roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
+          ''}
           ${lib.optionalString isLinux ''
             # On Linux, hermes is maintained by its vendor installer / self-updater.
             # On macOS, the `hermes-agent` Homebrew formula manages it.
@@ -373,7 +375,7 @@
         fi
       '';
 
-      # agy, openclaw, t3 and hermes cannot be pinned or brewed, so a fresh
+      # On Linux agy, openclaw, t3, qwen and hermes cannot be pinned, so a fresh
       # machine would otherwise have most but not all of the CLIs. This installs
       # only what is absent, making every later rebuild a no-op, and never fails
       # the activation — an offline rebuild must still succeed.

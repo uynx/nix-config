@@ -10,6 +10,9 @@
       # different product — the Kimi platform agent, not the terminal one.
       "kimi-code"
       "hermes-agent"
+      # The CLI, not the `openclaw` cask — that one is only OpenClaw.app.
+      "openclaw-cli"
+      "qwen-code"
     ];
 
     casks = [
@@ -26,6 +29,7 @@
       "cursor"
       "antigravity"
       "kimi"
+      # The macOS delivery of t3 — there is no formula for its CLI half.
       "t3-code"
     ];
   };
