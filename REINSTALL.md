@@ -256,15 +256,12 @@ The SSH keypair needs no manual restore. The public half has been registered on
 GitHub since 2026-01-17; the private half is ciphertext already in
 `secrets/secrets.yaml` and gets written out now that the age key exists.
 
-sops-nix only writes that private half, though — nothing derives
-`~/.ssh/id_ed25519.pub`, which git's SSH commit signing (`user.signingkey =
-~/.ssh/id_ed25519.pub`) needs. Unlike the other traps on this page it fails
-loudly (`git commit` exits 128, "Couldn't load public key"), but the fix is
-still manual:
-
-```fish
-ssh-keygen -y -f ~/.ssh/id_ed25519 > ~/.ssh/id_ed25519.pub
-```
+sops-nix only writes that private half; the public half git's SSH commit
+signing needs (`user.signingkey = ~/.ssh/id_ed25519.pub`) is derived by a
+`home.activation` hook in `modules/apps/sops`, ordered after `sops-nix` and
+guarded to skip until the private key actually exists — needed because
+sops-nix's darwin activation only triggers its launchd agent, it doesn't wait
+on it. First `reb` after the private key lands produces it; no manual step.
 
 ## 6. Converge
 
