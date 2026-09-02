@@ -22,13 +22,6 @@
       "grok-build"
       "cursor-cli"
       "antigravity-cli"
-
-      # Desktop apps, which have no Linux counterpart worth packaging.
-      "claude"
-      "chatgpt"
-      "cursor"
-      "antigravity"
-      "kimi"
       # The macOS delivery of t3 — there is no formula for its CLI half.
       "t3-code"
     ];
