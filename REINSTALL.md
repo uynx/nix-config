@@ -1,6 +1,6 @@
 # Reinstalling this machine
 
-Assembled 2026-08-18, macOS half added 2026-09-01. The only thing not in this
+Assembled 2026-08-18, macOS half added 2026-09-01, audited 2026-09-02. The only thing not in this
 repo is the age identity that decrypts `secrets/`; everything else converges
 from `reb`.
 
@@ -25,6 +25,17 @@ both hosts — one age identity, one recipient in `.sops.yaml`. The older
 `GPG master key` note decrypts nothing since the age migration and can be
 ignored.
 
+Two more things only work *before* the erase:
+
+* **Check you can get a Bitwarden 2FA code from the phone.** The whole recovery
+  chain is `Bitwarden → age key → everything`. If the second factor lives only
+  in Ente Auth on this Mac, erasing it locks you out of the vault holding the
+  key. Ente syncs server-side, so the app on the phone or the Ente recovery key
+  is enough — but confirm it, do not assume it.
+* **Push all three repos.** `~/nix-config`, `~/dotfiles`, `~/ai_memory`. A
+  commit that exists only on this disk dies with it, and the flake is cloned
+  from GitHub in step 0.5 and step 3, never from a backup.
+
 ## 0. Build the stick — on the Asahi side only
 
 **This ISO has only ever booted in QEMU, never on real hardware.** Keep a stock
@@ -48,6 +59,41 @@ so the whole install can be driven from an agent session. Two things it does
 not carry: a browser, so Claude Code's login is the paste-the-code flow on a
 phone, same as `gh auth login` in step 3; and `~/dotfiles`, so until that is
 cloned the session runs with no `CLAUDE.md` and no skills.
+
+## 0.25 The macOS stick
+
+Not needed for Erase All Content and Settings, which is the normal path. This is
+the fallback for a Mac that boots but will not erase; a Mac that does not boot at
+all needs DFU and a second Mac, which the stick cannot help with either.
+
+**The installer app's `Info.plist` does not say what it installs.**
+`DTPlatformVersion`, `CFBundleShortVersionString` and `DTSDKBuild` describe the
+SDK the InstallAssistant was compiled against and do not move between point
+releases — a 26.6.2 installer reports `26.6.1` / `21.6.01` / `25G74`, and 25G74
+is not a shipping build of anything. Read the payload instead:
+
+```bash
+hdiutil attach -nobrowse -readonly -noverify \
+  "/Volumes/Install macOS Tahoe/Install macOS Tahoe.app/Contents/SharedSupport/SharedSupport.dmg"
+rg -o '<key>(OSVersion|Build)</key>\s*<string>[^<]*' -U \
+  "/Volumes/Shared Support/com_apple_MobileAsset_MacSoftwareUpdate/com_apple_MobileAsset_MacSoftwareUpdate.xml"
+hdiutil detach "/Volumes/Shared Support"
+```
+
+Rewrite it only if that build is older than what `softwareupdate
+--list-full-installers` offers:
+
+```bash
+softwareupdate --fetch-full-installer --full-installer-version <version>
+sudo "/Applications/Install macOS Tahoe.app/Contents/Resources/createinstallmedia" \
+  --volume "/Volumes/Install macOS Tahoe"
+```
+
+`softwareupdate` exits 0 even when the download fails — it printed
+`PKDownloadError Code=8` at 90% and still returned success. Confirm
+`/Applications/Install macOS Tahoe.app` exists before believing it. Re-read the
+disk identifier immediately before writing, too: it is not stable across
+replugs, and the same stick came back as `disk7` and then `disk6`.
 
 ## 0.5 Reinstall macOS
 
@@ -91,6 +137,22 @@ nix run nix-darwin -- switch --flake ~/nix-config#darwin --impure
 
 The age key goes in before the first switch here for the same reason it does on
 Linux — see step 5. After that first switch `reb` works normally.
+
+**macOS fails the same silent way, not a milder one.** The identity is
+unencrypted and `generateKey` stays false, so nothing ever prompts: a missing
+key fails the launchd agent while `darwin-rebuild` still exits 0. Verify rather
+than assume:
+
+```fish
+launchctl list | rg sops        # org.nix-community.home.sops-nix, status 0
+ls -l ~/.ssh/id_ed25519         # symlink into ~/.config/sops-nix/secrets
+ls ~/.config/sops-nix/secrets   # six files: the ssh key plus five rclone
+ssh -T git@github.com           # GitHub greeting; exits 1 even on success
+```
+
+Darwin runs the home tier only — `bundle.darwin` adds nothing but `enteAuth`,
+and sops arrives through `mkBundle`'s shared `home` list. The Linux-only system
+tier exists for eduroam, which macOS has no equivalent of.
 
 ## 1. Decide how deep the wipe goes
 
