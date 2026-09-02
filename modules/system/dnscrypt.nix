@@ -100,42 +100,66 @@ in
 {
   flake.nixosModules.dnscrypt = shared;
 
-  flake.darwinModules.dnscrypt = {
-    imports = [ shared ];
+  flake.darwinModules.dnscrypt =
+    { config, lib, ... }:
+    {
+      imports = [ shared ];
 
-    # nix-darwin runs the daemon as `_dnscrypt-proxy`, which cannot bind port
-    # 53 — macOS reserves everything below 1024 for uid 0. Dropping privileges
-    # via dnscrypt's own `user_name` is not an option either: it re-execs and
-    # the parent exits, which KeepAlive reads as a crash and restarts forever.
-    launchd.daemons.dnscrypt-proxy.serviceConfig.UserName = lib.mkForce "root";
+      # nix-darwin runs the daemon as `_dnscrypt-proxy`, which cannot bind port
+      # 53 — macOS reserves everything below 1024 for uid 0. Dropping privileges
+      # via dnscrypt's own `user_name` is not an option either: it re-execs and
+      # the parent exits, which KeepAlive reads as a crash and restarts forever.
+      launchd.daemons.dnscrypt-proxy.serviceConfig.UserName = lib.mkForce "root";
 
-    # macOS has no global resolver setting; DNS is per network service, and
-    # these are every service this Mac has. Check `networksetup
-    # -listallnetworkservices` after adding a new adapter.
-    networking.knownNetworkServices = [
-      "Wi-Fi"
-      "USB 10/100/1000 LAN"
-      "Thunderbolt Bridge"
-      "iPhone USB"
-    ];
-    networking.dns = [ "127.0.0.1" ];
+      # At boot the daemon starts before the interface's IPv6 default route
+      # is installed (SLAAC lag), so its first live query dials an
+      # IPv6-literal upstream and fails "no route to host" — it already
+      # retries and self-heals in ~10s, but anything resolving during that
+      # window (a browser opened right after login) sees dead DNS. Wait for
+      # both default routes first, capped at 20s so an IPv4-only network
+      # still starts on schedule instead of hanging.
+      launchd.daemons.dnscrypt-proxy.serviceConfig.ProgramArguments = lib.mkForce [
+        "/bin/sh"
+        "-c"
+        ''
+          /bin/wait4path /nix/store
+          i=0
+          while [ "$i" -lt 20 ]; do
+            /sbin/route -n get default >/dev/null 2>&1 && /sbin/route -n get -inet6 default >/dev/null 2>&1 && break
+            i=$((i + 1))
+            sleep 1
+          done
+          exec ${config.launchd.daemons.dnscrypt-proxy.command}
+        ''
+      ];
 
-    # The detection map above gets the login window to appear; a portal page
-    # that pulls assets from its own hostnames still needs a resolver that
-    # answers on the far side of it. dnscrypt never falls back to plaintext, so
-    # that hand-off has to be manual. `reb` puts 127.0.0.1 back too.
-    home-manager.users.${self.lib.user.name}.programs.fish.functions.portal.body = ''
-      switch "$argv[1]"
-          case on
-              sudo networksetup -setdnsservers Wi-Fi empty
-              open -a "Captive Network Assistant"
-          case off
-              sudo networksetup -setdnsservers Wi-Fi 127.0.0.1
-          case '*'
-              echo "portal on   hand DNS back to the network, open the login window"
-              echo "portal off  encrypted DNS again"
-              networksetup -getdnsservers Wi-Fi
-      end
-    '';
-  };
+      # macOS has no global resolver setting; DNS is per network service, and
+      # these are every service this Mac has. Check `networksetup
+      # -listallnetworkservices` after adding a new adapter.
+      networking.knownNetworkServices = [
+        "Wi-Fi"
+        "USB 10/100/1000 LAN"
+        "Thunderbolt Bridge"
+        "iPhone USB"
+      ];
+      networking.dns = [ "127.0.0.1" ];
+
+      # The detection map above gets the login window to appear; a portal page
+      # that pulls assets from its own hostnames still needs a resolver that
+      # answers on the far side of it. dnscrypt never falls back to plaintext, so
+      # that hand-off has to be manual. `reb` puts 127.0.0.1 back too.
+      home-manager.users.${self.lib.user.name}.programs.fish.functions.portal.body = ''
+        switch "$argv[1]"
+            case on
+                sudo networksetup -setdnsservers Wi-Fi empty
+                open -a "Captive Network Assistant"
+            case off
+                sudo networksetup -setdnsservers Wi-Fi 127.0.0.1
+            case '*'
+                echo "portal on   hand DNS back to the network, open the login window"
+                echo "portal off  encrypted DNS again"
+                networksetup -getdnsservers Wi-Fi
+        end
+      '';
+    };
 }
