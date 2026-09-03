@@ -156,9 +156,29 @@ tier exists for eduroam, which macOS has no equivalent of.
 
 ## 1. Decide how deep the wipe goes
 
-Wiping **p5 only** (the NixOS root) needs no macOS-side work. p3 (Asahi stub,
+Wiping **the NixOS root only** needs no macOS-side work. p3 (Asahi stub,
 m1n1 + U-Boot) and p4 (`EFI - NIXOS`, `/boot`) both came from the macOS-side
 `alx.sh` run and are not NixOS-managed.
+
+**Partition numbers do not survive a macOS reinstall. Read the table before
+typing any device node.** Through the 2026-08 install this doc said p5 was the
+NixOS root. After the 2026-09-03 rebuild the disk came back as:
+
+| part | contents | |
+|---|---|---|
+| p1 | `iBootSystemContainer` | never touch |
+| p2 | macOS APFS container | never touch |
+| p3 | Asahi stub, m1n1 + U-Boot | from `alx.sh` |
+| p4 | `EFI - NIXOS`, the ESP | **never `mkfs`** |
+| p5 | `RecoveryOSContainer` | **never touch — this index used to be the root** |
+| p6 | NixOS root | created by hand in step 2 |
+
+`alx.sh` puts its partitions in the space it frees, and macOS recovery ends up
+last on the disk holding whatever index is spare — p5 this time. Running the old
+step 2 verbatim would have run `luksFormat` over macOS Recovery. Upstream says
+damage to the first partition or the **last** one (recovery) can cost the whole
+disk. Confirm with `sgdisk -p /dev/nvme0n1` and `parted /dev/nvme0n1 unit GiB
+print free` every time: the root is the partition you create, never one you find.
 
 **Never `mkfs` p4.** It holds `vendorfw/firmware.cpio`, `m1n1/` and `EFI/` —
 `vendorfw/firmware.cpio` replaced the old internal `asahi/all_firmware.tar.gz`
@@ -169,8 +189,8 @@ The installer mounts it by the partuuid at
 Reformat it and the installer loses Wi-Fi *and* the installed system loses its
 bootloader — recoverable only by redoing the macOS-side install.
 
-A macOS reinstall wipes all three, so after step 0.5 this is always the deep
-case: p3 and p4 come back from `alx.sh`, p5 is made by hand below.
+A macOS reinstall wipes p3, p4 and the root, so after step 0.5 this is always
+the deep case: p3 and p4 come back from `alx.sh`, the root is made below.
 
 ## 2. Live environment
 
@@ -178,16 +198,58 @@ Boot the stick, autologin. Bring up networking (`nmcli` or `iwctl`, both on the
 image). Keep a USB-C ethernet adapter or phone tethering available — if
 firmware extraction failed, there is no Wi-Fi.
 
+After a macOS reinstall the root partition **does not exist** — `alx.sh` leaves
+the space it freed unallocated (802 GiB, between p4 and recovery). Create it in
+the largest free block; it takes the next spare index, p6 in 2026-09:
+
+```bash
+sgdisk -n 0:0:0 -t 0:8300 -c 0:NIXOS /dev/nvme0n1
+partprobe /dev/nvme0n1
+lsblk -o NAME,SIZE,FSTYPE,PARTLABEL /dev/nvme0n1    # confirm the number it got
+```
+
 Encryption wraps the block device, so it precedes `mkfs`. This is the only
 moment full-disk encryption can be added; it cannot be retrofitted later.
 
 ```bash
-cryptsetup luksFormat /dev/nvme0n1p5
-cryptsetup open /dev/nvme0n1p5 cryptroot
-mkfs.ext4 /dev/mapper/cryptroot
+cryptsetup luksFormat /dev/nvme0n1p6      # the partition just created
+cryptsetup open /dev/nvme0n1p6 cryptroot
+mkfs.ext4 -L nixos /dev/mapper/cryptroot
 mount /dev/mapper/cryptroot /mnt
 mkdir -p /mnt/boot && mount /dev/nvme0n1p4 /mnt/boot
 ```
+
+`cryptsetup` needs a real TTY for its `YES` confirmation and the passphrase, so
+it cannot be driven from an agent session's non-interactive shell — it fails
+with `Nothing to read on input` and writes nothing. Run it from the console, or
+suspend the agent with `Ctrl+Z` and `fg` back. `gh auth login` in step 3 is the
+same.
+
+Then, before anything evaluates the flake:
+
+```bash
+mkdir -p /boot && mount --bind /mnt/boot /boot
+```
+
+`peripheralFirmwareDirectory = /boot/vendorfw` is an absolute path literal read
+at **eval** time under `--impure` (`modules/hardware/asahi.nix`). The live image
+has no `/boot`, so without the bind mount `nixos-install` dies before building
+anything. Upstream's module falls back to `/mnt/boot/vendorfw` on its own, but
+that default is overridden here.
+
+The live image has **no swap** and the machine has 16 GB. `nixos-install`
+defaults to `max-jobs = auto` — ten parallel jobs here — and the OOM killer
+takes out `nix` itself partway through the Rust builds. It exits 137 with no
+error in the log, which reads as a mystery until `dmesg` shows `Out of memory:
+Killed process ... (nix)`:
+
+```bash
+fallocate -l 32G /mnt/.swapfile && chmod 600 /mnt/.swapfile
+mkswap /mnt/.swapfile && swapon /mnt/.swapfile
+```
+
+Remove it after installing; the installed system makes its own 16 GB
+`/swapfile` from `swapDevices`.
 
 ## 3. Get the flake onto the target
 
@@ -219,17 +281,67 @@ unconditionally, and LUKS changes it even if p4 was kept.
 `nixos-generate-config` detects the LUKS container and writes the
 `boot.initrd.luks.devices.cryptroot.*` entries itself.
 
+The generated `boot.initrd.availableKernelModules` comes back nearly empty
+(`usb_storage`, `sdhci_pci`). That is correct and must not be "fixed": the
+option is a merged list, and `apple-silicon-support` contributes the Asahi set
+(`spi-apple`, `spi-hid-apple`, `spi-hid-apple-of`, `usbhid`, `hid_generic`). The
+built initrd does carry `hid-apple.ko` and both `spi-hid-apple` modules
+alongside `cryptsetup` and `dm-crypt`, so the internal keyboard works at the
+passphrase prompt. Worth verifying once on a machine that boots LUKS for the
+first time — a keyboard-less prompt is unrecoverable without a USB keyboard.
+
 Commit before building — the flake cannot see untracked files, and under
 `import-tree` that failure is silent.
 
 ```bash
 cd /mnt/home/uynx/nix-config && git add -A && git commit -m "hardware config"
-nixos-install --flake /mnt/home/uynx/nix-config#asahi --impure
-chown -R 1000:100 /mnt/home/uynx
-reboot
+nixos-install --flake /mnt/home/uynx/nix-config#asahi --impure \
+  --no-root-passwd --max-jobs 2 --cores 4
 ```
 
 `--impure` is required: the Asahi firmware directory has to stay a real path.
+`--max-jobs 2 --cores 4` is what keeps the heavy Rust builds — `wasmtime`,
+`determinate-nix`, `obs-studio`, the `obscuravpn`/`obscura-gui` chain — inside
+16 GB. The full build is roughly 50 GB written and about 75 minutes at that
+concurrency, with no kernel compile: `linux-asahi` comes from the cache the ISO
+was built against.
+
+Check the real exit status of `nixos-install` itself. Chaining it into
+`; tail ...` reports `tail`'s status and a failed install looks like a clean
+one.
+
+Then the three things `nixos-install` does not do:
+
+```bash
+chown -R 1000:100 /mnt/home/uynx
+rm -f /mnt/etc/nixos/*.nix && rmdir /mnt/etc/nixos
+nixos-enter --root /mnt -c 'passwd uynx'
+reboot
+```
+
+**Set the password or the install is unreachable.** `modules/system/user.nix`
+declares no `hashedPassword` and `mutableUsers` stays true, so credentials live
+in `/etc/shadow` on a root filesystem that was just created empty. Nothing in
+the repo or in `nixos-install` fills it: the result is a green install, a
+working desktop and no way past the greeter.
+
+`/etc/nixos` must be emptied because `core.nix` points
+`environment.etc."nixos".source` at `/home/uynx/nix-config`, and `setup-etc`
+will not replace a directory containing real files — the two
+`nixos-generate-config` just wrote there. The symptom is
+`could not create symlink /etc/nixos` during activation, after which
+`nixos-rebuild` with no `--flake` reads nothing.
+
+`sops-install-secrets` failing during activation with
+`cannot read keyfile '/home/uynx/.config/sops/age/keys.txt'` is expected at this
+point, not a fault — that is step 5.
+
+The ESP holds **three** generations, not the ten
+`boot.loader.systemd-boot.configurationLimit` permits: 476 M total, ~126 M of it
+permanently firmware (`asahi/` 55 M, `vendorfw/` 63 M, `m1n1/` 7.6 M), and 91 M
+per kernel/initrd pair. Generation 1 leaves 260 M free. At the current limit,
+generation 4 is where activation dies mid-write with ENOSPC — the exact failure
+the comment in `modules/hardware/asahi.nix` sets out to prevent.
 
 ## 5. First boot — the one manual secret
 
