@@ -160,8 +160,11 @@ Wiping **p5 only** (the NixOS root) needs no macOS-side work. p3 (Asahi stub,
 m1n1 + U-Boot) and p4 (`EFI - NIXOS`, `/boot`) both came from the macOS-side
 `alx.sh` run and are not NixOS-managed.
 
-**Never `mkfs` p4.** It holds `asahi/all_firmware.tar.gz`, `vendorfw/`, `m1n1/`
-and `EFI/`. The installer mounts it by the partuuid at
+**Never `mkfs` p4.** It holds `vendorfw/firmware.cpio`, `m1n1/` and `EFI/` —
+`vendorfw/firmware.cpio` replaced the old internal `asahi/all_firmware.tar.gz`
+format upstream, and `hardware.asahi.peripheralFirmwareDirectory` here already
+points at `/boot/vendorfw` expecting the new format (`modules/hardware/asahi.nix`).
+The installer mounts it by the partuuid at
 `/proc/device-tree/chosen/asahi,efi-system-partition` to extract firmware.
 Reformat it and the installer loses Wi-Fi *and* the installed system loses its
 bootloader — recoverable only by redoing the macOS-side install.
