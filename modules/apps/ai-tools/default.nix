@@ -27,7 +27,10 @@
         name = "update-ai-clis";
         runtimeInputs =
           with pkgs;
-          [ coreutils ] # timeout, bounding hermes below
+          [
+            coreutils # timeout, bounding hermes below
+            util-linux # flock
+          ]
           # Everything else this script runs is Linux-only now — macOS takes its
           # whole AI toolchain from Homebrew.
           ++ lib.optionals isLinux [
@@ -53,6 +56,18 @@
           missingOnly=
           if [ "''${1:-}" = --missing-only ]; then
             missingOnly=1
+          fi
+
+          # Activation runs this too, so it can land beside an interactive
+          # `update`. Both would see the same tool missing, both would take the
+          # install branch, and both would write the same ~/.hermes and
+          # ~/.local -- which is what a 2026-09-01 hermes tree containing only
+          # uv and uvx looks like. Whichever run holds the lock does the work,
+          # so the loser exiting 0 leaves nothing undone.
+          exec 9>"/tmp/update-ai-clis.$(id -u).lock"
+          if ! flock -n 9; then
+            echo "update-ai-clis: another run is already installing, skipping" >&2
+            exit 0
           fi
           export PATH="$PATH:${home}/.local/bin${lib.optionalString isLinux ":${home}/.hermes/bin"}"
 
