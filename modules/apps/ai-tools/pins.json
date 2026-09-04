@@ -1,16 +1,16 @@
 {
   "claude-code": {
-    "version": "2.1.257",
+    "version": "2.1.260",
     "hash": {
-      "aarch64-linux": "sha256-IvfUjxcZOVLDwtC4vy8x2yzQj9X7CaN0+jIUlrcR0Bc=",
-      "x86_64-linux": "sha256-mmS9qdhyKh+gW++aWWHQfgMxuZWX7ani9qcy86D/fwU="
+      "aarch64-linux": "sha256-mBGvtflyJMLF09DuHowxYRfSmNXsPgldX/DB3Q6InKU=",
+      "x86_64-linux": "sha256-ei/cdLaDbqPRg/ZluGnw7juuvJcTy+v/5YONpOp72C4="
     }
   },
   "codex": {
-    "version": "0.152.0",
+    "version": "0.153.2",
     "hash": {
-      "aarch64-linux": "sha256-JF91yc2870vM8E0fd+OJqaZu7Ko5WR9ngyuSYeTtxbs=",
-      "x86_64-linux": "sha256-nkxKJbiNnJPODuT2T7oj/FWUn2bZ7LeeQZxUG2S4CZc="
+      "aarch64-linux": "sha256-3y+Pdkv4aurlHXHMN2hty9LCTkvOmp0ejySRQf2Z+sM=",
+      "x86_64-linux": "sha256-H9UhEylJecmTahEMq3y51enR4oCG8RL9Z0igWCap5aA="
     }
   },
   "grok": {
@@ -21,24 +21,24 @@
     }
   },
   "kimi": {
-    "version": "0.39.1",
+    "version": "0.40.1",
     "hash": {
-      "aarch64-linux": "sha256-8uFgc4I83togfj0ijviZy55DyGI6sh3dPt11cCrhnKM=",
-      "x86_64-linux": "sha256-WFVH4ILy86Mt2AglYmocjdToL1W01qiqFOY5fAB1jso="
+      "aarch64-linux": "sha256-JS7ruBn2S1ohVEnTnZ4vDvxgW51usyXsbTrLqRAPsgw=",
+      "x86_64-linux": "sha256-4dUAOuGCIA7MPAYxq6fn6uuhYBoM9pB3CqAYS1kie7c="
     }
   },
   "opencode": {
-    "version": "1.18.25",
+    "version": "1.18.27",
     "hash": {
-      "aarch64-linux": "sha256-Ne93iXQl5BtRg6LCGsT7HU2UTYKpTjySD1e1SQrxGsU=",
-      "x86_64-linux": "sha256-WKNymm80Mt1tKRf8xKlJeIiRoDWBhkatSA4SyUf1bng="
+      "aarch64-linux": "sha256-jLwTTrXhALr2HucZYVD1A+NSBW5wMnbi2GN8OLr9LDk=",
+      "x86_64-linux": "sha256-SvVJT5Qz9Z24weNEGY8O5ypQwG7ACftKiuq0wtSr1wI="
     }
   },
   "cursor-agent": {
-    "version": "2026.08.31-4057e58",
+    "version": "2026.09.02-c22c1a3",
     "hash": {
-      "aarch64-linux": "sha256-z122tQR7MoDYpJRxz9Qb6x1eR1d0F3313yhRhXq2UUo=",
-      "x86_64-linux": "sha256-fjBttXUCGamcAO1Rf+iyNdPFTkyl934v8WDMl85wd5g="
+      "aarch64-linux": "sha256-+3vGNb5hcuvPaPkH/ZIX42FNpRkWRVxtf9tmaQmXiEw=",
+      "x86_64-linux": "sha256-tztZhUdiU1wPwg18zFHDtaNWqFFJEIjWCjYr5IdQ9Tw="
     }
   }
 }
