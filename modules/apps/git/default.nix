@@ -85,6 +85,12 @@ in
         gpg.format = "ssh";
         commit.gpgsign = true;
         tag.gpgsign = true;
+
+        # Signing works without this, but every local verification does not:
+        # `git log --show-signature` errors and `%G?` reads N on commits that
+        # are in fact signed, which is easy to misread as unsigned. Written at
+        # activation next to the derived .pub, since neither is known at eval.
+        gpg.ssh.allowedSignersFile = "~/.config/git/allowed_signers";
         merge.conflictstyle = "zdiff3";
         rerere.enabled = true;
       };
