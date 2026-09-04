@@ -147,18 +147,19 @@
         # %{version}-%{release}, not %{evr}: evr prefixes the epoch that the
         # pins omit, and NetworkManager (epoch 1) then never matches itself.
         # --arch keeps --latest-limit off the .src RPMs, which sort newest.
-        # Offline, dnf retries each unreachable mirror on its own schedule, so
-        # the setopts make it give up and exit into the empty-LATEST path
-        # below; the outer timeout is the backstop for a stall dnf does not
-        # bound, such as DNS. 15s/1 retry was too tight for the mirrors this
-        # machine draws -- the base repos silently failed to load while the
-        # coprs succeeded, and every package outside them read as retired.
+        # dnf keeps its default timeout/retries here on purpose, against the
+        # usual rule of bounding a network tool by its own options. Measured
+        # 2026-09-03: --setopt=timeout=60 --setopt=retries=2 loaded the coprs
+        # but not the Fedora base repos, and dnf still exited 0, so 33 of 34
+        # pins came back as retired -- a partial answer, which is worse than
+        # none because the empty-LATEST path below never fires on it. The
+        # mirrors this machine draws need dnf's full retry budget. The outer
+        # timeout plus the trap above is the bound instead.
         LATEST=$(${pkgs.coreutils}/bin/timeout 900 $DOCKER run --rm --name "$QC" "$REPO@$NEW_BASE" sh -c "
           dnf install -y 'dnf5-command(copr)' >/dev/null 2>&1 &&
           dnf copr enable -y @asahi/fedora-remix-scripts >/dev/null 2>&1 &&
           dnf copr enable -y @asahi/steam >/dev/null 2>&1 &&
           dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
-            --setopt=timeout=60 --setopt=retries=2 \
             --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES
         " 2>/dev/null || true)
 
