@@ -76,11 +76,13 @@
       # the one entry the updater could not fix -- which is the exact failure
       # this exists to prevent.
       #
-      # Resolution happens in a throwaway container off the Containerfile's own
-      # base image, never in the built one. The built container is usually
-      # missing *because* a pin went stale, so keying on it made this skip
-      # itself at the one moment it was needed. Like `nix flake update`, this
-      # only rewrites the file; reb's rebPostSwitch hook builds from it after.
+      # Resolution prefers the built container, which already holds the repo
+      # metadata and answers in seconds, and falls back to a throwaway off the
+      # Containerfile's own base image when there is no container. It must not
+      # *require* one: the container is usually missing precisely because a pin
+      # went stale, so keying on it made this skip itself at the one moment it
+      # was needed. Like `nix flake update`, this only rewrites the file; reb's
+      # rebPostSwitch hook builds from it after.
       update-steam-asahi-pins = pkgs.writeShellScriptBin "update-steam-asahi-pins" ''
         set -eu
 
@@ -143,30 +145,47 @@
             | ${pkgs.coreutils}/bin/tr '\n' ' '
         )
 
-        # --rm cannot reap a container whose client the outer timeout killed,
-        # so the name plus this trap is what actually reclaims it.
-        QC=steam-asahi-pinquery-$$
-        trap '$DOCKER rm -f "$QC" >/dev/null 2>&1 || true' EXIT
-
         # Unquoted $NAMES on purpose: the name list is the argument vector, and
         # no package name contains whitespace.
         # %{version}-%{release}, not %{evr}: evr prefixes the epoch that the
         # pins omit, and NetworkManager (epoch 1) then never matches itself.
         # --arch keeps --latest-limit off the .src RPMs, which sort newest.
         # Offline, dnf retries each unreachable mirror on its own schedule, so
-        # the setopts make it give up and exit into the empty-LATEST path
-        # below. Looser than the values used inside the built container: this
-        # one starts with no cached metadata and has the whole repomd set to
-        # pull before it can answer. The outer timeout is the backstop for a
-        # stall dnf does not bound, such as DNS.
-        LATEST=$(${pkgs.coreutils}/bin/timeout 900 $DOCKER run --rm --name "$QC" "$REPO@$NEW_BASE" sh -c "
-          dnf install -y 'dnf5-command(copr)' >/dev/null 2>&1 &&
-          dnf copr enable -y @asahi/fedora-remix-scripts >/dev/null 2>&1 &&
-          dnf copr enable -y @asahi/steam >/dev/null 2>&1 &&
-          dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
+        # the setopts make it give up and exit into the empty-LATEST path below;
+        # the outer timeout is the backstop for a stall dnf does not bound.
+        #
+        # The two branches spell the query out separately rather than sharing a
+        # variable: one is re-parsed by an inner `sh -c` and the other is not,
+        # so a single string cannot be quoted correctly for both.
+        #
+        # The built container already has the metadata cached, so asking it
+        # takes seconds; the throwaway has to install the copr plugin and pull
+        # the whole repomd set first, which is minutes. Pay that only on the
+        # bootstrap path this fallback exists to rescue. stdin is redirected
+        # because `distrobox enter` passes --interactive unconditionally and
+        # would hang the subshell.
+        if $DOCKER container inspect steam-asahi >/dev/null 2>&1; then
+          LATEST=$(${pkgs.coreutils}/bin/timeout 240 \
+            ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir steam-asahi -- \
+            dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
             --setopt=timeout=30 --setopt=retries=3 \
-            --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES
-        " 2>/dev/null || true)
+            --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES \
+            < /dev/null 2>/dev/null || true)
+        else
+          # --rm cannot reap a container whose client the outer timeout killed,
+          # so the name plus this trap is what actually reclaims it.
+          QC=steam-asahi-pinquery-$$
+          trap '$DOCKER rm -f "$QC" >/dev/null 2>&1 || true' EXIT
+
+          LATEST=$(${pkgs.coreutils}/bin/timeout 900 $DOCKER run --rm --name "$QC" "$REPO@$NEW_BASE" sh -c "
+            dnf install -y 'dnf5-command(copr)' >/dev/null 2>&1 &&
+            dnf copr enable -y @asahi/fedora-remix-scripts >/dev/null 2>&1 &&
+            dnf copr enable -y @asahi/steam >/dev/null 2>&1 &&
+            dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
+              --setopt=timeout=30 --setopt=retries=3 \
+              --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES
+          " 2>/dev/null || true)
+        fi
 
         # An unreachable mirror returns nothing, which is indistinguishable from
         # "no package resolved" further down and would report all 34 pins as
