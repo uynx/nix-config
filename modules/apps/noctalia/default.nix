@@ -41,6 +41,16 @@
         wallpaper = saved.wallpaper // {
           directory = "${../../wallpapers}";
         };
+
+        # Which image is showing lives only in ~/.cache/noctalia/wallpapers.json,
+        # never in settings, and nothing picks one when that cache is absent —
+        # so a fresh machine sits on noctalia's bundled default forever. The
+        # startup hook runs from the shell's own init, after WallpaperService
+        # exists, which a niri `spawn-at-startup` would race.
+        hooks = saved.hooks // {
+          enabled = true;
+          startup = "noctalia-shell ipc call wallpaper set ${../../wallpapers}/wallpaper.png all";
+        };
       };
 
       colors = builtins.fromJSON (builtins.readFile ./Flexoki.json);

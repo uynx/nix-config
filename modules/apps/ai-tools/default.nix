@@ -234,7 +234,13 @@
             # On Linux, hermes is maintained by its vendor installer / self-updater.
             # On macOS, the `hermes-agent` Homebrew formula manages it.
             if ! command -v hermes >/dev/null 2>&1; then
-              roll hermes sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
+              # First install builds several npm workspaces and took 20 minutes
+              # here. roll() buffers output until the command returns, so
+              # without this line the run is indistinguishable from a hang --
+              # which is what it was mistaken for. The installer bounds its own
+              # npm calls and nothing else, so the outer bound is still ours.
+              printf '  %-12s installing, first run takes many minutes...\n' hermes
+              roll hermes timeout 2400 sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
                 | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
             elif [ -z "$missingOnly" ]; then
               ver=$(get_ver hermes || true)
