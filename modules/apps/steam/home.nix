@@ -511,9 +511,16 @@
         }
         trap cleanup_url_bridge EXIT INT TERM HUP
 
+        # /opt/steam-arm64 lives in the image, not on the host, so this seeding
+        # copy has to run inside the container -- the destination stays a host
+        # path because the home is bind-mounted at the same absolute path in
+        # there. It only fires on a Steam root that has never been seeded, which
+        # is why a host-side `cp` went unnoticed until a first launch on a fresh
+        # install, where it fails `cannot stat` and Steam never opens.
         if [ ! -x "$STEAM_BIN" ]; then
           mkdir -p "$STEAM_ROOT"
-          cp -a /opt/steam-arm64/steamrtarm64 "$STEAM_ROOT/"
+          ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir "$CONTAINER" -- \
+            cp -a /opt/steam-arm64/steamrtarm64 "$STEAM_ROOT/" < /dev/null
         fi
         mkdir -p "$STEAM_ROOT/package" "$STEAM_HOME"
         printf '%s\n' "''${STEAM_CLIENT_BRANCH-publicbeta}" >"$STEAM_ROOT/package/beta"

@@ -87,6 +87,23 @@ window-rule {
     open-floating false
 }
 
+// Matches ghostty's own background-opacity. Note this is not the same effect:
+// the compositor fades the whole surface, glyphs included, because it cannot
+// tell background from content. Ghostty is excluded for exactly that reason --
+// it already fades only its background, and stacking the two would both double
+// the transparency and make its text translucent.
+window-rule {
+    exclude app-id="^com\\.mitchellh\\.ghostty$"
+    opacity 0.92
+}
+
+// Games are rendered content, not chrome, so fading them is just a dimmer.
+window-rule {
+    match app-id="^steam_app_[0-9]+$"
+    match app-id="^cs2$"
+    opacity 1.0
+}
+
 // Proton VPN is a narrow app; a third of the screen suits it better than the
 // global 0.75.
 window-rule {
