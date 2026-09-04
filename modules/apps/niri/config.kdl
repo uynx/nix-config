@@ -87,14 +87,20 @@ window-rule {
     open-floating false
 }
 
-// Matches ghostty's own background-opacity. Note this is not the same effect:
-// the compositor fades the whole surface, glyphs included, because it cannot
-// tell background from content. Ghostty is excluded for exactly that reason --
-// it already fades only its background, and stacking the two would both double
-// the transparency and make its text translucent.
+// Unfocused windows only. The compositor fades the whole surface, glyphs
+// included, because it cannot tell background from content -- tolerable on a
+// window you are not reading, not on the one you are. Ghostty is excluded
+// outright: it already fades only its own background, so stacking the two
+// would double the transparency and make its text translucent.
 window-rule {
     exclude app-id="^com\\.mitchellh\\.ghostty$"
     opacity 0.92
+}
+
+// Rules apply in order, so this restores the focused window to fully opaque.
+window-rule {
+    match is-focused=true
+    opacity 1.0
 }
 
 // Games are rendered content, not chrome, so fading them is just a dimmer.
