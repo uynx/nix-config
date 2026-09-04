@@ -30,6 +30,18 @@
         if [[ -e "$privateKey" && ! -e "$publicKey" ]]; then
           run ${pkgs.openssh}/bin/ssh-keygen -y -f "$privateKey" > "$publicKey"
         fi
+
+        # Same reason as the public half: signing needs neither of these, but
+        # without allowed_signers every local verification fails and `%G?`
+        # reports N on a commit that is in fact signed. The principal is read
+        # back out of git rather than restated, so it cannot drift from
+        # modules/apps/git.
+        signers=${config.xdg.configHome}/git/allowed_signers
+        if [[ -e "$publicKey" ]]; then
+          run ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$signers")"
+          run ${pkgs.coreutils}/bin/printf '%s %s\n' \
+            "$(${pkgs.git}/bin/git config --get user.email)" "$(< "$publicKey")" > "$signers"
+        fi
       '';
 
       sops = {
