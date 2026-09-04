@@ -75,15 +75,46 @@
       # pin that has aged off the mirrors resolves to nothing and would then be
       # the one entry the updater could not fix -- which is the exact failure
       # this exists to prevent.
+      #
+      # Resolution happens in a throwaway container off the Containerfile's own
+      # base image, never in the built one. The built container is usually
+      # missing *because* a pin went stale, so keying on it made this skip
+      # itself at the one moment it was needed. Like `nix flake update`, this
+      # only rewrites the file; reb's rebPostSwitch hook builds from it after.
       update-steam-asahi-pins = pkgs.writeShellScriptBin "update-steam-asahi-pins" ''
         set -eu
 
         FILE=${config.home.homeDirectory}/nix-config/steam-asahi/Containerfile
-        ENTER="${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir steam-asahi --"
+        DOCKER=${pkgs.docker}/bin/docker
 
-        if ! ${pkgs.docker}/bin/docker container inspect steam-asahi >/dev/null 2>&1; then
-          printf '%-52s %s\n' steam-asahi "no container, skipped"
+        # Repo, release and digest are read back out of the Containerfile so
+        # there is no second copy of any of them to keep in sync.
+        REPO=$(${pkgs.gnused}/bin/sed -n 's|^FROM \([^@:]*\).*|\1|p' "$FILE" | ${pkgs.coreutils}/bin/head -1)
+        RELEASE=$(${pkgs.gnugrep}/bin/grep -om1 'fc[0-9][0-9]*' "$FILE" | ${pkgs.gnused}/bin/sed 's/fc//')
+        OLD_BASE=$(${pkgs.gnused}/bin/sed -n 's|^FROM .*@\(sha256:[0-9a-f]*\).*|\1|p' "$FILE" | ${pkgs.coreutils}/bin/head -1)
+
+        printf 'steam-asahi pins\n'
+
+        # Quay rebuilds fedora-minimal:NN every few weeks and garbage-collects
+        # the manifest the superseded digest named, so a base pin that built
+        # last month resolves to nothing today and takes the whole image with
+        # it. It has to be re-resolved before anything else, and the pull is
+        # not extra work: the query container below needs the image anyway.
+        if ! ${pkgs.coreutils}/bin/timeout 600 $DOCKER pull -q "$REPO:$RELEASE" >/dev/null 2>&1; then
+          printf '  %s\n' "could not pull $REPO:$RELEASE -- pins left untouched, rerun when back online"
           exit 0
+        fi
+        NEW_BASE=$($DOCKER image inspect "$REPO:$RELEASE" \
+          --format '{{index .RepoDigests 0}}' | ${pkgs.gnused}/bin/sed 's|.*@||')
+
+        TMP=$(${pkgs.coreutils}/bin/mktemp)
+        ${pkgs.coreutils}/bin/cp "$FILE" "$TMP"
+        BUMPED=0
+
+        if [ "$NEW_BASE" != "$OLD_BASE" ]; then
+          ${pkgs.gnused}/bin/sed -i "s|$OLD_BASE|$NEW_BASE|" "$TMP"
+          printf '  %-52s -> %s\n' "base image $OLD_BASE" "$NEW_BASE"
+          BUMPED=$((BUMPED + 1))
         fi
 
         PINS=$(
@@ -106,84 +137,96 @@
             | ${pkgs.coreutils}/bin/sort -u
         )
 
-        # Unquoted on purpose: the name list is the argument vector, and no
-        # package name contains whitespace.
-        # shellcheck disable=SC2086
+        # --rm cannot reap a container whose client the outer timeout killed,
+        # so the name plus this trap is what actually reclaims it.
+        QC=steam-asahi-pinquery-$$
+        trap '$DOCKER rm -f "$QC" >/dev/null 2>&1 || true' EXIT
+
+        # Unquoted $NAMES on purpose: the name list is the argument vector, and
+        # no package name contains whitespace.
         # %{version}-%{release}, not %{evr}: evr prefixes the epoch that the
         # pins omit, and NetworkManager (epoch 1) then never matches itself.
         # --arch keeps --latest-limit off the .src RPMs, which sort newest.
-        # The format stays inline and quoted. Held in a variable it word-splits
-        # on its own space, and dnf reads half the format as a package name.
-        # Offline, dnf retries each unreachable mirror on its own schedule and
-        # `update` sits here with nothing printed. The setopts make dnf give up
-        # and exit, which is what reaches the empty-LATEST path below; the outer
-        # timeout is the backstop for a stall dnf does not bound, such as DNS.
-        LATEST=$(${pkgs.coreutils}/bin/timeout 240 \
-          $ENTER dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
-          --setopt=timeout=15 --setopt=retries=1 \
-          --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES < /dev/null 2>/dev/null || true)
+        # Offline, dnf retries each unreachable mirror on its own schedule, so
+        # the setopts make it give up and exit into the empty-LATEST path
+        # below; the outer timeout is the backstop for a stall dnf does not
+        # bound, such as DNS. 15s/1 retry was too tight for the mirrors this
+        # machine draws -- the base repos silently failed to load while the
+        # coprs succeeded, and every package outside them read as retired.
+        LATEST=$(${pkgs.coreutils}/bin/timeout 900 $DOCKER run --rm --name "$QC" "$REPO@$NEW_BASE" sh -c "
+          dnf install -y 'dnf5-command(copr)' >/dev/null 2>&1 &&
+          dnf copr enable -y @asahi/fedora-remix-scripts >/dev/null 2>&1 &&
+          dnf copr enable -y @asahi/steam >/dev/null 2>&1 &&
+          dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
+            --setopt=timeout=60 --setopt=retries=2 \
+            --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES
+        " 2>/dev/null || true)
 
         # An unreachable mirror returns nothing, which is indistinguishable from
         # "no package resolved" further down and would report all 34 pins as
-        # retired. Pins are untouched either way, so this reports and leaves the
-        # relock behind it alone rather than failing the whole `update`.
+        # retired. A base bump found above still gets written.
         if [ -z "$LATEST" ]; then
-          printf 'steam-asahi pins\n  %s\n' \
-            "could not reach the Fedora repos -- pins left untouched, rerun when back online"
-          exit 0
+          printf '  %s\n' "could not reach the Fedora repos -- package pins left untouched, rerun when back online"
+        else
+          PLAN=$(printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v latest="$LATEST" '
+            BEGIN {
+              n = split(latest, l, "\n")
+              for (i = 1; i <= n; i++) { split(l[i], a, " "); if (a[1] != "") newest[a[1]] = a[2] }
+            }
+            $0 == "" { next }
+            {
+              nm = $0
+              sub(/\.[^.]*$/, "", nm)
+              sub(/-[^-]*-[^-]*$/, "", nm)
+              # No entry at all means the package itself left the repos, not just
+              # this build of it. Renamed or retired upstream, so only a human can
+              # decide what replaces it.
+              if (!(nm in newest)) { print "MISSING", $0, nm; next }
+              if (newest[nm] == $0) { print "SAME", $0, "-"; next }
+              print "BUMP", $0, newest[nm]
+            }
+          ')
+
+          MISSED=$(printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -c '^MISSING' || true)
+
+          # A repo that failed to load takes every package it carries down with
+          # it, and each one then looks retired. Packages do get retired, but
+          # never dozens at once, so treat a large MISSING count as the repo
+          # problem it almost always is rather than rewriting 30 lines off a
+          # half-loaded mirror. Ceiling: a real mass retirement (a Fedora
+          # release going EOL) needs a human either way.
+          if [ "$MISSED" -gt 3 ]; then
+            printf '  %s\n' "$MISSED of $(printf '%s\n' "$PINS" | ${pkgs.coreutils}/bin/wc -l) pins unresolved -- a repo failed to load, package pins left untouched"
+          else
+            # An arrow means that Containerfile line changed, and nothing else
+            # prints one. The old output used the same arrow for held pins that
+            # moved nothing, which is what made it unreadable.
+            printf '%s\n' "$PLAN" | while read -r kind old new; do
+              case $kind in
+                BUMP)
+                  ${pkgs.gnused}/bin/sed -i "s|$old|$new|" "$TMP"
+                  printf '  %-52s -> %s\n' "$old" "$new"
+                  ;;
+                SAME) printf '  %-52s    already newest\n' "$old" ;;
+                MISSING) printf '  %-52s    !! package %s NO LONGER EXISTS in any enabled repo\n' "$old" "$new" ;;
+              esac
+            done
+
+            BUMPED=$((BUMPED + $(printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -c '^BUMP' || true)))
+            if [ "$MISSED" -gt 0 ]; then
+              printf '  %s\n' "$MISSED pin(s) CANNOT be fixed automatically -- the container will not rebuild until they are edited by hand in $FILE"
+            fi
+          fi
         fi
-
-        PLAN=$(printf '%s\n' "$PINS" | ${pkgs.gawk}/bin/awk -v latest="$LATEST" '
-          BEGIN {
-            n = split(latest, l, "\n")
-            for (i = 1; i <= n; i++) { split(l[i], a, " "); if (a[1] != "") newest[a[1]] = a[2] }
-          }
-          $0 == "" { next }
-          {
-            nm = $0
-            sub(/\.[^.]*$/, "", nm)
-            sub(/-[^-]*-[^-]*$/, "", nm)
-            # No entry at all means the package itself left the repos, not just
-            # this build of it. Renamed or retired upstream, so only a human can
-            # decide what replaces it.
-            if (!(nm in newest)) { print "MISSING", $0, nm; next }
-            if (newest[nm] == $0) { print "SAME", $0, "-"; next }
-            print "BUMP", $0, newest[nm]
-          }
-        ')
-
-        printf 'steam-asahi pins\n'
-
-        TMP=$(${pkgs.coreutils}/bin/mktemp)
-        ${pkgs.coreutils}/bin/cp "$FILE" "$TMP"
-        # An arrow means that Containerfile line changed, and nothing else
-        # prints one. The old output used the same arrow for held pins that
-        # moved nothing, which is what made it unreadable.
-        printf '%s\n' "$PLAN" | while read -r kind old new; do
-          case $kind in
-            BUMP)
-              ${pkgs.gnused}/bin/sed -i "s|$old|$new|" "$TMP"
-              printf '  %-52s -> %s\n' "$old" "$new"
-              ;;
-            SAME) printf '  %-52s    already newest\n' "$old" ;;
-            MISSING) printf '  %-52s    !! package %s NO LONGER EXISTS in any enabled repo\n' "$old" "$new" ;;
-          esac
-        done
-
-        BUMPED=$(printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -c '^BUMP' || true)
-        MISSED=$(printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -c '^MISSING' || true)
 
         # Only rewrite when something actually moved, so an unchanged run
         # leaves the file's mtime and the container config hash alone.
         if [ "$BUMPED" -gt 0 ]; then
           # Written back through cat so the file keeps its own permissions.
           ${pkgs.coreutils}/bin/cat "$TMP" >"$FILE"
-          printf '  %s\n' "$BUMPED pin(s) rewritten -- next game launch rebuilds the container"
+          printf '  %s\n' "$BUMPED pin(s) rewritten -- reb will rebuild the container"
         else
           printf '  %s\n' "every pin already newest, Containerfile untouched"
-        fi
-        if [ "$MISSED" -gt 0 ]; then
-          printf '  %s\n' "$MISSED pin(s) CANNOT be fixed automatically -- the container will not rebuild until they are edited by hand in $FILE"
         fi
         ${pkgs.coreutils}/bin/rm -f "$TMP"
       '';
