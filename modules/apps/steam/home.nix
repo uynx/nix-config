@@ -131,10 +131,16 @@
 
         # RPM forbids a dash in version and release, so dropping the arch
         # suffix and then the last two dash-fields leaves exactly the name.
+        # Flattened to one line, not left newline-separated: this is
+        # interpolated into the double-quoted `sh -c` body below, where a
+        # newline is a command separator rather than an argument separator.
+        # Left as-is, dnf receives the first name and the inner shell tries to
+        # run the other 33 as commands -- which reads as 33 retired packages.
         NAMES=$(
           printf '%s\n' "$PINS" \
             | ${pkgs.gnused}/bin/sed -e 's/\.[^.]*$//' -e 's/-[^-]*-[^-]*$//' \
-            | ${pkgs.coreutils}/bin/sort -u
+            | ${pkgs.coreutils}/bin/sort -u \
+            | ${pkgs.coreutils}/bin/tr '\n' ' '
         )
 
         # --rm cannot reap a container whose client the outer timeout killed,
@@ -147,19 +153,18 @@
         # %{version}-%{release}, not %{evr}: evr prefixes the epoch that the
         # pins omit, and NetworkManager (epoch 1) then never matches itself.
         # --arch keeps --latest-limit off the .src RPMs, which sort newest.
-        # dnf keeps its default timeout/retries here on purpose, against the
-        # usual rule of bounding a network tool by its own options. Measured
-        # 2026-09-03: --setopt=timeout=60 --setopt=retries=2 loaded the coprs
-        # but not the Fedora base repos, and dnf still exited 0, so 33 of 34
-        # pins came back as retired -- a partial answer, which is worse than
-        # none because the empty-LATEST path below never fires on it. The
-        # mirrors this machine draws need dnf's full retry budget. The outer
-        # timeout plus the trap above is the bound instead.
+        # Offline, dnf retries each unreachable mirror on its own schedule, so
+        # the setopts make it give up and exit into the empty-LATEST path
+        # below. Looser than the values used inside the built container: this
+        # one starts with no cached metadata and has the whole repomd set to
+        # pull before it can answer. The outer timeout is the backstop for a
+        # stall dnf does not bound, such as DNS.
         LATEST=$(${pkgs.coreutils}/bin/timeout 900 $DOCKER run --rm --name "$QC" "$REPO@$NEW_BASE" sh -c "
           dnf install -y 'dnf5-command(copr)' >/dev/null 2>&1 &&
           dnf copr enable -y @asahi/fedora-remix-scripts >/dev/null 2>&1 &&
           dnf copr enable -y @asahi/steam >/dev/null 2>&1 &&
           dnf -q repoquery --available --arch aarch64,noarch --latest-limit 1 \
+            --setopt=timeout=30 --setopt=retries=3 \
             --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES
         " 2>/dev/null || true)
 
