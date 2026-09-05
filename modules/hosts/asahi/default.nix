@@ -31,9 +31,6 @@
       # Campus Wi-Fi, laptop only — the other hosts are never at UMass.
       eduroam
 
-      # The travel router, and the priority that keeps it ahead of eduroam.
-      uynxWifi
-
       ./_hardware-configuration.nix
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
 
