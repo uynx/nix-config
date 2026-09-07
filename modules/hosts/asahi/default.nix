@@ -36,6 +36,12 @@
 
       { networking.hostName = "asahi"; }
       {
+        # The only Linux builder here, and the x86 host's ISO and toplevel have
+        # to be built somewhere. qemu-user is verified working despite this
+        # kernel's 16 KiB pages. Also sets `nix.settings.extra-platforms`.
+        boot.binfmt.emulatedSystems = [ "x86_64-linux" ];
+      }
+      {
         home-manager.users.${self.lib.user.name}.home.sessionVariables.GSK_RENDERER = "gl";
       }
     ];
