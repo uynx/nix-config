@@ -92,7 +92,11 @@
         # Repo, release and digest are read back out of the Containerfile so
         # there is no second copy of any of them to keep in sync.
         REPO=$(${pkgs.gnused}/bin/sed -n 's|^FROM \([^@:]*\).*|\1|p' "$FILE" | ${pkgs.coreutils}/bin/head -1)
-        RELEASE=$(${pkgs.gnugrep}/bin/grep -om1 'fc[0-9][0-9]*' "$FILE" | ${pkgs.gnused}/bin/sed 's/fc//')
+        # The dot is load-bearing: it is what makes this match the `.fc44` of an
+        # RPM release field and not the bare `fc116` that sat inside the base
+        # image's sha256 digest, which `grep -m1` reached first -- resolving the
+        # release to a Fedora that does not exist and failing the pull below.
+        RELEASE=$(${pkgs.gnugrep}/bin/grep -om1 '\.fc[0-9][0-9]*' "$FILE" | ${pkgs.gnused}/bin/sed 's/\.fc//')
         OLD_BASE=$(${pkgs.gnused}/bin/sed -n 's|^FROM .*@\(sha256:[0-9a-f]*\).*|\1|p' "$FILE" | ${pkgs.coreutils}/bin/head -1)
 
         printf 'steam-asahi pins\n'
@@ -102,8 +106,11 @@
         # last month resolves to nothing today and takes the whole image with
         # it. It has to be re-resolved before anything else, and the pull is
         # not extra work: the query container below needs the image anyway.
-        if ! ${pkgs.coreutils}/bin/timeout 600 $DOCKER pull -q "$REPO:$RELEASE" >/dev/null 2>&1; then
-          printf '  %s\n' "could not pull $REPO:$RELEASE -- pins left untouched, rerun when back online"
+        # Docker's own reason is printed rather than swallowed: every failure
+        # here used to read as "offline", which sent the last one chasing the VPN
+        # when the tag simply did not exist.
+        if ! ERR=$(${pkgs.coreutils}/bin/timeout 600 $DOCKER pull -q "$REPO:$RELEASE" 2>&1 >/dev/null); then
+          printf '  %s\n' "could not pull $REPO:$RELEASE -- pins left untouched" "$ERR"
           exit 0
         fi
         NEW_BASE=$($DOCKER image inspect "$REPO:$RELEASE" \
