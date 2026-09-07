@@ -36,9 +36,16 @@
         }
 
         CONTAINER=steam-asahi
-        IMAGE=localhost/steam-asahi:44
         CFILE=Containerfile
         INI=distrobox.ini
+
+        # Read out of the Containerfile, never restated: a Fedora bump then moves
+        # the image tag and every NEVRA match below in one edit. The dot is what
+        # keeps this off the `fc116` sitting inside the base image's digest.
+        REL=$(${pkgs.gnugrep}/bin/grep -om1 '\.fc[0-9][0-9]*' \
+          ${config.home.homeDirectory}/nix-config/steam-asahi/Containerfile \
+          | ${pkgs.gnused}/bin/sed 's/\.fc//')
+        IMAGE=localhost/steam-asahi:$REL
       '';
       steam-asahi-doctor = pkgs.writeShellScriptBin "steam-asahi-doctor" ''
         set -eu
@@ -54,9 +61,9 @@
         # Read out of the Containerfile rather than restated: a second copy of
         # the NEVRA list is one more thing to edit on every Fedora bump. Stops
         # at the first `dnf clean all` so only the base install list is read.
-        ${pkgs.gawk}/bin/awk '
+        ${pkgs.gawk}/bin/awk -v rel="fc$REL" '
           /dnf install -y/ { f = 1 }
-          f && /fc44/ { gsub(/['"'"' \\&]/, ""); print }
+          f && $0 ~ rel { gsub(/['"'"' \\&]/, ""); print }
           /dnf clean all/ { exit }
         ' "$SOURCE/Containerfile" \
           | ${pkgs.findutils}/bin/xargs \
@@ -127,9 +134,9 @@
         fi
 
         PINS=$(
-          ${pkgs.gawk}/bin/awk '
+          ${pkgs.gawk}/bin/awk -v rel="fc$RELEASE" '
             /dnf install -y/ { f = 1 }
-            f && /fc44/ {
+            f && $0 ~ rel {
               line = $0
               gsub(/['"'"' \\&]/, "", line)
               if (!seen[line]++) print line
