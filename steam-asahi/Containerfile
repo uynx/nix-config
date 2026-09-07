@@ -54,7 +54,7 @@ RUN python3 -c 'import requests; r = requests.get("https://repo.steampowered.com
 
 # Valve's ARM64 public beta avoids running Steam's desktop UI through FEX. The
 # client updates this bootstrap in persistent user state after first launch.
-RUN python3 -c 'import requests; open("/tmp/steam-arm64.zip", "wb").write(requests.get("https://client-update.steamstatic.com/bins_linuxarm64_linuxarm64.zip.f122d0dc522cbd4d450fcfebc3552274b66b82e0").content)' && \
+RUN python3 -c 'import requests; r = requests.get("https://client-update.steamstatic.com/bins_linuxarm64_linuxarm64.zip.f122d0dc522cbd4d450fcfebc3552274b66b82e0", timeout=60); r.raise_for_status(); open("/tmp/steam-arm64.zip", "wb").write(r.content)' && \
     echo 'a61e993476fa4e06b8a50f29f7bff9211367be7cf57c8bacb30544e384feaf15  /tmp/steam-arm64.zip' | sha256sum -c - && \
     mkdir -p /opt/steam-arm64 && \
     python3 -c 'import zipfile; zipfile.ZipFile("/tmp/steam-arm64.zip").extractall("/opt/steam-arm64")' && \
