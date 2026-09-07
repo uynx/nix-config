@@ -62,12 +62,6 @@
       # nothing is on the bus.
       services.upower.enable = true;
 
-      # Only RustDesk uses flatpak. Its app state lives outside the flake, so
-      # nothing else should be installed this way. It lives here rather than in
-      # core because it asserts on xdg.portal, which only a desktop provides —
-      # in core it made the headless host stubs fail to evaluate.
-      services.flatpak.enable = true;
-
       # niri has no built-in XWayland; X11 clients need this bridge.
       environment.systemPackages = with pkgs; [
         xwayland-satellite
