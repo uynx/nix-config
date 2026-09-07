@@ -30,7 +30,7 @@
         # Newest first. The server lists only live releases, so this is a
         # handful of lines rather than the whole archive.
         versions() {
-          curl -fsSL --connect-timeout 10 --max-time 30 "$base/$1/" \
+          curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 "$base/$1/" \
             | sed -n 's|.*href="\([0-9][^"/]*\)/".*|\1|p' \
             | sort -Vr
         }
@@ -43,7 +43,7 @@
         # candidate is probed rather than assumed. No -S here: a 404 is the
         # expected answer for most probes and must not print as an error.
         has_arm() {
-          curl -fsI --connect-timeout 10 --max-time 30 -o /dev/null \
+          curl -fsI --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 -o /dev/null \
             "$(arm_url "$1" "$2" "$3")"
         }
 

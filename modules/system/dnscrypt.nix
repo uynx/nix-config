@@ -60,7 +60,7 @@ let
             trap 'rm -rf "$work"' EXIT INT TERM
 
             for f in public-resolvers.md public-resolvers.md.minisig; do
-              curl -fsSL --connect-timeout 10 --max-time 60 -o "$work/$f" "$base/$f"
+              curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 60 -o "$work/$f" "$base/$f"
             done
 
             # This list decides where every DNS query on this machine goes, and

@@ -143,34 +143,34 @@
             # is 300 s, so one blocked vendor otherwise freezes the whole run
             # with no output at all.
             if [ -z "$missingOnly" ]; then
-            claude=$(curl -fsSL --connect-timeout 10 --max-time 30 https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]' || true)
+            claude=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]' || true)
             try_bump claude-code "$claude" \
               "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude" \
               "https://downloads.claude.ai/claude-code-releases/$claude/linux-x64/claude"
 
             # npm, not the GitHub feed — the GitHub tarball omits the code-mode
             # host binary, so the feed has to match the source we actually fetch.
-            codex=$(curl -fsSL --connect-timeout 10 --max-time 30 https://registry.npmjs.org/@openai/codex/latest | jq -r '.version' || true)
+            codex=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://registry.npmjs.org/@openai/codex/latest | jq -r '.version' || true)
             try_bump codex "$codex" \
               "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-arm64.tgz" \
               "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-x64.tgz"
 
-            grok=$(curl -fsSL --connect-timeout 10 --max-time 30 https://x.ai/cli/stable | tr -d '[:space:]' || true)
+            grok=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://x.ai/cli/stable | tr -d '[:space:]' || true)
             try_bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64" \
               "https://x.ai/cli/grok-$grok-linux-x86_64"
 
-            kimi=$(curl -fsSL --connect-timeout 10 --max-time 30 https://code.kimi.com/kimi-code/latest | tr -d '[:space:]' || true)
+            kimi=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://code.kimi.com/kimi-code/latest | tr -d '[:space:]' || true)
             try_bump kimi "$kimi" \
               "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-arm64" \
               "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-x64"
 
-            opencode=$(curl -fsSL --connect-timeout 10 --max-time 30 https://api.github.com/repos/sst/opencode/releases/latest \
+            opencode=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://api.github.com/repos/sst/opencode/releases/latest \
               | jq -r '.tag_name | ltrimstr("v")' || true)
             try_bump opencode "$opencode" \
               "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-arm64.tar.gz" \
               "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-x64.tar.gz"
 
-            cursor=$(curl -fsSL --connect-timeout 10 --max-time 30 --compressed https://cursor.com/install | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1 || true)
+            cursor=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 --compressed https://cursor.com/install | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1 || true)
             try_bump cursor-agent "$cursor" \
               "https://downloads.cursor.com/lab/$cursor/linux/arm64/agent-cli-package.tar.gz" \
               "https://downloads.cursor.com/lab/$cursor/linux/x64/agent-cli-package.tar.gz"
@@ -230,7 +230,7 @@
             if command -v agy >/dev/null 2>&1; then
               roll agy    agy update
             else
-              roll agy    sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://antigravity.google/cli/install.sh | bash'
+              roll agy    sh -c 'curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://antigravity.google/cli/install.sh | bash'
             fi
           ''}
           ${lib.optionalString (!isLinux) ''
@@ -255,7 +255,7 @@
               # which is what it was mistaken for. The installer bounds its own
               # npm calls and nothing else, so the outer bound is still ours.
               printf '  %-12s installing, first run takes many minutes...\n' hermes
-              roll hermes timeout 2400 sh -c 'curl -fsSL --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
+              roll hermes timeout 2400 sh -c 'curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
                 | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
             elif [ -z "$missingOnly" ]; then
               ver=$(get_ver hermes || true)

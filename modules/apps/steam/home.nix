@@ -476,7 +476,13 @@
         # propagate a loop mount made inside it.
         ROOTFS=/home/uynx/.local/share/steam-asahi/ArchLinux.ero
         if [ ! -e "$ROOTFS" ]; then
-          ${pkgs.curl}/bin/curl -fsSL --connect-timeout 10 -o "$ROOTFS.part" \
+          # --speed-limit/--speed-time rather than --max-time: this is a
+          # multi-GB image, so a wall-clock bound would kill a healthy slow
+          # download. Stalls are what need catching, and a stalled transfer is
+          # otherwise unbounded.
+          ${pkgs.curl}/bin/curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
+            --connect-timeout 10 --speed-limit 1024 --speed-time 60 \
+            -o "$ROOTFS.part" \
             https://rootfs.fex-emu.gg/ArchLinux/2026-08-11/ArchLinux.ero
           echo "b035dcfe31a3d8e7ee497f2809caa11bf3a85bc68d707c7621d7433839d19ff2  $ROOTFS.part" \
             | ${pkgs.coreutils}/bin/sha256sum -c -
