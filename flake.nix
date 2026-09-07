@@ -28,6 +28,12 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Declarative flatpak. nixpkgs' own `services.flatpak.enable` installs the
+    # daemon and nothing else, so the RustDesk that used to be here was a hand
+    # run of `flatpak install` and did not survive the reinstall. Pinned to a
+    # tag rather than a branch: it owns an activation step.
+    nix-flatpak.url = "github:gmodena/nix-flatpak/v0.7.0";
     nix-darwin = {
       url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";

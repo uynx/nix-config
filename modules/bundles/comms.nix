@@ -2,6 +2,7 @@
 let
   bundle = self.lib.mkBundle {
     home = [ self.homeModules.comms ];
+    nixos = [ self.nixosModules.rustdesk ];
     darwin = [ self.darwinModules.rustdesk ];
   };
 in
