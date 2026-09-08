@@ -34,6 +34,15 @@
           # profiles/installation-device.nix deliberately forces it on.
           documentation.nixos.enable = lib.mkForce false;
 
+          # Upstream's favourites list points at a Firefox-and-manual dock, and two
+          # of its four entries are dead here: the manual is disabled below and
+          # GNOME ships gnome-console, not org.gnome.Terminal. Brave first, since
+          # signing in to Claude Code is what the browser is on this image for.
+          services.desktopManager.gnome.favoriteAppsOverride = ''
+            [org.gnome.shell]
+            favorite-apps=[ 'brave-origin.desktop', 'org.gnome.Console.desktop', 'firefox.desktop', 'gparted.desktop', 'org.gnome.Nautilus.desktop' ]
+          '';
+
           # /etc is the store-backed copy; the symlink is what puts it where the
           # autologin lands, since the live home is a tmpfs the store cannot write.
           environment.etc."REINSTALL.md".source = ../../../REINSTALL.md;

@@ -302,7 +302,13 @@
         REPLACE=0
 
         if [ "$IMAGE_HASH" != "$CONFIG_HASH" ]; then
+          # repo.steampowered.com answers IPv4 with a Google Edge Cache node
+          # that returns "forbidden" for every path, while its AAAA serves
+          # normally. The default bridge is IPv4-only, so the build always
+          # landed on the broken edge and curl retried its way to a 403.
+          # Sharing the host netns gives the build the working IPv6 route.
           ${pkgs.docker}/bin/docker build \
+            --network=host \
             --label "$LABEL=$CONFIG_HASH" \
             --tag "$IMAGE" \
             --file "$SOURCE/$CFILE" \
