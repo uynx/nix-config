@@ -83,14 +83,39 @@
     }
   );
 
-  flake.homeModules.niri = {
-    shellHooks.rebPostSwitch = ''
-      if type -q niri; and niri msg version >/dev/null 2>&1
-          set -l niri_cfg (grep -o "/nix/store/[^\" ]*-niri-config.kdl" (type -p niri) | head -n1)
-          if test -n "$niri_cfg"
-              niri msg action load-config-file --path $niri_cfg
-          end
-      end
-    '';
-  };
+  flake.homeModules.niri =
+    { pkgs, lib, ... }:
+    {
+      shellHooks.rebPostSwitch = ''
+        if type -q niri; and niri msg version >/dev/null 2>&1
+            set -l niri_cfg (grep -o "/nix/store/[^\" ]*-niri-config.kdl" (type -p niri) | head -n1)
+            if test -n "$niri_cfg"
+                niri msg action load-config-file --path $niri_cfg
+            end
+        end
+      '';
+
+      # Bound to Mod+W and Mod+Q. niri's own close-window is wrong for a Steam
+      # window: closing the XWayland window leaves Proton and the game running
+      # headless in the VM. Steam handling is opportunistic (`command -v`, not
+      # a Nix reference) so this stays installed on every host, including ones
+      # without the `gaming` bundle's steam-asahi-stop.
+      home.packages = [
+        (pkgs.writers.writeDashBin "close-active" ''
+          set -eu
+
+          N=${lib.getExe pkgs.niri}
+          ACTIVE=$($N msg -j focused-window 2>/dev/null || echo '{}')
+          APP=$(printf '%s' "$ACTIVE" | ${lib.getExe pkgs.jq} -r '.app_id // ""' 2>/dev/null || true)
+          case "$APP" in
+            steam|Steam|steam_app_[0-9]*)
+              if command -v steam-asahi-stop >/dev/null 2>&1; then
+                exec steam-asahi-stop
+              fi
+              ;;
+          esac
+          exec $N msg action close-window
+        '')
+      ];
+    };
 }
