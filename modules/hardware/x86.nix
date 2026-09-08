@@ -5,12 +5,15 @@
   # modules need Turing or newer for GSP firmware Pascal does not have.
   # nixpkgs marks 580 an LTSB supported until Aug 2028.
   flake.nixosModules.hardwareX86 =
-    { config, ... }:
+    { config, pkgs, ... }:
     {
       boot.loader = {
         systemd-boot.enable = true;
         efi.canTouchEfiVariables = true;
       };
+      # Desktop, not the laptop's suspend/resume minefield — track mainline
+      # instead of the default LTS-ish kernel.
+      boot.kernelPackages = pkgs.linuxPackages_latest;
       hardware.enableRedistributableFirmware = true;
 
       services.xserver.videoDrivers = [ "nvidia" ];
