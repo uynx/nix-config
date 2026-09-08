@@ -393,3 +393,128 @@ rclone once secrets land).
 missing key fails the user unit, but `nixos-rebuild` still exits 0 — so the
 wrong order gives a green rebuild, a working desktop, no SSH key, no Drive
 mount, and nothing but an inactive unit to explain it.
+
+## 7. The x86 desktop
+
+Written 2026-09-07, never executed. The `x86` host has existed since 2026-08-31
+and evaluates clean; nothing below has been run on the machine.
+
+Steps 5 and 6 apply unchanged — the age key and `reb` work the same on every
+host. Steps 0.25 through 4 are Apple-specific and are replaced by this section.
+
+### 7.1 The stick
+
+```bash
+nix build .#nixosConfigurations.iso-x86.config.system.build.isoImage
+sudo dd if=result/iso/*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+```
+
+**This has to be built on the Asahi laptop**, which is the only Linux machine
+here — `boot.binfmt.emulatedSystems = [ "x86_64-linux" ]` on that host is what
+makes an x86_64 image buildable at all, and the Mac has no `linux-builder`.
+Budget ~35 minutes, almost all of it the 3.1 GiB fetch; the emulated squashfs
+and xorriso are minutes. The image is 3.3 GiB.
+
+Unlike the aarch64 image this one is graphical: GNOME with autologin as `nixos`,
+plus Brave, so the Bitwarden **web** vault opens on the machine being installed
+and the age key never has to be retyped off a phone. `bw`, `sops`, `rage`,
+`cryptsetup`, `gh` and `claude` are all on it, and `REINSTALL.md` is in the live
+home. Keep a stock NixOS graphical ISO on a second stick: the 1070 runs on
+nouveau in the live image, GDM may fall back to X11, and none of this has been
+booted on real hardware.
+
+### 7.2 Partition
+
+**Read the disk, never assume it.** This machine has no `alx.sh` history and no
+partitions that must survive, but it may still hold a Windows ESP worth reusing
+or data worth keeping.
+
+```bash
+lsblk -o NAME,SIZE,TYPE,FSTYPE,PARTLABEL
+sgdisk -p /dev/nvme0n1
+```
+
+Wiping the whole disk, ESP plus LUKS root:
+
+```bash
+sgdisk -Z /dev/nvme0n1
+sgdisk -n 1:0:+1G   -t 1:ef00 -c 1:ESP   /dev/nvme0n1
+sgdisk -n 2:0:0     -t 2:8300 -c 2:NIXOS /dev/nvme0n1
+partprobe /dev/nvme0n1
+
+mkfs.fat -F32 -n BOOT /dev/nvme0n1p1
+cryptsetup luksFormat /dev/nvme0n1p2
+cryptsetup open /dev/nvme0n1p2 cryptroot
+mkfs.ext4 -L nixos /dev/mapper/cryptroot
+
+mount /dev/mapper/cryptroot /mnt
+mkdir -p /mnt/boot && mount /dev/nvme0n1p1 /mnt/boot
+```
+
+1 GiB for the ESP, not the laptop's 476 M: that one is cramped only because
+Apple firmware eats 126 M of it, and it caps this config at three generations.
+Nothing eats into this one, so `configurationLimit = 10` fits comfortably.
+
+Encryption is decided here and nowhere else — it wraps the block device, so it
+cannot be retrofitted. `cryptsetup` needs a real TTY for its `YES` and its
+passphrase and cannot be driven from an agent session; the same is true of
+`gh auth login` below.
+
+No bind mount of `/boot` is needed. That step exists on the laptop only because
+`peripheralFirmwareDirectory` is an absolute path read at eval time.
+
+### 7.3 Flake, hardware config, install
+
+```bash
+gh auth login                     # HTTPS, browser flow — the repo is private
+mkdir -p /mnt/home/uynx
+git clone https://github.com/uynx/nix-config.git /mnt/home/uynx/nix-config
+
+nixos-generate-config --root /mnt
+cp /mnt/etc/nixos/hardware-configuration.nix \
+   /mnt/home/uynx/nix-config/modules/hosts/x86/_hardware-configuration.nix
+```
+
+**Then uncomment its import in `modules/hosts/x86/default.nix`.** The laptop
+does not need this step; the x86 host ships with that line commented out because
+the file does not exist until now. It is also what supplies
+`nixpkgs.hostPlatform`, since the host still uses the legacy `system =`
+argument, so anything reading `config.nixpkgs.hostPlatform.system` fails until
+the import is live — with a trace pointing somewhere unrelated.
+
+```bash
+cd /mnt/home/uynx/nix-config && git add -A && git commit -m "x86 hardware config"
+nixos-install --flake /mnt/home/uynx/nix-config#x86 --no-root-passwd
+```
+
+Commit first: `import-tree` globs `modules/`, so a file that is never `git add`ed
+is skipped silently rather than failing.
+
+**No `--impure` here** — that flag is an Asahi firmware requirement. The x86
+host evaluates purely.
+
+`--max-jobs`/`--cores` are left at their defaults on purpose: those limits exist
+on the laptop to keep Rust builds inside 16 GB. Check `free -g` first and clamp
+the same way if this machine is also at 16 GB, and add the swapfile from step 2
+if so.
+
+The NVIDIA 580 driver is **not** in the binary cache (unfree, so Hydra never
+builds it), so expect a local kernel-module compile. It has never been built
+anywhere — confirming 580.178.04 compiles against the running kernel happens
+here for the first time.
+
+Then the same three things `nixos-install` does not do:
+
+```bash
+chown -R 1000:100 /mnt/home/uynx
+rm -f /mnt/etc/nixos/*.nix && rmdir /mnt/etc/nixos
+nixos-enter --root /mnt -c 'passwd uynx'
+reboot
+```
+
+### 7.4 Differences after first boot
+
+Step 5 (age key) and step 6 (`reb`) run unchanged. Two things do not apply:
+there is no Steam container to rebuild — the `gaming` bundle is Asahi-only and
+native Steam is not written for this host yet — and there is no `eduroam`
+profile, since the machine never leaves the house.
