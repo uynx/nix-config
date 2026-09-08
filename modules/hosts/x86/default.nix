@@ -4,7 +4,7 @@
   # component. Differs only where the hardware does — no `gaming` (that bundle
   # is the Fedora/FEX container that exists solely because asahi is 16 KiB-page
   # aarch64; native Steam is the x86 answer and is not written yet) and no
-  # `eduroam` (this machine never leaves the house).
+  # `campus-wifi` (this machine never leaves the house).
   flake.nixosConfigurations.x86 = inputs.nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
     specialArgs = { inherit inputs; };

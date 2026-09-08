@@ -66,7 +66,7 @@
 
     };
 
-  # System tier, Linux only. NetworkManager reads the eduroam credentials as
+  # System tier, Linux only. NetworkManager reads the campus Wi-Fi credentials as
   # root at unit start, before any user service could have decrypted them, so
   # the home tier above cannot serve them.
   #

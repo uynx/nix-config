@@ -1,8 +1,12 @@
 { inputs, ... }:
 {
   # Remote desktop. macOS takes the Homebrew cask (darwin.nix beside this);
-  # Linux takes the Flathub build rather than nixpkgs' `rustdesk`, which is a
-  # deliberate choice and not an oversight — revisit only if asked.
+  # Linux takes the Flathub build rather than nixpkgs' `rustdesk`. The reason is
+  # aarch64-specific: nixpkgs' build compiles and runs on asahi but its buttons
+  # render wrong, so the app is unusable there. x86 has no such defect and could
+  # take `pkgs.rustdesk` directly — deliberately not split yet. Note that
+  # rustdesk is uncached on *every* platform (its `libsciter` dependency is
+  # unfree, so Hydra never builds it), making that a ~40 min source build.
   #
   # nixpkgs' `services.flatpak.enable` installs the daemon and stops there: it
   # declares no remote and no application. The RustDesk that lived here before
