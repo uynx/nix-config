@@ -455,10 +455,17 @@ mkdir -p /mnt/boot && mount /dev/nvme0n1p1 /mnt/boot
 Apple firmware eats 126 M of it, and it caps this config at three generations.
 Nothing eats into this one, so `configurationLimit = 10` fits comfortably.
 
-Encryption is decided here and nowhere else — it wraps the block device, so it
-cannot be retrofitted. `cryptsetup` needs a real TTY for its `YES` and its
-passphrase and cannot be driven from an agent session; the same is true of
-`gh auth login` below.
+**Encryption is settled: this machine gets it** (decided 2026-09-07), which is
+why LUKS is in the path above rather than an option beside it. It wraps the
+block device, so this is the only moment it can happen.
+
+`cryptsetup` needs a real TTY for its `YES` and its passphrase and cannot be
+driven from an agent session; the same is true of `gh auth login` below.
+
+Confirm the generated `boot.initrd.availableKernelModules` carries `xhci_pci`
+and `usbhid` before rebooting into the passphrase prompt. Unlike the laptop,
+whose internal keyboard modules come from `apple-silicon-support`, everything
+here is USB — a prompt that cannot read a keyboard is unrecoverable.
 
 No bind mount of `/boot` is needed. That step exists on the laptop only because
 `peripheralFirmwareDirectory` is an absolute path read at eval time.
