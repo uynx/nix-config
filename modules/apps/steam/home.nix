@@ -783,22 +783,6 @@
         exec ${pkgs.noctalia-shell}/bin/noctalia-shell ipc call launcher toggle
       '';
 
-      # Bound to Mod+W and Mod+Q. niri's close-window is wrong for Steam: closing
-      # the XWayland window leaves Proton and the game running headless in the VM.
-      close-active = pkgs.writers.writeDashBin "close-active" ''
-        set -eu
-
-        ACTIVE=$(${N} msg -j focused-window 2>/dev/null || echo '{}')
-        APP=$(printf '%s' "$ACTIVE" | ${J} -r '.app_id // ""' 2>/dev/null || true)
-        case "$APP" in
-          steam|Steam|steam_app_[0-9]*)
-            exec ${steam-asahi-stop}/bin/steam-asahi-stop
-            ;;
-          *)
-            exec ${N} msg action close-window
-            ;;
-        esac
-      '';
     in
     {
       home.packages = with pkgs; [
@@ -811,7 +795,6 @@
         update-steam-asahi-pins
         distrobox
         dive
-        close-active
       ];
 
       # Rewrites the Containerfile but never installs: `update` runs its hooks
