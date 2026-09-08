@@ -445,11 +445,29 @@ partprobe /dev/nvme0n1
 mkfs.fat -F32 -n BOOT /dev/nvme0n1p1
 cryptsetup luksFormat /dev/nvme0n1p2
 cryptsetup open /dev/nvme0n1p2 cryptroot
-mkfs.ext4 -L nixos /dev/mapper/cryptroot
+mkfs.xfs -L nixos /dev/mapper/cryptroot
 
 mount /dev/mapper/cryptroot /mnt
 mkdir -p /mnt/boot && mount /dev/nvme0n1p1 /mnt/boot
 ```
+
+**XFS, not the laptop's ext4** (decided 2026-09-07). The two are within noise
+for a desktop, but XFS leads on large-file throughput — which here means the
+Steam library and the VM images under `virt` — and pays no copy-on-write tax the
+way Btrfs would. Btrfs was rejected on purpose: its selling points are snapshots
+and compression, neither of which is wanted. XFS's one real weakness, that it
+can never be shrunk, is irrelevant to a single root spanning the whole disk.
+Revert to `mkfs.ext4` if matching the laptop is worth more than the throughput.
+
+After `nixos-generate-config`, add `allowDiscards` to the LUKS entry it writes:
+
+```nix
+boot.initrd.luks.devices."cryptroot".allowDiscards = true;
+```
+
+Without it LUKS blocks discards, the weekly `fstrim` does nothing, and write
+performance decays as the drive fills. The cost is that someone holding the disk
+can tell how much of the volume is in use.
 
 1 GiB for the ESP, not the laptop's 476 M: that one is cramped only because
 Apple firmware eats 126 M of it, and it caps this config at three generations.

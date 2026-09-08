@@ -16,6 +16,13 @@ _: {
         # mid-write with ENOSPC.
         configurationLimit = 10;
       };
+      # Without this, LUKS refuses to pass discards through and the weekly
+      # `fstrim` (on by default) silently does nothing — the drive never learns
+      # which blocks are free and write performance decays as it fills. The
+      # accepted cost is that an attacker with the disk can see how much of the
+      # volume is in use and roughly where.
+      initrd.luks.devices.cryptroot.allowDiscards = true;
+
       # lz4 must be in the initrd: zswap picks its compressor at init, and an
       # absent module silently leaves it on the built-in default.
       initrd.kernelModules = [
