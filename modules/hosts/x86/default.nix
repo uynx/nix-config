@@ -29,8 +29,8 @@
       virt
 
       # Generated on the machine during install and copied in here, exactly as
-      # REINSTALL.md does it for asahi. Uncomment once that file exists.
-      # ./_hardware-configuration.nix
+      # REINSTALL.md does it for asahi.
+      ./_hardware-configuration.nix
 
       { networking.hostName = "x86"; }
     ];
