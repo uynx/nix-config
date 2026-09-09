@@ -1,9 +1,9 @@
 {
   "claude-code": {
-    "version": "2.1.263",
+    "version": "2.1.266",
     "hash": {
-      "aarch64-linux": "sha256-fSXXyK5sbgCcx9rk6Bf2dBef0x+3dhvNVv7kwpArTAM=",
-      "x86_64-linux": "sha256-JtAgNR6BEvQAZ5Dzz85DtMnfDBux0OVCNk1kFRuB1bo="
+      "aarch64-linux": "sha256-bkTF08l++qHuNauN2HWpB2gXB+XMT2yg2j0TqRe7zts=",
+      "x86_64-linux": "sha256-GYQnBemJOT/Ok2gE320qsDSGDiS4+IgDV5gdh//YP6w="
     }
   },
   "codex": {
@@ -14,10 +14,10 @@
     }
   },
   "grok": {
-    "version": "1.0.13",
+    "version": "1.0.24",
     "hash": {
-      "aarch64-linux": "sha256-uSb8Uwg3Q5biYOfvvWEHIxqNrhPAhN2vD+ibfrs+3SU=",
-      "x86_64-linux": "sha256-7feVIVgbtea5Wr74SEkaanQuhg2j4jfr6GooDTDc5ME="
+      "aarch64-linux": "sha256-+D9w+nRs7iuVSvJ2G9EOLcX96hxRNVvnUECrq0hqVBA=",
+      "x86_64-linux": "sha256-oxocJwJGvrjhjx/OkRIaXoPZuo9RqLJDRrvHX+cnvfU="
     }
   },
   "kimi": {
@@ -28,17 +28,17 @@
     }
   },
   "opencode": {
-    "version": "1.18.29",
+    "version": "1.18.30",
     "hash": {
-      "aarch64-linux": "sha256-cLr3aTlcpOemiSQCZTDDkOrOGU87fkkZ1O/LKqLu08A=",
-      "x86_64-linux": "sha256-6oALf/ViJrcJUhJsn8HiUXykxLVoL9nT+eh0SWl6EZQ="
+      "aarch64-linux": "sha256-QRGlXCoCwPrDFL1R6aIzAoDm0p0rhblVT/9tYmElZu0=",
+      "x86_64-linux": "sha256-VQByRoWBZUlv+FuhwrZI90IejiATv0GJpoDJ/45pnRc="
     }
   },
   "cursor-agent": {
-    "version": "2026.09.02-c22c1a3",
+    "version": "2026.09.08-6caf4ff",
     "hash": {
-      "aarch64-linux": "sha256-+3vGNb5hcuvPaPkH/ZIX42FNpRkWRVxtf9tmaQmXiEw=",
-      "x86_64-linux": "sha256-tztZhUdiU1wPwg18zFHDtaNWqFFJEIjWCjYr5IdQ9Tw="
+      "aarch64-linux": "sha256-FTrhgtuQgUdI1UTyomq8Bz5OTl3wuGer/Wne8P93qnE=",
+      "x86_64-linux": "sha256-DXoR3QG2Uri5LQXMFPdp+8WjRCt4bNi2NgQfGJq4Hx4="
     }
   }
 }

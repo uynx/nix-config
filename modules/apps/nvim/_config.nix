@@ -1,5 +1,6 @@
 {
   tmuxNavigator,
+  vimtex,
   flakePath,
   hostAttr,
   isDarwin,
@@ -161,12 +162,26 @@
     globals = {
       vimtex_view_method = "sioyek";
       vimtex_compiler_method = "latexmk";
-      vimtex_compiler_latexmk_engine = "lualatex";
-      vimtex_callback_progname = "nvim";
+      # The engine goes here and nowhere else: vimtex appends this flag *after*
+      # `options`, so a `-pdflua` in that list is overridden by the default
+      # `-pdf` and the document silently builds with pdfTeX.
+      vimtex_compiler_latexmk_engines._ = "-lualatex";
+      # Setting `options` replaces vimtex's defaults, hence the last four.
+      vimtex_compiler_latexmk.options = [
+        "-shell-escape"
+        "-verbose"
+        "-file-line-error"
+        "-synctex=1"
+        "-interaction=nonstopmode"
+      ];
     };
 
-    # No nvf module for this one.
-    extraPlugins.vim-tmux-navigator.package = tmuxNavigator;
+    # nvf has no vimtex module and its tex language module is texlab + treesitter
+    # only, so compilation (\ll) and forward search come from the plugin itself.
+    extraPlugins = {
+      vim-tmux-navigator.package = tmuxNavigator;
+      vimtex.package = vimtex;
+    };
 
     # autoread only reloads when Neovim actually checks, hence the polling.
     luaConfigRC.checktime = ''
