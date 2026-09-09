@@ -8,4 +8,10 @@
       nixos = [ self.nixosModules.steamAsahi ];
       home = [ self.homeModules.steamAsahi ];
     }).nixos;
+
+  # Same program, no container: x86 doesn't need the FEX/distrobox stack.
+  flake.nixosModules.gamingNative =
+    (self.lib.mkBundle {
+      nixos = [ self.nixosModules.steamNative ];
+    }).nixos;
 }
