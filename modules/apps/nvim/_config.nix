@@ -1,6 +1,7 @@
 {
   tmuxNavigator,
   vimtex,
+  nvim-treesitter-textobjects,
   flakePath,
   hostAttr,
   isDarwin,
@@ -108,16 +109,36 @@
       direnv.enable = true;
       oil-nvim.enable = true;
       undotree.enable = true;
-      motion.leap.enable = true;
+      grug-far-nvim.enable = true;
+      motion.leap = {
+        enable = true;
+        # nvf defaults these to <leader>ss/sS — three keystrokes for a motion
+        # whose whole value is being one. `s` and `S` are given up in exchange;
+        # `cl` and `cc` do the same thing.
+        mappings = {
+          leapForwardTo = "s";
+          leapBackwardTo = "S";
+        };
+      };
     };
 
     notes.todo-comments.enable = true;
-    mini.hipatterns.enable = true;
+    mini = {
+      hipatterns.enable = true;
+      # Zero config: adds `a` (argument), `f` (function call) and `t` (tag) to
+      # every operator. Covers calls, where the treesitter textobjects above
+      # cover definitions.
+      ai.enable = true;
+    };
 
     languages = {
       # Per-language lsp.enable defaults to vim.lsp.enable, set above.
       enableTreesitter = true;
       enableFormat = true;
+      # statix + deadnix, shellcheck, markdownlint, luacheck, mypy, eslint_d.
+      # The last two are the noisy ones: mypy is slow on large files and
+      # eslint_d errors in any project without an eslint config.
+      enableExtraDiagnostics = true;
 
       nix = {
         enable = true;
@@ -181,6 +202,48 @@
     extraPlugins = {
       vim-tmux-navigator.package = tmuxNavigator;
       vimtex.package = vimtex;
+
+      # nvf's `vim.treesitter.textobjects` option is inert against this plugin
+      # version: it calls `require("nvim-treesitter.config").setup { textobjects
+      # = ... }`, the pre-`main` API, which the new nvim-treesitter merges into
+      # its config table and never reads. Keymaps have to be set by hand.
+      # Letters dodge two collisions: gitsigns owns `]c`/`[c`, and mini.ai
+      # already claims `af` (function *call*) and `aa` (argument), so
+      # definitions go on `m`, matching vim's own method motion.
+      nvim-treesitter-textobjects = {
+        package = nvim-treesitter-textobjects;
+        setup = ''
+          require("nvim-treesitter-textobjects").setup({ select = { lookahead = true } })
+
+          local select = require("nvim-treesitter-textobjects.select")
+          for lhs, query in pairs({
+            am = "@function.outer",
+            im = "@function.inner",
+            ac = "@class.outer",
+            ic = "@class.inner",
+            al = "@loop.outer",
+            il = "@loop.inner",
+            ak = "@conditional.outer",
+            ik = "@conditional.inner",
+          }) do
+            vim.keymap.set({ "x", "o" }, lhs, function()
+              select.select_textobject(query, "textobjects")
+            end, { desc = "Select " .. query })
+          end
+
+          local move = require("nvim-treesitter-textobjects.move")
+          for lhs, query in pairs({ ["]m"] = "@function.outer", ["]]"] = "@class.outer" }) do
+            vim.keymap.set({ "n", "x", "o" }, lhs, function()
+              move.goto_next_start(query, "textobjects")
+            end, { desc = "Next " .. query })
+          end
+          for lhs, query in pairs({ ["[m"] = "@function.outer", ["[["] = "@class.outer" }) do
+            vim.keymap.set({ "n", "x", "o" }, lhs, function()
+              move.goto_previous_start(query, "textobjects")
+            end, { desc = "Previous " .. query })
+          end
+        '';
+      };
     };
 
     # autoread only reloads when Neovim actually checks, hence the polling.
