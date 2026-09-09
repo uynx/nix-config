@@ -183,18 +183,24 @@
     globals = {
       vimtex_view_method = "sioyek";
       vimtex_compiler_method = "latexmk";
+      # Wrapped nvim on PATH needed so Sioyek's inverse-search callback finds
+      # VimtexInverseSearch rather than invoking bare unwrapped neovim.
+      vimtex_callback_progpath = "nvim";
       # The engine goes here and nowhere else: vimtex appends this flag *after*
       # `options`, so a `-pdflua` in that list is overridden by the default
       # `-pdf` and the document silently builds with pdfTeX.
       vimtex_compiler_latexmk_engines._ = "-lualatex";
       # Setting `options` replaces vimtex's defaults, hence the last four.
-      vimtex_compiler_latexmk.options = [
-        "-shell-escape"
-        "-verbose"
-        "-file-line-error"
-        "-synctex=1"
-        "-interaction=nonstopmode"
-      ];
+      vimtex_compiler_latexmk = {
+        aux_dir = "build";
+        options = [
+          "-shell-escape"
+          "-verbose"
+          "-file-line-error"
+          "-synctex=1"
+          "-interaction=nonstopmode"
+        ];
+      };
     };
 
     # nvf has no vimtex module and its tex language module is texlab + treesitter

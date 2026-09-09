@@ -64,7 +64,13 @@ in
         zoxide.enable = true;
         atuin.enable = true;
         fastfetch.enable = true;
-        sioyek.enable = true;
+        sioyek = {
+          enable = true;
+          config = {
+            "control_click_command" = "synctex_under_cursor";
+            "inverse_search_command" = ''nvim --headless -c "VimtexInverseSearch %2 '%1'"'';
+          };
+        };
         nix-index.enable = true;
         nix-index-database.comma.enable = true;
 
