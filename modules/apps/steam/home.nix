@@ -329,6 +329,13 @@
             ${pkgs.docker}/bin/docker container inspect \
               --format '{{.Image}}' "$CONTAINER"
           )
+          # distrobox bind-mounts its own store path in, so a distrobox rebuild
+          # strands the container on a GC'd source and every start dies with
+          # `mkdir /nix/store/...: read-only file system`.
+          ${pkgs.docker}/bin/docker container inspect \
+            --format '{{range .HostConfig.Binds}}{{println .}}{{end}}' "$CONTAINER" \
+            | ${pkgs.gnugrep}/bin/grep -q "^${pkgs.distrobox}/bin/distrobox-init:" \
+            || REPLACE=1
         fi
         if [ "$REPLACE" = 1 ] || \
            { [ -n "''${CONTAINER_IMAGE_ID:-}" ] && [ "$CONTAINER_IMAGE_ID" != "$IMAGE_ID" ]; }; then
