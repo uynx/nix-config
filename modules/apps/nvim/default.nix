@@ -20,6 +20,7 @@
             (import ./_config.nix {
               c = self.lib.flexoki;
               tmuxNavigator = pkgs.vimPlugins.vim-tmux-navigator;
+              inherit (pkgs.vimPlugins) vimtex;
               # nixd evaluates this path at edit time on the machine running
               # neovim, so both halves have to name that machine's own home and
               # its own host — a Linux path and `asahi` leave a Mac with no
