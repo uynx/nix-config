@@ -14,17 +14,17 @@
     }
   },
   "grok": {
-    "version": "1.0.24",
+    "version": "1.0.25",
     "hash": {
-      "aarch64-linux": "sha256-+D9w+nRs7iuVSvJ2G9EOLcX96hxRNVvnUECrq0hqVBA=",
-      "x86_64-linux": "sha256-oxocJwJGvrjhjx/OkRIaXoPZuo9RqLJDRrvHX+cnvfU="
+      "aarch64-linux": "sha256-7AR6uKUvKXspWcSnR/gNQvYRseNgg1K3hKzVT20b7mY=",
+      "x86_64-linux": "sha256-pG0XvNYCxGE1tb4tppoIFEf4xRTF6nM8W+EmW8+2K4A="
     }
   },
   "kimi": {
-    "version": "0.41.0",
+    "version": "0.42.0",
     "hash": {
-      "aarch64-linux": "sha256-NSibHvdpTeOpXxEELFVPWB9dsOboIf7bpUUVSl6koJg=",
-      "x86_64-linux": "sha256-UDGoOyH9N5LLQ+o/Sn61kNbxDbYEOxbIFLsVvM+4kUc="
+      "aarch64-linux": "sha256-T6DW96UXFzPZORsHTr/jGOgafug69sZI1RxCg0lhzFo=",
+      "x86_64-linux": "sha256-67TvAthf4KKd2pWlpgvNBgiijB/zMdJ+mb5UudRy4z0="
     }
   },
   "opencode": {
