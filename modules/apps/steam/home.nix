@@ -792,7 +792,6 @@
         steam-asahi-bootstrap
         steam-asahi-doctor
         steam-asahi-stop
-        steam-game-entries
         steam-menu
         update-steam-asahi-pins
         distrobox
