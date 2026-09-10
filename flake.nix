@@ -5,17 +5,10 @@
     nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-weekly/*";
     nixpkgs-stable.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-26.05-chilled/*";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
-    # Last revision carrying linux-asahi 7.0.13. 7.1.5 boots, but no OpenGL
-    # survives inside muvm — `muvm -- glxinfo` kills the VM and Steam dies at
-    # its first GL call. Both containers, 2026-08-13. Unpin when virglrenderer
-    # ships a 7.1 fix.
     nixos-apple-silicon = {
       url = "github:nix-community/nixos-apple-silicon/3902c801519264191a7c3dfec8dd1f9faeb38fd5";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # FlakeHub inputs must pin the 0.1.* series, here and below. A bare `*`
-    # outranks it with the branch-derived 0.2605.* series, silently swapping
-    # master for release-26.05 against our unstable nixpkgs.
     home-manager = {
       url = "https://flakehub.com/f/nix-community/home-manager/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -29,24 +22,17 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Declarative flatpak. nixpkgs' own `services.flatpak.enable` installs the
-    # daemon and nothing else, so the RustDesk that used to be here was a hand
-    # run of `flatpak install` and did not survive the reinstall. Pinned to a
-    # tag rather than a branch: it owns an activation step.
     nix-flatpak.url = "github:gmodena/nix-flatpak/v0.7.0";
     nix-darwin = {
       url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Home Manager installs .app bundles into the store, where Spotlight and the
-    # Dock cannot see them; this generates the aliases that make them launchable.
     mac-app-util = {
       url = "github:hraban/mac-app-util";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Dendritic
     flake-parts.url = "https://flakehub.com/f/hercules-ci/flake-parts/0.1.*";
     import-tree.url = "github:vic/import-tree";
     wrapper-modules = {
@@ -59,11 +45,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Deliberately does NOT follow nixpkgs — do not re-add it. Its rust-overlay
-    # follows this input in turn, and against our weekly nixpkgs the toolchain
-    # fetch degrades to a source named "unknown" that unpackPhase then refuses:
-    # "do not know how to unpack source archive". Costs one extra nixpkgs in
-    # the lock, which is the price of a vendored Rust toolchain.
     obscuravpn.url = "github:Sovereign-Engineering/obscuravpn-client";
   };
 

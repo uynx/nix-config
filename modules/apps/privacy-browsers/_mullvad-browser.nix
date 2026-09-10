@@ -82,7 +82,6 @@ let
     vulkan-loader
     wayland
   ];
-  # Rewritten by `update-privacy-browsers`, which `update` runs.
   pin = (builtins.fromJSON (builtins.readFile ./pins.json)).mullvad-browser;
 in
 stdenv.mkDerivation rec {
@@ -105,9 +104,6 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/mullvad-browser $out/bin
     cp -r Browser/* $out/lib/mullvad-browser/
 
-    # Without this marker the bundle runs in portable mode and keeps its profile
-    # next to the binary, i.e. in the read-only store. With it, state goes to
-    # ~/.config/mullvad.
     touch $out/lib/mullvad-browser/is-packaged-app
 
     interpreter=$(cat ${stdenv.cc}/nix-support/dynamic-linker)
@@ -117,9 +113,6 @@ stdenv.mkDerivation rec {
       fi
     done
 
-    # Same reason as the tor-browser package: without this the browser reads
-    # the system fontconfig and every font installed on this machine becomes
-    # part of its fingerprint. The bundle's own fonts.conf says as much.
     fontsConf=$out/lib/mullvad-browser/fonts/fonts.conf
     substituteInPlace "$fontsConf" \
       --replace-fail '<dir prefix="cwd">fonts</dir>' "<dir>$out/lib/mullvad-browser/fonts</dir>"

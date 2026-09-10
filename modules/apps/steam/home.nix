@@ -11,16 +11,11 @@
       N = "${lib.getExe pkgs.niri}";
       J = "${lib.getExe pkgs.jq}";
 
-      # The container mounts this as the guest's $HOME, so every path the guest
-      # and the host both touch hangs off it. `home.file` keys need the relative
-      # form, the scripts need the absolute one.
       guestRel = ".local/share/steam-asahi/home";
       steamRel = "${guestRel}/.local/share/Steam";
       guest = "${config.home.homeDirectory}/${guestRel}";
       steam = "${config.home.homeDirectory}/${steamRel}";
 
-      # niri calls Hyprland's `class` `app_id` and its `address` `id`, and
-      # returns outputs as an object keyed by name rather than a list.
       shellHelpers = ''
         window_id() {
           ${N} msg -j windows 2>/dev/null | ${J} -r --arg app "$1" \
@@ -39,9 +34,6 @@
         CFILE=Containerfile
         INI=distrobox.ini
 
-        # Read out of the Containerfile, never restated: a Fedora bump then moves
-        # the image tag and every NEVRA match below in one edit. The dot is what
-        # keeps this off the `fc116` sitting inside the base image's digest.
         REL=$(${pkgs.gnugrep}/bin/grep -om1 '\.fc[0-9][0-9]*' \
           ${config.home.homeDirectory}/nix-config/steam-asahi/Containerfile \
           | ${pkgs.gnused}/bin/sed 's/\.fc//')
@@ -58,9 +50,6 @@
         ${pkgs.docker}/bin/docker image inspect "$IMAGE" >/dev/null
         ${pkgs.docker}/bin/docker container inspect "$CONTAINER" >/dev/null
 
-        # Read out of the Containerfile rather than restated: a second copy of
-        # the NEVRA list is one more thing to edit on every Fedora bump. Stops
-        # at the first `dnf clean all` so only the base install list is read.
         ${pkgs.gawk}/bin/awk -v rel="fc$REL" '
           /dnf install -y/ { f = 1 }
           f && $0 ~ rel { gsub(/['"'"' \\&]/, ""); print }
@@ -77,45 +66,18 @@
         printf '%s\n' "Steam Asahi container checks passed."
       '';
 
-      # Every pin auto-bumps to the newest build in the repos; nothing is held
-      # back. Names are derived from the NEVRAs rather than queried, because a
-      # pin that has aged off the mirrors resolves to nothing and would then be
-      # the one entry the updater could not fix -- which is the exact failure
-      # this exists to prevent.
-      #
-      # Resolution prefers the built container, which already holds the repo
-      # metadata and answers in seconds, and falls back to a throwaway off the
-      # Containerfile's own base image when there is no container. It must not
-      # *require* one: the container is usually missing precisely because a pin
-      # went stale, so keying on it made this skip itself at the one moment it
-      # was needed. Like `nix flake update`, this only rewrites the file; reb's
-      # rebPostSwitch hook builds from it after.
       update-steam-asahi-pins = pkgs.writeShellScriptBin "update-steam-asahi-pins" ''
         set -eu
 
         FILE=${config.home.homeDirectory}/nix-config/steam-asahi/Containerfile
         DOCKER=${pkgs.docker}/bin/docker
 
-        # Repo, release and digest are read back out of the Containerfile so
-        # there is no second copy of any of them to keep in sync.
         REPO=$(${pkgs.gnused}/bin/sed -n 's|^FROM \([^@:]*\).*|\1|p' "$FILE" | ${pkgs.coreutils}/bin/head -1)
-        # The dot is load-bearing: it is what makes this match the `.fc44` of an
-        # RPM release field and not the bare `fc116` that sat inside the base
-        # image's sha256 digest, which `grep -m1` reached first -- resolving the
-        # release to a Fedora that does not exist and failing the pull below.
         RELEASE=$(${pkgs.gnugrep}/bin/grep -om1 '\.fc[0-9][0-9]*' "$FILE" | ${pkgs.gnused}/bin/sed 's/\.fc//')
         OLD_BASE=$(${pkgs.gnused}/bin/sed -n 's|^FROM .*@\(sha256:[0-9a-f]*\).*|\1|p' "$FILE" | ${pkgs.coreutils}/bin/head -1)
 
         printf 'steam-asahi pins\n'
 
-        # Quay rebuilds fedora-minimal:NN every few weeks and garbage-collects
-        # the manifest the superseded digest named, so a base pin that built
-        # last month resolves to nothing today and takes the whole image with
-        # it. It has to be re-resolved before anything else, and the pull is
-        # not extra work: the query container below needs the image anyway.
-        # Docker's own reason is printed rather than swallowed: every failure
-        # here used to read as "offline", which sent the last one chasing the VPN
-        # when the tag simply did not exist.
         if ! ERR=$(${pkgs.coreutils}/bin/timeout 600 $DOCKER pull -q "$REPO:$RELEASE" 2>&1 >/dev/null); then
           printf '  %s\n' "could not pull $REPO:$RELEASE -- pins left untouched" "$ERR"
           exit 0
@@ -145,13 +107,6 @@
           ' "$FILE"
         )
 
-        # RPM forbids a dash in version and release, so dropping the arch
-        # suffix and then the last two dash-fields leaves exactly the name.
-        # Flattened to one line, not left newline-separated: this is
-        # interpolated into the double-quoted `sh -c` body below, where a
-        # newline is a command separator rather than an argument separator.
-        # Left as-is, dnf receives the first name and the inner shell tries to
-        # run the other 33 as commands -- which reads as 33 retired packages.
         NAMES=$(
           printf '%s\n' "$PINS" \
             | ${pkgs.gnused}/bin/sed -e 's/\.[^.]*$//' -e 's/-[^-]*-[^-]*$//' \
@@ -159,25 +114,6 @@
             | ${pkgs.coreutils}/bin/tr '\n' ' '
         )
 
-        # Unquoted $NAMES on purpose: the name list is the argument vector, and
-        # no package name contains whitespace.
-        # %{version}-%{release}, not %{evr}: evr prefixes the epoch that the
-        # pins omit, and NetworkManager (epoch 1) then never matches itself.
-        # --arch keeps --latest-limit off the .src RPMs, which sort newest.
-        # Offline, dnf retries each unreachable mirror on its own schedule, so
-        # the setopts make it give up and exit into the empty-LATEST path below;
-        # the outer timeout is the backstop for a stall dnf does not bound.
-        #
-        # The two branches spell the query out separately rather than sharing a
-        # variable: one is re-parsed by an inner `sh -c` and the other is not,
-        # so a single string cannot be quoted correctly for both.
-        #
-        # The built container already has the metadata cached, so asking it
-        # takes seconds; the throwaway has to install the copr plugin and pull
-        # the whole repomd set first, which is minutes. Pay that only on the
-        # bootstrap path this fallback exists to rescue. stdin is redirected
-        # because `distrobox enter` passes --interactive unconditionally and
-        # would hang the subshell.
         if $DOCKER container inspect steam-asahi >/dev/null 2>&1; then
           LATEST=$(${pkgs.coreutils}/bin/timeout 240 \
             ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir steam-asahi -- \
@@ -186,8 +122,6 @@
             --qf '%{name} %{name}-%{version}-%{release}.%{arch}\n' $NAMES \
             < /dev/null 2>/dev/null || true)
         else
-          # --rm cannot reap a container whose client the outer timeout killed,
-          # so the name plus this trap is what actually reclaims it.
           QC=steam-asahi-pinquery-$$
           trap '$DOCKER rm -f "$QC" >/dev/null 2>&1 || true' EXIT
 
@@ -201,9 +135,6 @@
           " 2>/dev/null || true)
         fi
 
-        # An unreachable mirror returns nothing, which is indistinguishable from
-        # "no package resolved" further down and would report all 34 pins as
-        # retired. A base bump found above still gets written.
         if [ -z "$LATEST" ]; then
           printf '  %s\n' "could not reach the Fedora repos -- package pins left untouched, rerun when back online"
         else
@@ -217,9 +148,6 @@
               nm = $0
               sub(/\.[^.]*$/, "", nm)
               sub(/-[^-]*-[^-]*$/, "", nm)
-              # No entry at all means the package itself left the repos, not just
-              # this build of it. Renamed or retired upstream, so only a human can
-              # decide what replaces it.
               if (!(nm in newest)) { print "MISSING", $0, nm; next }
               if (newest[nm] == $0) { print "SAME", $0, "-"; next }
               print "BUMP", $0, newest[nm]
@@ -228,18 +156,9 @@
 
           MISSED=$(printf '%s\n' "$PLAN" | ${pkgs.gnugrep}/bin/grep -c '^MISSING' || true)
 
-          # A repo that failed to load takes every package it carries down with
-          # it, and each one then looks retired. Packages do get retired, but
-          # never dozens at once, so treat a large MISSING count as the repo
-          # problem it almost always is rather than rewriting 30 lines off a
-          # half-loaded mirror. Ceiling: a real mass retirement (a Fedora
-          # release going EOL) needs a human either way.
           if [ "$MISSED" -gt 3 ]; then
             printf '  %s\n' "$MISSED of $(printf '%s\n' "$PINS" | ${pkgs.coreutils}/bin/wc -l) pins unresolved -- a repo failed to load, package pins left untouched"
           else
-            # An arrow means that Containerfile line changed, and nothing else
-            # prints one. The old output used the same arrow for held pins that
-            # moved nothing, which is what made it unreadable.
             printf '%s\n' "$PLAN" | while read -r kind old new; do
               case $kind in
                 BUMP)
@@ -258,10 +177,7 @@
           fi
         fi
 
-        # Only rewrite when something actually moved, so an unchanged run
-        # leaves the file's mtime and the container config hash alone.
         if [ "$BUMPED" -gt 0 ]; then
-          # Written back through cat so the file keeps its own permissions.
           ${pkgs.coreutils}/bin/cat "$TMP" >"$FILE"
           printf '  %s\n' "$BUMPED pin(s) rewritten -- reb will rebuild the container"
         else
@@ -302,11 +218,6 @@
         REPLACE=0
 
         if [ "$IMAGE_HASH" != "$CONFIG_HASH" ]; then
-          # repo.steampowered.com answers IPv4 with a Google Edge Cache node
-          # that returns "forbidden" for every path, while its AAAA serves
-          # normally. The default bridge is IPv4-only, so the build always
-          # landed on the broken edge and curl retried its way to a 403.
-          # Sharing the host netns gives the build the working IPv6 route.
           ${pkgs.docker}/bin/docker build \
             --network=host \
             --label "$LABEL=$CONFIG_HASH" \
@@ -329,9 +240,6 @@
             ${pkgs.docker}/bin/docker container inspect \
               --format '{{.Image}}' "$CONTAINER"
           )
-          # distrobox bind-mounts its own store path in, so a distrobox rebuild
-          # strands the container on a GC'd source and every start dies with
-          # `mkdir /nix/store/...: read-only file system`.
           ${pkgs.docker}/bin/docker container inspect \
             --format '{{range .HostConfig.Binds}}{{println .}}{{end}}' "$CONTAINER" \
             | ${pkgs.gnugrep}/bin/grep -q "^${pkgs.distrobox}/bin/distrobox-init:" \
@@ -339,10 +247,6 @@
         fi
         if [ "$REPLACE" = 1 ] || \
            { [ -n "''${CONTAINER_IMAGE_ID:-}" ] && [ "$CONTAINER_IMAGE_ID" != "$IMAGE_ID" ]; }; then
-          # Not `--replace`: docker rm returns before the removal completes, so
-          # distrobox's immediate create loses the race and leaves a container
-          # it never runs its user-adding init on. Every later enter then fails
-          # with "unable to find user uynx: no matching entries in passwd file".
           ${pkgs.docker}/bin/docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
           for _ in $(${pkgs.coreutils}/bin/seq 1 60); do
             ${pkgs.docker}/bin/docker container inspect "$CONTAINER" \
@@ -353,15 +257,10 @@
             --file "$SOURCE/$INI"
         fi
 
-        # No rpm -q here: the image carries the Containerfile's hash as a label
-        # and is rebuilt whenever that changes, and dnf installs those exact
-        # NEVRAs or fails the build. `steam-asahi-doctor` checks them.
         ${pkgs.distrobox}/bin/distrobox enter --no-tty "$CONTAINER" -- \
           test -x /opt/steam-arm64/steamrtarm64/steam
       '';
 
-      # Stopping the container is the one reliable process boundary: it cannot
-      # leave a second Steam client, FEX process, or Venus VM behind.
       steam-asahi-stop = pkgs.writeShellScriptBin "steam-asahi-stop" ''
         set -eu
         ${shellHelpers}
@@ -372,8 +271,6 @@
           ${pkgs.docker}/bin/docker container stop --time 5 "$CONTAINER" >/dev/null
         fi
 
-        # Watchers live outside the container; their stale locks would block the
-        # next launch.
         for LOCK in "$RUNTIME_DIR"/steam-asahi-launch-*; do
           [ -d "$LOCK" ] || continue
           WATCH_PID=$(cat "$LOCK/pid" 2>/dev/null || true)
@@ -386,22 +283,14 @@
           rm -rf "$LOCK"
         done
 
-        # Runtime-only sockets; an interrupted muvm session leaves them behind and
-        # blocks the next clean launch.
         rm -rf \
           "$RUNTIME_DIR/krun" \
           "$RUNTIME_DIR/muvm.lock"
-        # steam.pipe outlives the client that made it, and `steam-launch` reads
-        # its mere existence as "client is live" — so every later launch took the
-        # remote path and skipped `steam-asahi-run`, losing the FEX RootFS mount,
-        # --vram and the max_map_count tune.
         rm -f \
           ${guest}/.cache/steam-asahi/open-url.pipe \
           ${guest}/.steam/steam.pipe
       '';
 
-      # Distrobox's xdg-open forwarding cannot cross muvm's VM boundary, so web
-      # URLs go out through a FIFO in the shared Steam home instead.
       steam-guest-open = pkgs.writeShellScript "steam-guest-open" ''
         set -eu
 
@@ -429,12 +318,6 @@
         done <"$FIFO"
       '';
 
-      # Denuvo in Hogwarts' 2023 build rewrites its own code inline and leans on
-      # 16-byte atomics. On FEX's defaults that means a permanent fault loop in
-      # the anti-tamper VM, then a torn compare-exchange and a corrupted
-      # pointer. `full` is lowercase on purpose — the enum is case-sensitive and
-      # an unrecognised value is ignored silently, which looks identical to the
-      # setting not helping.
       fex-hogwarts-config = pkgs.writeText "fex-hogwarts.json" (
         builtins.toJSON {
           Config = {
@@ -479,20 +362,8 @@
 
         ${steam-asahi-bootstrap}/bin/steam-asahi-bootstrap
 
-        # Steam's FEX compat tool expects the OS to supply a combined FEX+Mesa
-        # x86 rootfs here, and it has to be the Arch image FEX publishes — the
-        # tool's own source calls it an "arch linux install". Fedora's rootfs
-        # shares sonames with the aarch64 container, so pressure-vessel hands
-        # host binaries 32-bit libraries and every Proton game dies before
-        # Proton starts. The Arch image carries its own graphics_provider.json;
-        # do not hand-write one. Container side, not the guest: muvm does not
-        # propagate a loop mount made inside it.
         ROOTFS=/home/uynx/.local/share/steam-asahi/ArchLinux.ero
         if [ ! -e "$ROOTFS" ]; then
-          # --speed-limit/--speed-time rather than --max-time: this is a
-          # multi-GB image, so a wall-clock bound would kill a healthy slow
-          # download. Stalls are what need catching, and a stalled transfer is
-          # otherwise unbounded.
           ${pkgs.curl}/bin/curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
             --connect-timeout 10 --speed-limit 1024 --speed-time 60 \
             -o "$ROOTFS.part" \
@@ -501,12 +372,6 @@
             | ${pkgs.coreutils}/bin/sha256sum -c -
           ${pkgs.coreutils}/bin/mv "$ROOTFS.part" "$ROOTFS"
         fi
-        # MangoHud and gtk2 come from the nix store rather than either image's
-        # package manager, because asahi-alarm ships neither and /nix is visible
-        # in both containers. The layer must sit in the standard directory —
-        # pressure-vessel only captures layers it finds on that search path.
-        # The gtk2 link is gated so it cannot shadow Fedora's own copy, which
-        # lives in /usr/lib64 with /usr/lib symlinked onto it.
         ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir "$CONTAINER" -- sudo sh -c \
           'grep -qs " /usr/share/guestos/fex-mesa " /proc/mounts || {
              mkdir -p /usr/share/guestos/fex-mesa
@@ -519,10 +384,6 @@
            ldconfig -p | grep -q libgtk-x11-2.0.so.0 || ln -sfn \
              ${pkgs.gtk2}/lib/libgtk-x11-2.0.so.0 \
              ${pkgs.gtk2}/lib/libgdk-x11-2.0.so.0 /usr/lib/'
-
-        # No compat tool is written from here: Steam Play is set once in the
-        # client (all titles -> Proton ARM64 Experimental), which is native
-        # aarch64 Wine with FEX translating only the game's own x86.
 
 
         STEAM_ROOT=${steam}
@@ -544,12 +405,6 @@
         }
         trap cleanup_url_bridge EXIT INT TERM HUP
 
-        # /opt/steam-arm64 lives in the image, not on the host, so this seeding
-        # copy has to run inside the container -- the destination stays a host
-        # path because the home is bind-mounted at the same absolute path in
-        # there. It only fires on a Steam root that has never been seeded, which
-        # is why a host-side `cp` went unnoticed until a first launch on a fresh
-        # install, where it fails `cannot stat` and Steam never opens.
         if [ ! -x "$STEAM_BIN" ]; then
           mkdir -p "$STEAM_ROOT"
           ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir "$CONTAINER" -- \
@@ -558,11 +413,6 @@
         mkdir -p "$STEAM_ROOT/package" "$STEAM_HOME"
         printf '%s\n' "''${STEAM_CLIENT_BRANCH-publicbeta}" >"$STEAM_ROOT/package/beta"
         ln -sfn "$STEAM_ROOT" "$STEAM_HOME/root"
-        # Steam hard-asserts on this one at startup -- "Steam data link does not
-        # exist, client is misconfigured, cannot continue" -- and then dies
-        # before opening a window. The client creates it itself once it has run,
-        # so it is only ever missing on a guest home that has never launched
-        # Steam, which is why this went unnoticed until a fresh install.
         ln -sfn "$STEAM_ROOT" "$STEAM_HOME/steam"
         ln -sfn "$STEAM_ROOT/linuxarm64" "$STEAM_HOME/sdkarm64"
         chmod -R u+rwX "$STEAM_ROOT/steamrtarm64"
@@ -573,24 +423,16 @@
           esac
         fi
 
-
-        # Only the aarch64 Proton path gets the HUD: the x86 one draws through
-        # the read-only FEX rootfs, which carries no MangoHud to load. Games see
-        # raw pixels rather than niri's logical size, so the default 24px font
-        # renders at half the size it looks like it should on this display.
         set -- /usr/bin/muvm \
           -e "BROWSER=$GUEST_BIN/xdg-open" \
           -e "MANGOHUD=''${STEAM_HUD:-0}" \
           -e "MANGOHUD_CONFIG=font_size=''${STEAM_HUD_FONT:-48}" \
           --gpu-mode=venus
-        # Proton writes ~/steam-<appid>.log in the guest home when this is set.
         if [ -n "''${STEAM_PROTON_LOG:-}" ]; then
           set -- "$@" -e "PROTON_LOG=1"
         fi
         if [ "$APP_ID" = 990080 ]; then
           set -- "$@" --vram=4096
-          # Per-game FEX tuning. Passed here rather than through Steam's launch
-          # options, which live in localconfig.vdf and are rewritten by Steam.
           set -- "$@" -e "FEX_APP_CONFIG=${fex-hogwarts-config}"
         fi
         set -- "$@" --execute-pre=/usr/local/libexec/steam-guest-tune -- \
@@ -605,8 +447,6 @@
         exit "$STATUS"
       '';
 
-      # Native ARM64 client: FEX's Steam UI hits a restart/focus loop. Windows
-      # games still go through Proton and FEX inside the same Venus VM.
       steam-asahi = pkgs.writeShellScriptBin "steam-asahi" ''
         set -eu
         ${shellHelpers}
@@ -634,10 +474,6 @@
         exec ${steam-asahi-run}/bin/steam-asahi-run "$@"
       '';
 
-      # Focuses the game window, then shuts the VM down once the last Steam
-      # window is gone. Do not add fullscreening here: niri's IPC cannot report
-      # whether a window already is, so a toggle is a coin flip. That lives in
-      # the niri config's `window-rule { open-fullscreen true }`.
       steam-game-watch = pkgs.writeShellScriptBin "steam-game-watch" ''
         set -u
         ${shellHelpers}
@@ -671,9 +507,6 @@
         any_steam_window || ${steam-asahi-stop}/bin/steam-asahi-stop
       '';
 
-      # No per-game display handling: niri's window rules fullscreen every
-      # steam_app_* window, and ARM64 Proton removed the reason the games each
-      # needed their resolution written into their own config format.
       steam-launch = pkgs.writeShellScriptBin "steam-launch" ''
         set -eu
         ${shellHelpers}
@@ -803,17 +636,8 @@
         dive
       ];
 
-      # Rewrites the Containerfile but never installs: `update` runs its hooks
-      # as `; or return 1`, so a container rebuild failing on a Fedora mirror
-      # hiccup would abort the flake relock behind it.
       shellHooks.update = [ "update-steam-asahi-pins" ];
 
-      # Installing the bumped pins is instead reb's job, after a successful
-      # switch, where a failure cannot wedge anything. Bootstrap self-gates on
-      # the Containerfile hash, so this is a sub-second no-op on the rebuilds
-      # that did not touch it -- which is nearly all of them. Without this the
-      # first launch after a bump pays for a 34-package dnf install, and a bad
-      # bump surfaces mid-launch instead of here.
       shellHooks.rebPostSwitch = ''
         ${steam-asahi-bootstrap}/bin/steam-asahi-bootstrap
         or echo "steam-asahi container rebuild failed -- run steam-asahi-bootstrap by hand"

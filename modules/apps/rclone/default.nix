@@ -13,26 +13,12 @@
     {
       imports = [ self.homeModules.sops ];
 
-      # sd-switch starts changed user units synchronously inside activation, and
-      # this one is Type=notify against Google Drive: with no network it blocks
-      # for its 90 s start timeout and stalls the whole rebuild. Rebuilding
-      # offline is reason enough on its own, so activation must never wait on it.
       systemd.user.services."rclone-mount:@gcrypt" = {
         Unit.X-SwitchMethod = "keep-old";
 
-        # rclone unmounts itself on SIGTERM by exec'ing fusermount, but the
-        # default KillMode=control-group signals that child too — "Failed to
-        # unmount: signal: terminated" — leaving a mount the next ExecStartPre
-        # cannot even stat. Clear it from a process the kill cannot reach; the
-        # leading `-` is what makes it a no-op when there is nothing to unmount.
-        # Needs the setuid wrapper: unprivileged unmount from the store fails.
         Service.ExecStopPost = "-/run/wrappers/bin/fusermount3 -uz ${mountPoint}";
       };
 
-      # keep-old means nothing else ever lands a new rclone on the running mount.
-      # This runs on every Home Manager activation rather than only under `reb`,
-      # and --no-block keeps it off activation's critical path, so it stays safe
-      # on a rebuild with no network at all.
       home.activation.restartRcloneMount = lib.mkIf pkgs.stdenv.hostPlatform.isLinux (
         lib.hm.dag.entryAfter [ "reloadSystemd" ] ''
           run systemctl --user --no-block try-restart rclone-mount:@gcrypt.service || true
@@ -51,14 +37,6 @@
         enable = true;
 
         remotes = {
-          # rclone-config.service rewrites rclone.conf from this attrset at every
-          # login, so anything `rclone config` wrote interactively is lost unless
-          # it is carried here. Secrets are read as file paths at service start,
-          # which is what lets sops hand them over decrypted at runtime.
-          # client_id and client_secret belong under `secrets`, not `config`:
-          # anything in `config` is rendered into a store path, which is world
-          # readable. rclone only obscures options its backend marks as
-          # passwords, so these two arrive verbatim, which is what Drive wants.
           gdrive = {
             config.type = "drive";
             secrets = {
@@ -80,10 +58,6 @@
             mounts."" = {
               enable = true;
               inherit mountPoint;
-              # nfsmount runs an in-process NFS server and mounts it with the
-              # system NFS client, so macOS needs no macFUSE kext and no
-              # Recovery-mode security downgrade. Linux keeps plain FUSE, where
-              # mounting NFS would want root.
               mountType = if pkgs.stdenv.hostPlatform.isDarwin then "nfsmount" else "mount";
             };
           };

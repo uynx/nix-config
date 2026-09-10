@@ -4,14 +4,10 @@
   fetchurl,
 }:
 
-# Vendor CLIs pinned by hash. `update-ai-clis` rewrites pins.json with jq, so
-# this file is ordinary Nix and safe to format.
 let
   pins = builtins.fromJSON (builtins.readFile ./pins.json);
 
   inherit (stdenvNoCC.hostPlatform) system;
-  # Two spellings of the same architecture, because the six vendors do not agree
-  # on one. `cpu` is nixpkgs' own name, `short` the npm/GitHub-release one.
   cpu = stdenvNoCC.hostPlatform.parsed.cpu.name;
   short = if cpu == "aarch64" then "arm64" else "x64";
 
@@ -25,9 +21,6 @@ let
     sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
   };
 
-  # `url` is a function of the version so the pin is read once, here, rather
-  # than named twice per package. Default to a vendor that ships one bare
-  # executable; an archive names its `sourceRoot` and its own `install`.
   mkPin =
     {
       pname,
@@ -59,9 +52,6 @@ let
     );
 in
 {
-  # Do NOT autoPatchelf: Bun appends its payload after the ELF, and patching
-  # shifts it out of reach, silently degrading to the plain Bun runtime. Same
-  # for opencode below, which is built the same way.
   claude-code = mkPin {
     pname = "claude-code";
     bin = "claude";
@@ -70,11 +60,6 @@ in
     desc = "Anthropic's Claude Code CLI";
   };
 
-  # Source is npm, not the GitHub release: that tarball ships `codex` alone,
-  # while every GPT-5.6 model is `tool_mode = code_mode_only` and routes all
-  # tool calls through a sibling `codex-code-mode-host` binary that only the
-  # npm platform package carries. Without it every call dies at "timed out
-  # negotiating with the code-mode host". The `codex` binaries are identical.
   codex = mkPin {
     pname = "codex";
     url = v: "https://registry.npmjs.org/@openai/codex/-/codex-${v}-linux-${short}.tgz";
@@ -91,11 +76,6 @@ in
     desc = "x.ai's official Grok CLI";
   };
 
-  # Kimi Code, the rebuilt successor to the Python kimi-cli. Its own installer
-  # renames the first `kimi` on PATH to `kimi-legacy` and deletes later
-  # duplicates, which would maul the store path — pin it here instead and never
-  # run `/upgrade`. Versions come from code.kimi.com, not GitHub, which is still
-  # publishing the old 1.x line.
   kimi = mkPin {
     pname = "kimi";
     url = v: "https://code.kimi.com/kimi-code/binaries/${v}/kimi-code-linux-${short}";
@@ -112,8 +92,6 @@ in
     desc = "SST's OpenCode terminal agent";
   };
 
-  # Ships its own node next to the launcher, so the tree moves whole and only
-  # the launcher gets linked into bin.
   cursor-agent = mkPin {
     pname = "cursor-agent";
     url = v: "https://downloads.cursor.com/lab/${v}/linux/${short}/agent-cli-package.tar.gz";

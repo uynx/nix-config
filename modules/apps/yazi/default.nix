@@ -7,8 +7,6 @@
 
       settings.yazi.mgr = {
         show_hidden = true;
-        # "modified" was renamed upstream; yazi rejects the whole config file
-        # and falls back to presets if this is wrong.
         sort_by = "mtime";
         sort_dir_first = true;
       };
@@ -20,9 +18,6 @@
       };
     };
 
-  # `y` is Home Manager's shellWrapperName, reimplemented here because the
-  # wrapper ships the binary only. Without it yazi cannot change the shell's
-  # directory on exit — that is the whole point of the wrapper function.
   flake.homeModules.yazi = moduleWithSystem (
     { self', ... }:
     { lib, ... }:

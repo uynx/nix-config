@@ -20,8 +20,6 @@
       swi-prolog
       mermaid-cli
 
-      # devenv vendors its own secretspec (same 0.17.0); adding the standalone
-      # package back collides on bin/secretspec and fails the home-manager env.
       devenv
 
       nixfmt

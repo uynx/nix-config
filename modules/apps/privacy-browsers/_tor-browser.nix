@@ -84,7 +84,6 @@ let
     wayland
     zlib
   ];
-  # Rewritten by `update-privacy-browsers`, which `update` runs.
   pin = (builtins.fromJSON (builtins.readFile ./pins.json)).tor-browser;
 in
 stdenv.mkDerivation rec {
@@ -107,9 +106,6 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/tor-browser $out/bin
     cp -r Browser/* $out/lib/tor-browser/
 
-    # Without this marker the bundle runs in portable mode and keeps its profile
-    # next to the binary, i.e. in the read-only store. With it, state goes to
-    # ~/.config/"tor project".
     touch $out/lib/tor-browser/is-packaged-app
 
     interpreter=$(cat ${stdenv.cc}/nix-support/dynamic-linker)
@@ -124,11 +120,6 @@ stdenv.mkDerivation rec {
 
     fullLibPath="$out/lib/tor-browser:$out/lib/tor-browser/TorBrowser/Tor:${libPath}"
 
-    # The bundle's own fonts.conf makes its bundled fonts the *only* fonts the
-    # browser can see, which is the whole point — a system font list is one of
-    # the highest-entropy fingerprints there is, and this machine's is not the
-    # standard one. FONTCONFIG_FILE, not FONTCONFIG_PATH: upstream's variable
-    # loses to the system config here (verified in nixpkgs with FC_DEBUG=1024).
     fontsConf=$out/lib/tor-browser/fonts/fonts.conf
     substituteInPlace "$fontsConf" \
       --replace-fail '<dir prefix="cwd">fonts</dir>' "<dir>$out/lib/tor-browser/fonts</dir>"
@@ -138,8 +129,6 @@ stdenv.mkDerivation rec {
       --set FONTCONFIG_FILE "$fontsConf" \
       --set-default MOZ_ENABLE_WAYLAND 1
 
-    # The browser spawns tor itself and reports only "unable to connect" if it
-    # dies, so a missing library here is invisible at runtime.
     LD_LIBRARY_PATH="$fullLibPath" $out/lib/tor-browser/TorBrowser/Tor/tor --version > /dev/null
 
     runHook postInstall

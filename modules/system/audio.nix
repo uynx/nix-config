@@ -1,6 +1,5 @@
 {
   flake.nixosModules.audio = {
-    # Without it pipewire runs at normal priority and drops buffers under load.
     security.rtkit.enable = true;
 
     services.pipewire = {

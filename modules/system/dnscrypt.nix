@@ -1,8 +1,5 @@
 { self, lib, ... }:
 let
-  # Names are upstream's, because `update-dns-stamps` looks each one up by
-  # heading in public-resolvers.md. Renaming one here silently stops it
-  # updating.
   stamps = lib.importJSON ./dns-stamps.json;
 
   shared =
@@ -15,21 +12,11 @@ let
             "127.0.0.1:53"
             "[::1]:53"
           ];
-          # Static entries rather than a resolver list: nothing to fetch before
-          # DNS works. `require_nolog`/`require_nofilter` from the upstream
-          # defaults only screen servers taken from sources, which is the only
-          # reason an ads-and-trackers filtering resolver is reachable this way.
           server_names = lib.attrNames stamps;
           static = lib.mapAttrs (_: stamp: { inherit stamp; }) stamps;
           doh_servers = true;
           require_dnssec = false;
 
-          # Answered from this file unconditionally, never forwarded — which is
-          # the point: on a captive network the upstream is unreachable, so
-          # without it the OS probe gets SERVFAIL, reads that as "no internet"
-          # rather than "portal", and never offers a login window. Several
-          # anycast addresses because a dead pin means a permanent false
-          # "portal detected" on healthy networks.
           captive_portals.map_file = pkgs.writeText "captive-portals.txt" ''
             captive.apple.com 17.253.125.203, 17.253.125.201, 17.253.109.201, 17.253.113.202
           '';
@@ -63,10 +50,6 @@ let
               curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 60 -o "$work/$f" "$base/$f"
             done
 
-            # This list decides where every DNS query on this machine goes, and
-            # dnscrypt-proxy verifies it at runtime with exactly this key.
-            # Pinning the stamps moves the fetch offline, so the check has to
-            # move with it — TLS alone would be a downgrade.
             minisign -Vqm "$work/public-resolvers.md" \
               -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
 
@@ -77,9 +60,6 @@ let
               current=$(jq -r --arg n "$name" '.[$n]' "$file")
 
               if [ -z "$latest" ]; then
-                # Keeping the stale stamp is the safe failure: a delisted
-                # resolver is rarely dead the same day, an empty pin is
-                # instant, and `update` must still reach the flake relock.
                 printf '%-22s FAILED (not in public-resolvers.md — pin left stale)\n' "$name"
               elif [ "$latest" = "$current" ]; then
                 printf '%-22s up to date\n' "$name"
@@ -105,19 +85,8 @@ in
     {
       imports = [ shared ];
 
-      # nix-darwin runs the daemon as `_dnscrypt-proxy`, which cannot bind port
-      # 53 — macOS reserves everything below 1024 for uid 0. Dropping privileges
-      # via dnscrypt's own `user_name` is not an option either: it re-execs and
-      # the parent exits, which KeepAlive reads as a crash and restarts forever.
       launchd.daemons.dnscrypt-proxy.serviceConfig.UserName = lib.mkForce "root";
 
-      # At boot the daemon starts before the interface's IPv6 default route
-      # is installed (SLAAC lag), so its first live query dials an
-      # IPv6-literal upstream and fails "no route to host" — it already
-      # retries and self-heals in ~10s, but anything resolving during that
-      # window (a browser opened right after login) sees dead DNS. Wait for
-      # both default routes first, capped at 20s so an IPv4-only network
-      # still starts on schedule instead of hanging.
       launchd.daemons.dnscrypt-proxy.serviceConfig.ProgramArguments = lib.mkForce [
         "/bin/sh"
         "-c"
@@ -133,9 +102,6 @@ in
         ''
       ];
 
-      # macOS has no global resolver setting; DNS is per network service, and
-      # these are every service this Mac has. Check `networksetup
-      # -listallnetworkservices` after adding a new adapter.
       networking.knownNetworkServices = [
         "Wi-Fi"
         "USB 10/100/1000 LAN"
@@ -144,10 +110,6 @@ in
       ];
       networking.dns = [ "127.0.0.1" ];
 
-      # The detection map above gets the login window to appear; a portal page
-      # that pulls assets from its own hostnames still needs a resolver that
-      # answers on the far side of it. dnscrypt never falls back to plaintext, so
-      # that hand-off has to be manual. `reb` puts 127.0.0.1 back too.
       home-manager.users.${self.lib.user.name}.programs.fish.functions.portal.body = ''
         switch "$argv[1]"
             case on

@@ -1,12 +1,7 @@
 {
-  # Push-to-talk dictation: first press records, second transcribes and types
-  # the result at the cursor. Wayland-only — wtype and wl-copy need a
-  # compositor; the X11 counterpart on the family's Plasma box uses xdotool.
   flake.homeModules.dictate =
     { pkgs, ... }:
     let
-      # Pinned rather than fetched on first run, so dictation works offline and
-      # the first press is not a silent 140 MB download.
       whisperModel = pkgs.fetchurl {
         url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
         hash = "sha256-oDd5yG3zMjB19eeWyyzlAp8A7Ihp7uP9+4l6/jbG0AI=";
@@ -30,10 +25,6 @@
             audio=/tmp/whisper-dictate.wav
             model=${whisperModel}
 
-            # A leftover pid file must start a recording, not fake a stop: after a
-            # crash or reboot the pid is dead or recycled onto something else, so
-            # confirm it is still our recorder. `|| true` because errexit would
-            # abort the check if pw-record exits mid-read.
             recording=0
             if [ -f "$recordPid" ]; then
               pid=$(cat "$recordPid" || true)
@@ -54,8 +45,6 @@
               [ -f "$audio" ] || exit 0
               notify-send "Dictation" "Transcribing..." -i microphone-sensitivity-high-symbolic || true
 
-              # writeShellApplication sets errexit and pipefail, so without
-              # `|| true` the "no speech" branch below can never run.
               text=$(whisper-cli -m "$model" -f "$audio" --no-timestamps -nt 2>/dev/null \
                 | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
               rm -f "$audio"

@@ -26,8 +26,6 @@
       scrolloff = 8;
     };
 
-    # nvf has no flexoki theme and flexoki-neovim is not in nixpkgs, so the
-    # palette is mapped onto base16 by hand.
     theme = {
       enable = true;
       name = "base16";
@@ -54,15 +52,8 @@
     lsp = {
       enable = true;
 
-      # The reason nixd is worth the swap: pointed at a real evaluation of this
-      # flake, completion and hover cover *our* modules' options, not just
-      # upstream NixOS. Home Manager rides in as a NixOS submodule here, so its
-      # options have to be unwrapped with getSubOptions rather than read off a
-      # homeConfigurations output this flake does not produce.
       servers.nixd.settings.nixd = {
         nixpkgs.expr = ''import (builtins.getFlake "${flakePath}").inputs.nixpkgs { }'';
-        # `nixos` is only nixd's name for the slot — on a Mac this is the darwin
-        # host, which has the same home-manager submodule underneath.
         options = {
           nixos.expr = ''(builtins.getFlake "${flakePath}").${hostAttr}.options'';
           home_manager.expr = ''(builtins.getFlake "${flakePath}").${hostAttr}.options.home-manager.users.type.getSubOptions [ ]'';
@@ -112,9 +103,6 @@
       grug-far-nvim.enable = true;
       motion.leap = {
         enable = true;
-        # nvf defaults these to <leader>ss/sS — three keystrokes for a motion
-        # whose whole value is being one. `s` and `S` are given up in exchange;
-        # `cl` and `cc` do the same thing.
         mappings = {
           leapForwardTo = "s";
           leapBackwardTo = "S";
@@ -125,29 +113,17 @@
     notes.todo-comments.enable = true;
     mini = {
       hipatterns.enable = true;
-      # Zero config: adds `a` (argument), `f` (function call) and `t` (tag) to
-      # every operator. Covers calls, where the treesitter textobjects above
-      # cover definitions.
       ai.enable = true;
     };
 
     languages = {
-      # Per-language lsp.enable defaults to vim.lsp.enable, set above.
       enableTreesitter = true;
       enableFormat = true;
-      # statix + deadnix, shellcheck, markdownlint, luacheck, mypy, eslint_d.
-      # The last two are the noisy ones: mypy is slow on large files and
-      # eslint_d errors in any project without an eslint config.
       enableExtraDiagnostics = true;
 
       nix = {
         enable = true;
-        # nvf defaults to nil, which only knows upstream NixOS options. nixd can
-        # be pointed at a real evaluation, which is the only way completion
-        # reaches this flake's own modules — see lsp.servers.nixd below.
         lsp.servers = [ "nixd" ];
-        # nvf defaults to alejandra; every file in this repo is nixfmt-formatted,
-        # so format-on-save would rewrite the whole tree into the other style.
         format.type = [ "nixfmt" ];
       };
       lua.enable = true;
@@ -156,11 +132,6 @@
       tsx.enable = true;
       html.enable = true;
       css = {
-        # Some Sass speaks plain CSS too, so on Linux it is the only server
-        # needed and nvf's css LSP (vscode-css-language-server) is redundant.
-        # It stays on darwin, where Some Sass cannot build: nvf builds that
-        # server itself and its keytar dependency's node-addon-api does not
-        # compile under Apple clang.
         enable = true;
         lsp.enable = isDarwin;
       };
@@ -183,14 +154,8 @@
     globals = {
       vimtex_view_method = "sioyek";
       vimtex_compiler_method = "latexmk";
-      # Wrapped nvim on PATH needed so Sioyek's inverse-search callback finds
-      # VimtexInverseSearch rather than invoking bare unwrapped neovim.
       vimtex_callback_progpath = "nvim";
-      # The engine goes here and nowhere else: vimtex appends this flag *after*
-      # `options`, so a `-pdflua` in that list is overridden by the default
-      # `-pdf` and the document silently builds with pdfTeX.
       vimtex_compiler_latexmk_engines._ = "-lualatex";
-      # Setting `options` replaces vimtex's defaults, hence the last four.
       vimtex_compiler_latexmk = {
         aux_dir = "build";
         options = [
@@ -203,19 +168,10 @@
       };
     };
 
-    # nvf has no vimtex module and its tex language module is texlab + treesitter
-    # only, so compilation (\ll) and forward search come from the plugin itself.
     extraPlugins = {
       vim-tmux-navigator.package = tmuxNavigator;
       vimtex.package = vimtex;
 
-      # nvf's `vim.treesitter.textobjects` option is inert against this plugin
-      # version: it calls `require("nvim-treesitter.config").setup { textobjects
-      # = ... }`, the pre-`main` API, which the new nvim-treesitter merges into
-      # its config table and never reads. Keymaps have to be set by hand.
-      # Letters dodge two collisions: gitsigns owns `]c`/`[c`, and mini.ai
-      # already claims `af` (function *call*) and `aa` (argument), so
-      # definitions go on `m`, matching vim's own method motion.
       nvim-treesitter-textobjects = {
         package = nvim-treesitter-textobjects;
         setup = ''
@@ -252,7 +208,6 @@
       };
     };
 
-    # autoread only reloads when Neovim actually checks, hence the polling.
     luaConfigRC.checktime = ''
       vim.api.nvim_create_autocmd(
         { "FocusGained", "BufEnter", "CursorHold", "CursorHoldI", "TermClose", "TermLeave" },
@@ -274,8 +229,6 @@
       })
     '';
 
-    # Undo files are 0644 and unencrypted; keys.txt is 0600. Never let the
-    # private age identity leak into ~/.local/state/nvf/undo.
     luaConfigRC.noUndoForSecrets = ''
       vim.api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
         group = vim.api.nvim_create_augroup("uynx_no_undo_secrets", { clear = true }),

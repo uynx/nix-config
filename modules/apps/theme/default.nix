@@ -4,12 +4,8 @@
     gtk =
       let
         c = self.lib.flexoki;
-        # Flexoki's base-950. The only surface shade the terminal palette has
-        # no entry for, so it stays here.
         surface = "#1c1b1a";
 
-        # No Flexoki GTK theme exists, so override libadwaita's named colours
-        # instead. GTK3 apps shipping their own stylesheet stay Adwaita-dark.
         flexoki = ''
           @define-color accent_color ${c.yellow};
           @define-color accent_bg_color ${c.yellow};
