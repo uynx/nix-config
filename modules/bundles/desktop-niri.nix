@@ -4,6 +4,7 @@
     (self.lib.mkBundle {
       nixos = with self.nixosModules; [
         niri
+        noctalia
         sddm
         screenUtils
       ];
