@@ -47,7 +47,7 @@ _: {
     };
 
     # apple-drm cannot suspend; every attempt wedges the machine - do not re-enable
-    systemd.sleep.extraConfig = "AllowSuspend=no";
+    systemd.sleep.settings.Sleep.AllowSuspend = false;
 
     systemd.settings.Manager.RuntimeWatchdogSec = "2min";
 
