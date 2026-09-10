@@ -2,6 +2,7 @@ _: {
   flake.nixosModules.hardwareAsahi = {
     hardware.asahi = {
       enable = true;
+      # A real path, not a string: read at build time, hence rebuilds needing --impure.
       peripheralFirmwareDirectory = /boot/vendorfw;
     };
 

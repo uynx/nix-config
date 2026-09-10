@@ -52,6 +52,7 @@ let
     );
 in
 {
+  # Do NOT autoPatchelf these: it shifts Bun's appended payload out of reach.
   claude-code = mkPin {
     pname = "claude-code";
     bin = "claude";

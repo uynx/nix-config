@@ -385,7 +385,6 @@
              ${pkgs.gtk2}/lib/libgtk-x11-2.0.so.0 \
              ${pkgs.gtk2}/lib/libgdk-x11-2.0.so.0 /usr/lib/'
 
-
         STEAM_ROOT=${steam}
         STEAM_HOME=${guest}/.steam
         STEAM_BIN="$STEAM_ROOT/steamrtarm64/steam"
