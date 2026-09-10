@@ -35,6 +35,7 @@
         settings.connectivity.interval = 0;
       };
 
+      # Do not "fix" a captive portal by re-enabling NM's connectivity probe.
       programs.captive-browser = {
         enable = true;
         interface = "wlan0";
