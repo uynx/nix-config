@@ -57,6 +57,8 @@
           export CI=1
 
           skipped=0
+          step=0
+          total=0
 
           ${lib.optionalString isLinux ''
             file=${home}/nix-config/modules/apps/ai-tools/pins.json
@@ -150,33 +152,49 @@
             esac
           }
 
+          # Vendors emit no machine-readable progress, so the tail of their own
+          # output is the only real completion signal there is.
+          spin() {
+            name=$1
+            pid=$2
+            out=$3
+            [ -t 1 ] || return 0
+            chars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+            i=0
+            last=""
+            start=$(date +%s)
+            while kill -0 "$pid" 2>/dev/null; do
+              c=''${chars:i++%10:1}
+              elapsed=$(( $(date +%s) - start ))
+              if [ "$elapsed" -ge 60 ]; then
+                t="$((elapsed / 60))m $((elapsed % 60))s"
+              else
+                t="''${elapsed}s"
+              fi
+              if [ $((i % 10)) -eq 1 ]; then
+                last=$(tr '\r' '\n' <"$out" 2>/dev/null \
+                  | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' \
+                  | grep -v '^[[:space:]]*$' | tail -1)
+              fi
+              printf '  [%d/%d] %-12s %s %-8s %.40s\r' \
+                "$step" "$total" "$name" "$c" "$t" "$last"
+              sleep 0.1
+            done
+            printf '\r\033[K'
+          }
+
           roll() {
             name=$1
             shift
             if [ -n "$missingOnly" ] && command -v "$name" >/dev/null 2>&1; then
               return
             fi
+            step=$((step + 1))
             before=$(get_ver "$name" || true)
             tmp=$(mktemp)
             "$@" >"$tmp" 2>&1 &
             pid=$!
-            if [ -t 1 ]; then
-              chars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
-              i=0
-              start=$(date +%s)
-              while kill -0 "$pid" 2>/dev/null; do
-                c=''${chars:i++%10:1}
-                elapsed=$(( $(date +%s) - start ))
-                if [ "$elapsed" -ge 60 ]; then
-                  t="$((elapsed / 60))m $((elapsed % 60))s"
-                else
-                  t="''${elapsed}s"
-                fi
-                printf '  %-12s %s %s\r' "$name" "$c" "$t"
-                sleep 0.1
-              done
-              printf '\r\033[K'
-            fi
+            spin "$name" "$pid" "$tmp"
             if wait "$pid"; then
               after=$(get_ver "$name" || true)
               if [ -n "$before" ] && [ -n "$after" ] && [ "$before" = "$after" ]; then
@@ -197,6 +215,8 @@
           }
 
           ${lib.optionalString isLinux ''
+            # Bump alongside the roll calls below.
+            total=5
             if command -v agy >/dev/null 2>&1; then
               roll agy    agy update
             else
@@ -222,8 +242,15 @@
               rm -f "${home}/.hermes/hermes-agent/.git/"*.lock 2>/dev/null || true
               git -C "${home}/.hermes/hermes-agent" config url."https://github.com/".insteadOf "https://github.com/" 2>/dev/null || true
               ver=$(get_ver hermes || true)
+              step=$((step + 1))
+              tmp=$(mktemp)
+              timeout 60 hermes update --check >"$tmp" 2>&1 &
+              pid=$!
+              spin hermes "$pid" "$tmp"
               rc=0
-              check=$(timeout 60 hermes update --check 2>&1) || rc=$?
+              wait "$pid" || rc=$?
+              check=$(cat "$tmp")
+              rm -f "$tmp"
               if [ "$rc" -eq 124 ]; then
                 printf '  %-12s SKIPPED (update check timed out)\n' hermes
                 skipped=$((skipped + 1))
