@@ -7,6 +7,7 @@
         noctalia
         sddm
         screenUtils
+        ananicy
       ];
       home = with self.homeModules; [
         niri

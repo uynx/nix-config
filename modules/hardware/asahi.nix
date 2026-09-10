@@ -27,7 +27,10 @@ _: {
         "zswap.max_pool_percent=25"
         "zswap.shrinker_enabled=1"
       ];
-      kernel.sysctl."vm.swappiness" = 100;
+      kernel.sysctl = {
+        "vm.swappiness" = 100;
+        "vm.vfs_cache_pressure" = 50;
+      };
 
       extraModprobeConfig = ''
         options hid_apple iso_layout=0
