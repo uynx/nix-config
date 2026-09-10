@@ -1,8 +1,4 @@
 {
-  # Everything about the AI CLIs that is the same on both platforms: the shared
-  # skills/AGENTS.md wiring, and `update-ai-clis` — the one entry point that
-  # maintains every tool. How the tools themselves arrive differs per platform:
-  # linux.nix pins them, darwin.nix brews them.
   flake.homeModules.aiTools =
     {
       config,
@@ -28,11 +24,9 @@
         runtimeInputs =
           with pkgs;
           [
-            coreutils # timeout, bounding hermes below
-            util-linux # flock
+            coreutils
+            util-linux
           ]
-          # Everything else this script runs is Linux-only now — macOS takes its
-          # whole AI toolchain from Homebrew.
           ++ lib.optionals isLinux [
             curl
             nix
@@ -40,30 +34,19 @@
             jq
             nodejs
             uv
-            git # hermes' installer clones its own repo
+            git
 
-            # t3 pulls node-pty, which has no linux-arm64 prebuild and compiles on
-            # install. Without these npm dies on `c++: not found`.
             python3
             gnumake
             gcc
             binutils
           ];
         text = ''
-          # Home Manager activation calls this with --missing-only to make a
-          # fresh machine self-populate. $HOME is /homeless-shelter there, so
-          # every path below is the literal home instead.
           missingOnly=
           if [ "''${1:-}" = --missing-only ]; then
             missingOnly=1
           fi
 
-          # Activation runs this too, so it can land beside an interactive
-          # `update`. Both would see the same tool missing, both would take the
-          # install branch, and both would write the same ~/.hermes and
-          # ~/.local -- which is what a 2026-09-01 hermes tree containing only
-          # uv and uvx looks like. Whichever run holds the lock does the work,
-          # so the loser exiting 0 leaves nothing undone.
           exec 9>"/tmp/update-ai-clis.$(id -u).lock"
           if ! flock -n 9; then
             echo "update-ai-clis: another run is already installing, skipping" >&2
@@ -71,36 +54,21 @@
           fi
           export PATH="$PATH:${home}/.local/bin${lib.optionalString isLinux ":${home}/.hermes/bin"}"
 
-          # hermes' installer pulls unicode-animations, whose postinstall writes
-          # a spinner demo to /dev/tty and never exits unless CI is set.
           export CI=1
 
-          # Counts pins and tools this run could not reach, for the summary at
-          # the end. Declared out here so it spans the Linux-only pin section
-          # and the rolling installs below, which both feed it.
           skipped=0
 
           ${lib.optionalString isLinux ''
             file=${home}/nix-config/modules/apps/ai-tools/pins.json
 
-            # bump <name> <latest-version> <aarch64-url> <x86_64-url>
-            # Both architectures are pinned from whichever machine runs this, so
-            # the other one can rebuild without a prefetch of its own. One
-            # unreachable vendor must not cost every later pin. Under errexit a
-            # failed prefetch would abort the whole run, so each step reports and
-            # returns instead, and callers use `try_bump`.
             bump() {
               name=$1 latest=$2 url_arm=$3 url_x86=$4
 
-              # An empty or null version means the lookup failed, and pasting it
-              # into the URL would prefetch a 404 page rather than the artifact.
               if [ -z "$latest" ] || [ "$latest" = null ]; then
                 printf '%-12s SKIPPED (lookup failed)\n' "$name"
                 return 1
               fi
 
-              # Refuse to invent a key: `.[$n] = …` would happily create one, so a
-              # typo'd name would add a pin nothing reads instead of failing.
               current=$(jq -r --arg n "$name" '.[$n].version // ""' "$file")
               if [ -z "$current" ]; then
                 echo "$name: no such pin in $file" >&2
@@ -116,16 +84,11 @@
                   "$(nix-prefetch-url --type sha256 "$1")"
               }
 
-              # Both or neither: a pin carrying one new hash beside one stale one
-              # would build a mismatched binary on the machine that was skipped.
-              # `||` short-circuits, so a failed aarch64 fetch skips the x86 one.
               if ! hash_arm=$(prefetch "$url_arm") || ! hash_x86=$(prefetch "$url_x86"); then
                 printf '%-12s SKIPPED (prefetch failed)\n' "$name"
                 return 1
               fi
 
-              # Written via mktemp and mv, so a pin is either fully updated or
-              # untouched. That is what makes skipping one safe to continue past.
               tmp=$(mktemp)
               jq --arg n "$name" --arg v "$latest" --arg a "$hash_arm" --arg x "$hash_x86" \
                 '.[$n] = { version: $v, hash: { "aarch64-linux": $a, "x86_64-linux": $x } }' \
@@ -139,17 +102,12 @@
               bump "$@" || skipped=$((skipped + 1))
             }
 
-            # Every lookup below is timed out: curl's default connect timeout
-            # is 300 s, so one blocked vendor otherwise freezes the whole run
-            # with no output at all.
             if [ -z "$missingOnly" ]; then
             claude=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]' || true)
             try_bump claude-code "$claude" \
               "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude" \
               "https://downloads.claude.ai/claude-code-releases/$claude/linux-x64/claude"
 
-            # npm, not the GitHub feed — the GitHub tarball omits the code-mode
-            # host binary, so the feed has to match the source we actually fetch.
             codex=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://registry.npmjs.org/@openai/codex/latest | jq -r '.version' || true)
             try_bump codex "$codex" \
               "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-arm64.tgz" \
@@ -187,26 +145,39 @@
               openclaw) openclaw --version 2>/dev/null | head -1 | sed 's/OpenClaw //' ;;
               t3) t3 --version 2>/dev/null | head -1 | sed 's/t3 //' ;;
               qwen) (qwen --version 2>/dev/null || qwen-code --version 2>/dev/null) | head -1 ;;
-              # Drop the local-commit suffix. hermes carries local modifications
-              # as a commit and `hermes update` resets them away, so comparing
-              # the raw strings reported a version change on every single run.
               hermes) hermes --version 2>/dev/null | head -1 | sed -e 's/Hermes Agent //' -e 's/ · local .*//' ;;
               *) echo "" ;;
             esac
           }
 
-          # Keep stderr: a swallowed failure here reads exactly like success,
-          # which is how this once installed nothing at all.
           roll() {
             name=$1
             shift
             if [ -n "$missingOnly" ] && command -v "$name" >/dev/null 2>&1; then
               return
             fi
-            # `|| true`: errexit plus pipefail would abort the whole run when a
-            # tool is present but its --version fails.
             before=$(get_ver "$name" || true)
-            if err=$("$@" 2>&1); then
+            tmp=$(mktemp)
+            "$@" >"$tmp" 2>&1 &
+            pid=$!
+            if [ -t 1 ]; then
+              chars='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+              i=0
+              start=$(date +%s)
+              while kill -0 "$pid" 2>/dev/null; do
+                c=''${chars:i++%10:1}
+                elapsed=$(( $(date +%s) - start ))
+                if [ "$elapsed" -ge 60 ]; then
+                  t="$((elapsed / 60))m $((elapsed % 60))s"
+                else
+                  t="''${elapsed}s"
+                fi
+                printf '  %-12s %s %s\r' "$name" "$c" "$t"
+                sleep 0.1
+              done
+              printf '\r\033[K'
+            fi
+            if wait "$pid"; then
               after=$(get_ver "$name" || true)
               if [ -n "$before" ] && [ -n "$after" ] && [ "$before" = "$after" ]; then
                 printf '  %-12s %s (up to date)\n' "$name" "$after"
@@ -219,14 +190,13 @@
               fi
             else
               printf '  %-12s FAILED\n' "$name"
-              printf '%s\n' "$err" | tail -3 | sed 's/^/               /'
+              tail -3 "$tmp" | sed 's/^/               /'
               skipped=$((skipped + 1))
             fi
+            rm -f "$tmp"
           }
 
           ${lib.optionalString isLinux ''
-            # On Linux, agy is maintained by its self-updater / vendor script.
-            # On macOS, the `antigravity-cli` Homebrew cask manages it.
             if command -v agy >/dev/null 2>&1; then
               roll agy    agy update
             else
@@ -239,30 +209,19 @@
             fi
           ''}
           ${lib.optionalString isLinux ''
-            # macOS gets all three from Homebrew instead: `openclaw-cli` and
-            # `qwen-code` as formulas, t3 as the `t3-code` desktop app.
             roll openclaw npm install -g --prefix "${home}/.local" openclaw
             roll t3       npm install -g --prefix "${home}/.local" t3
             roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
           ''}
           ${lib.optionalString isLinux ''
-            # On Linux, hermes is maintained by its vendor installer / self-updater.
-            # On macOS, the `hermes-agent` Homebrew formula manages it.
             if ! command -v hermes >/dev/null 2>&1; then
-              # First install builds several npm workspaces and took 20 minutes
-              # here. roll() buffers output until the command returns, so
-              # without this line the run is indistinguishable from a hang --
-              # which is what it was mistaken for. The installer bounds its own
-              # npm calls and nothing else, so the outer bound is still ours.
               printf '  %-12s installing, first run takes many minutes...\n' hermes
               roll hermes timeout 2400 sh -c 'curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
                 | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
             elif [ -z "$missingOnly" ]; then
+              rm -f "${home}/.hermes/hermes-agent/.git/"*.lock 2>/dev/null || true
+              git -C "${home}/.hermes/hermes-agent" config url."https://github.com/".insteadOf "https://github.com/" 2>/dev/null || true
               ver=$(get_ver hermes || true)
-              # hermes does its own network I/O and bounds none of it, so a
-              # stalled lookup parks the whole run here with nothing printed.
-              # Only 124 means the bound fired: any other non-zero exit is
-              # hermes answering, and the grep below still decides what it meant.
               rc=0
               check=$(timeout 60 hermes update --check 2>&1) || rc=$?
               if [ "$rc" -eq 124 ]; then
@@ -271,16 +230,11 @@
               elif printf '%s' "$check" | grep -q 'Already up to date'; then
                 printf '  %-12s %s (up to date)\n' hermes "$ver"
               else
-                roll hermes timeout 300 hermes update --yes
+                roll hermes timeout 600 hermes update --yes
               fi
             fi
           ''}
 
-          # Exits 0 even with skips. Every pin is written atomically, so a
-          # skipped one leaves the file consistent and there is no reason to
-          # stop `update` from relocking the flake afterwards. A hard crash
-          # still exits non-zero under errexit, which is what the caller's
-          # `; or return 1` is actually for.
           if [ "$skipped" -gt 0 ]; then
             echo
             echo "$skipped not updated this run — rerun to retry."
@@ -291,37 +245,19 @@
     {
       home.packages = [ update-ai-clis ];
 
-      # Registered rather than named by `update` itself, so a host without the
-      # AI bundle does not get an `update` that calls a missing command.
       shellHooks.update = [ "update-ai-clis" ];
 
       home.sessionVariables = {
-        # Without these a self-updater fetches a newer build into ~/.local and
-        # the pin stops being what actually runs.
         DISABLE_AUTOUPDATER = "1";
         GROK_DISABLE_AUTOUPDATER = "1";
         OPENCODE_DISABLE_AUTOUPDATE = "1";
 
-        # Appended, not home.sessionPath: that prepends, letting a self-installed
-        # binary here silently outrank its pinned version.
         PATH = "$PATH:${home}/.local/bin";
       }
-      # hermes' browser tool otherwise makes Playwright fetch its own Ubuntu
-      # Chromium, which will not run unpatched here. Reuses whatever browser the
-      # host already builds rather than adding 3.2 GB of pkgs.chromium — so it
-      # only applies on a host that took the `web` bundle. The macOS half is in
-      # `apps/brave-origin/darwin.nix`: a cask leaves nothing in `config` to
-      # test here.
       // lib.optionalAttrs config.programs.chromium.enable {
         AGENT_BROWSER_EXECUTABLE_PATH = "${config.programs.chromium.package}/bin/brave-origin";
       };
 
-      # One set of skills and one AGENTS.md, wired to wherever each CLI expects
-      # to find them. Deliberately outside the store: the memory workflow
-      # rewrites both constantly and a read-only store symlink would break it.
-      #
-      # Cursor is the one tool that gets skills but not instructions: its user
-      # rules are .mdc files with frontmatter, which a plain AGENTS.md is not.
       home.file =
         lib.genAttrs
           [
@@ -330,7 +266,7 @@
             ".codex/AGENTS.md"
             ".cursorrules"
             ".cursor/rules/system.mdc"
-            ".gemini/AGENTS.md" # agy, whose state dir is Antigravity's
+            ".gemini/AGENTS.md"
             ".grok/AGENTS.md"
             ".kimi-code/AGENTS.md"
             ".openclaw/AGENTS.md"
@@ -356,11 +292,6 @@
             (_: {
               source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
             })
-        # codex is the exception: ~/.codex/skills already holds its own vendor
-        # skills under .system, and a directory symlink would displace them. So
-        # each skill is linked individually alongside them. Read impurely
-        # because the source is a working copy, not a flake input; a machine
-        # without the dotfiles clone simply gets none.
         // lib.listToAttrs (
           map (skill: {
             name = ".codex/skills/${skill}";
@@ -379,16 +310,9 @@
           '';
         };
 
-      # Each hermes update snapshots its whole state dir, and that state dir
-      # holds .env and auth.json — so every run leaves another plaintext copy of
-      # its credentials lying around indefinitely. Keep a week for rollback.
       systemd.user.tmpfiles.rules = lib.optionals isLinux [
         "e ${home}/.hermes/state-snapshots - - - 7d"
       ];
-      # hermes finds extra skills through a config key rather than a path, and
-      # writes that config itself, so it cannot be a store symlink. Appending is
-      # safe only while it has no `skills:` block of its own; if it grows one,
-      # the key has to be merged in by hand instead.
       home.activation.hermesSharedSkills = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         cfg="${home}/.hermes/config.yaml"
         if [ -f "$cfg" ] && ! grep -qE '^skills:|external_dirs' "$cfg"; then
@@ -396,10 +320,6 @@
         fi
       '';
 
-      # On Linux agy, openclaw, t3, qwen and hermes cannot be pinned, so a fresh
-      # machine would otherwise have most but not all of the CLIs. This installs
-      # only what is absent, making every later rebuild a no-op, and never fails
-      # the activation — an offline rebuild must still succeed.
       home.activation.installRollingAiClis = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         ${update-ai-clis}/bin/update-ai-clis --missing-only || true
       '';
