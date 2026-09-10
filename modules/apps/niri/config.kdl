@@ -5,6 +5,7 @@
 // session. To get Hyprland's Alt back, set `mod-key "Alt"` in the input block.
 
 input {
+    disable-power-key-handling
     keyboard {
         xkb {
             layout "us"

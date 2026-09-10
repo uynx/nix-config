@@ -43,7 +43,11 @@ _: {
     services.logind.settings.Login = {
       HandleLidSwitch = "lock";
       HandleLidSwitchExternalPower = "lock";
+      HandlePowerKey = "lock";
     };
+
+    # apple-drm cannot suspend; every attempt wedges the machine - do not re-enable
+    systemd.sleep.extraConfig = "AllowSuspend=no";
 
     systemd.settings.Manager.RuntimeWatchdogSec = "2min";
 
