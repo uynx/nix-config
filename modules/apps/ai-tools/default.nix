@@ -152,8 +152,6 @@
             esac
           }
 
-          # Vendors emit no machine-readable progress, so the tail of their own
-          # output is the only real completion signal there is.
           spin() {
             name=$1
             pid=$2
@@ -173,8 +171,8 @@
               fi
               if [ $((i % 10)) -eq 1 ]; then
                 last=$(tr '\r' '\n' <"$out" 2>/dev/null \
-                  | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' \
-                  | grep -v '^[[:space:]]*$' | tail -1)
+                  | sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e '/^[[:space:]]*$/d' \
+                  | tail -1 || true)
               fi
               printf '  [%d/%d] %-12s %s %-8s %.40s\r' \
                 "$step" "$total" "$name" "$c" "$t" "$last"
