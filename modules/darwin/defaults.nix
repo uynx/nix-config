@@ -1,8 +1,5 @@
 { self, ... }:
 {
-  # Every macOS preference this config asserts. No NixOS counterpart exists.
-  # The firewall, lock screen and login window are not preferences and live in
-  # ./security.nix, mirroring `system/security.nix`.
   flake.darwinModules.defaults = {
     system = {
       keyboard = {
@@ -13,10 +10,6 @@
       startup.chime = false;
 
       defaults = {
-        # Safari, Siri, TextEdit, mail and QuickTimePlayerX are sandboxed: `defaults`
-        # redirects those writes into ~/Library/Containers, so activation only
-        # succeeds from a terminal holding Full Disk Access, and a fresh grant needs
-        # that terminal relaunched before it applies.
         CustomUserPreferences = {
           "com.apple.CrashReporter".DialogType = "none";
           "com.apple.universalaccess".reduceMotion = true;
@@ -103,13 +96,13 @@
           NSAutomaticSpellingCorrectionEnabled = false;
           NSAutomaticInlinePredictionEnabled = false;
 
-          NSWindowShouldDragOnGesture = true; # Cmd + Ctrl + click anywhere to drag
+          NSWindowShouldDragOnGesture = true;
 
           NSNavPanelExpandedStateForSaveMode = true;
           NSNavPanelExpandedStateForSaveMode2 = true;
           PMPrintingExpandedStateForPrint = true;
           PMPrintingExpandedStateForPrint2 = true;
-          AppleScrollerPagingBehavior = true; # Jump to the spot clicked on the bar
+          AppleScrollerPagingBehavior = true;
           NSDocumentSaveNewDocumentsToCloud = false;
           NSWindowResizeTime = 0.001;
         };

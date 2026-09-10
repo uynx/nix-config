@@ -1,17 +1,9 @@
 { self, inputs, ... }:
 {
-  # Everything that shells out to `nix` should be the same nix that runs the
-  # system. Without this, nixpkgs' plain build is pulled in by nix-direnv,
-  # comma, noctalia-shell and the pin updaters — a second 170 MB closure that
-  # also warns "unknown setting" on every Determinate-only key in nix.conf.
   flake.lib.determinateNixOverlay = final: _: {
     nix = inputs.determinate.inputs.nix.packages.${final.stdenv.hostPlatform.system}.default;
   };
 
-  # Read as `self.lib.caches`. The same two binary caches on both platforms —
-  # only the option names differ, since determinate owns nix.conf on macOS and
-  # refuses the plain `nix.settings` keys. Stated once so adding a cachix is
-  # one edit rather than two files that silently drift apart.
   flake.lib.caches = {
     substituters = [
       "https://nix-community.cachix.org"
@@ -23,8 +15,6 @@
     ];
   };
 
-  # `nix run uynx#btop` from any directory, no flake path needed. Takes the home
-  # directory because the two platforms disagree about where it is.
   flake.lib.selfRegistry = home: {
     ${self.lib.user.name}.to = {
       type = "git";

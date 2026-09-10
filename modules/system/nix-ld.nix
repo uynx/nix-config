@@ -1,5 +1,4 @@
 {
-  # Needed by unpackaged binaries (Antigravity tarball, etc.)
   flake.nixosModules.nixLd = { pkgs, ... }: {
     programs.nix-ld = {
       enable = true;

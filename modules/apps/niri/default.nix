@@ -1,13 +1,5 @@
 { moduleWithSystem, ... }:
 {
-  # KDL stays a real file rather than becoming the wrapper's structured
-  # settings — niri takes --config, so there is nothing to translate.
-  # replaceStrings, not pkgs.replaceVars: replaceVars fails the build on any
-  # leftover @identifier@, and wpctl's @DEFAULT_AUDIO_SINK@ is literal KDL
-  # syntax, not a placeholder.
-  #
-  # Cost of baking it: the config is a store path, so editing no longer
-  # live-reloads. Changing a binding now means a rebuild.
   flake.wrappers.niri =
     {
       wlib,
@@ -25,8 +17,6 @@
 
       package = pkgs.niri;
 
-      # Wrapping drops passthru, and services.displayManager.sessionPackages
-      # rejects any package that does not declare which sessions it provides.
       passthru.providedSessions = [ "niri" ];
 
       filesToPatch = [
@@ -35,13 +25,6 @@
         "share/systemd/user/*.service"
       ];
 
-      # NIRI_CONFIG, not a prepended --config flag: niri rejects the global
-      # flag ahead of a subcommand, so flags."--config" breaks every
-      # `niri msg` call — which the Steam module and fish's android function
-      # both depend on. The env var is parsed independently of arguments.
-      #
-      # Validated at build time, so a KDL mistake fails the build instead of
-      # leaving a compositor that will not start at the next login.
       env.NIRI_CONFIG = pkgs.runCommand "niri-config.kdl" { } ''
         cp ${pkgs.writeText "niri-config-unchecked.kdl" rendered} $out
         ${lib.getExe pkgs.niri} validate -c $out
@@ -52,17 +35,13 @@
     { self', ... }:
     { pkgs, ... }:
     {
-
       programs.niri = {
         enable = true;
         package = self'.packages.niri;
       };
 
-      # noctalia's battery widget reads UPower and silently hides itself when
-      # nothing is on the bus.
       services.upower.enable = true;
 
-      # niri has no built-in XWayland; X11 clients need this bridge.
       environment.systemPackages = with pkgs; [
         xwayland-satellite
         wl-clipboard
@@ -95,11 +74,6 @@
         end
       '';
 
-      # Bound to Mod+W and Mod+Q. niri's own close-window is wrong for a Steam
-      # window: closing the XWayland window leaves Proton and the game running
-      # headless in the VM. Steam handling is opportunistic (`command -v`, not
-      # a Nix reference) so this stays installed on every host, including ones
-      # without the `gaming` bundle's steam-asahi-stop.
       home.packages = [
         (pkgs.writers.writeDashBin "close-active" ''
           set -eu
