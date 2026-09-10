@@ -30,6 +30,27 @@
       colors = builtins.fromJSON (builtins.readFile ./Flexoki.json);
     };
 
+  flake.nixosModules.noctalia = moduleWithSystem (
+    { self', ... }:
+    { pkgs, ... }:
+    {
+      systemd.packages = [ pkgs.systemd-lock-handler ];
+      systemd.user.services.systemd-lock-handler.wantedBy = [ "default.target" ];
+
+      systemd.user.services.noctalia-lock = {
+        unitConfig = {
+          PartOf = [ "lock.target" ];
+          After = [ "lock.target" ];
+        };
+        wantedBy = [ "lock.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${self'.packages.noctalia-shell}/bin/noctalia-shell ipc call sessionMenu lock";
+        };
+      };
+    }
+  );
+
   flake.homeModules.noctalia = moduleWithSystem (
     { self', ... }:
     {
