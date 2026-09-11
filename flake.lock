@@ -280,12 +280,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1789047607,
-        "narHash": "sha256-TvkqeCjWyQvQs7jZ/2WcOWF1GMSgKtAP3qrw7eKpp1k=",
-        "rev": "f7f333f04ff6e2f94f955642a1b4956d4fcd3010",
-        "revCount": 7234,
+        "lastModified": 1789150619,
+        "narHash": "sha256-Vsgv5atXkGWOOdLOL8oQLnZSGt1h140synPfFdwbyjU=",
+        "rev": "e4345d5ae8aa1def34378d2a60ac5e6e4c8fd7c1",
+        "revCount": 7242,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-community/home-manager/0.1.7234%2Brev-f7f333f04ff6e2f94f955642a1b4956d4fcd3010/01a08b8c-e97c-7dc0-9a20-4f124a04ad7b/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/nix-community/home-manager/0.1.7242%2Brev-e4345d5ae8aa1def34378d2a60ac5e6e4c8fd7c1/01a091b1-8f1b-7d63-bf0b-26132027ed32/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -672,11 +672,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1788774122,
-        "narHash": "sha256-NQXVvqs3ojipkNqu/G8N+/1mZ2Us1UTv/z5fKL+E6mc=",
+        "lastModified": 1789062087,
+        "narHash": "sha256-XJx9GuwlrLwz4BAFrxJmcAxa0kybSEbu5mWyrdAW09c=",
         "owner": "Sovereign-Engineering",
         "repo": "obscuravpn-client",
-        "rev": "e88126bbbbc6f9a6b8f3abe1d313f95f4ee05bf0",
+        "rev": "0d2a82a238c6ef782749f5a92d2bcd8160436640",
         "type": "github"
       },
       "original": {
