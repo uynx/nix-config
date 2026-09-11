@@ -274,6 +274,7 @@
 
       home.sessionVariables = {
         DISABLE_AUTOUPDATER = "1";
+        CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1";
         GROK_DISABLE_AUTOUPDATER = "1";
         OPENCODE_DISABLE_AUTOUPDATE = "1";
 
