@@ -8,6 +8,9 @@
 
   flake.nixosModules.gamingNative =
     (self.lib.mkBundle {
-      nixos = [ self.nixosModules.steamNative ];
+      nixos = [
+        self.nixosModules.steamNative
+        self.nixosModules.lact
+      ];
     }).nixos;
 }
