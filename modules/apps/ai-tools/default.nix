@@ -324,6 +324,10 @@
             value.source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills/${skill}";
           }) sharedSkills
         )
+        // {
+          ".claude/settings.json".source =
+            config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/claude-settings.json";
+        }
         // lib.optionalAttrs isLinux {
           ".local/share/applications/t3.desktop".text = ''
             [Desktop Entry]
