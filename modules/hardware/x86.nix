@@ -19,6 +19,15 @@
 
       powerManagement.cpuFreqGovernor = "performance";
 
+      # nct6775 owns I/O ports ACPI also claims; without lax it refuses to bind and VRM/fan sensors vanish.
+      boot.kernelParams = [ "acpi_enforce_resources=lax" ];
+      boot.kernelModules = [ "nct6775" ];
+
+      environment.systemPackages = with pkgs; [
+        lm_sensors
+        stress-ng
+      ];
+
       zramSwap = {
         enable = true;
         algorithm = "zstd";
