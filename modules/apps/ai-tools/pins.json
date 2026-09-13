@@ -1,9 +1,9 @@
 {
   "claude-code": {
-    "version": "2.1.268",
+    "version": "2.1.270",
     "hash": {
-      "aarch64-linux": "sha256-EW/QMfk57x4J7fFw1ixInhzCjta/vaSflIdzuhaMj2I=",
-      "x86_64-linux": "sha256-lpGit715ZxLKjP+44y5U/3/EW2YlQCMxcaFqlKBCVlM="
+      "aarch64-linux": "sha256-e/nzOswSTfmrzPbyNmOXqCp0A3jVNfoS1Cb6d/28mUY=",
+      "x86_64-linux": "sha256-OmJKWnzXm7rU0yvX2zbxGX7PRYvFvx4q7YGDSgGtPvA="
     }
   },
   "codex": {
@@ -14,10 +14,10 @@
     }
   },
   "grok": {
-    "version": "1.0.25",
+    "version": "1.0.30",
     "hash": {
-      "aarch64-linux": "sha256-7AR6uKUvKXspWcSnR/gNQvYRseNgg1K3hKzVT20b7mY=",
-      "x86_64-linux": "sha256-pG0XvNYCxGE1tb4tppoIFEf4xRTF6nM8W+EmW8+2K4A="
+      "aarch64-linux": "sha256-qtjDyKiylMITd99g02hQf0vNNTDGwwrxDuAqVM7BiMw=",
+      "x86_64-linux": "sha256-UE3WVGq5kbddNmmCQodc5GFInNH4zYQoWHPLVb1cfVQ="
     }
   },
   "kimi": {
@@ -35,10 +35,10 @@
     }
   },
   "cursor-agent": {
-    "version": "2026.09.08-6caf4ff",
+    "version": "2026.09.10-fd3934a",
     "hash": {
-      "aarch64-linux": "sha256-FTrhgtuQgUdI1UTyomq8Bz5OTl3wuGer/Wne8P93qnE=",
-      "x86_64-linux": "sha256-DXoR3QG2Uri5LQXMFPdp+8WjRCt4bNi2NgQfGJq4Hx4="
+      "aarch64-linux": "sha256-4ElEOLAcN7w0hISR0fNHjvRpSUxWyvAg3hF5bRRttko=",
+      "x86_64-linux": "sha256-J5l8g5GthTpacysYRduO+CqLpq+w94KcxzlGT4lm6W4="
     }
   }
 }
