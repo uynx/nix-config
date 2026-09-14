@@ -1,0 +1,60 @@
+Tester console logging started at 2026-09-14T15:38:22.748859Z
+
+1: Bus=0x01:00 DevId=0x1B81   8GB NVIDIA GeForce GTX 1070
+2: Bus=0x00:00 DevId=0x0000   32GB llvmpipe (LLVM 21.1.8, 256 bits)
+Tester worker logging started at 2026-09-14T15:38:22.819965Z
+Standard 5-minute test of 1: Bus=0x01:00 DevId=0x1B81   8GB NVIDIA GeForce GTX 1070
+      1 iteration. Passed  0.0516 seconds  written:    3.5GB 208.2GB/sec        checked:    7.0GB 201.0GB/sec
+     21 iteration. Passed  1.0156 seconds  written:   70.0GB 207.0GB/sec        checked:  140.0GB 206.7GB/sec
+    120 iteration. Passed  5.0127 seconds  written:  346.5GB 207.2GB/sec        checked:  693.0GB 207.5GB/sec
+    710 iteration. Passed 30.0030 seconds  written: 2065.0GB 205.9GB/sec        checked: 4130.0GB 206.8GB/sec
+   1289 iteration. Passed 30.0395 seconds  written: 2026.5GB 203.0GB/sec        checked: 4053.0GB 202.1GB/sec
+   1864 iteration. Passed 30.0451 seconds  written: 2012.5GB 201.5GB/sec        checked: 4025.0GB 200.7GB/sec
+   2443 iteration. Passed 30.0396 seconds  written: 2026.5GB 202.4GB/sec        checked: 4053.0GB 202.4GB/sec
+Tester worker logging started at 2026-09-14T15:41:22.792599Z
+Standard 5-minute test of 1: Bus=0x01:00 DevId=0x1B81   8GB NVIDIA GeForce GTX 1070
+      1 iteration. Passed  0.0530 seconds  written:    3.5GB 209.0GB/sec        checked:    7.0GB 192.9GB/sec
+     20 iteration. Passed  1.0106 seconds  written:   66.5GB 197.6GB/sec        checked:  133.0GB 197.3GB/sec
+    116 iteration. Passed  5.0112 seconds  written:  336.0GB 200.6GB/sec        checked:  672.0GB 201.4GB/sec
+    687 iteration. Passed 30.0188 seconds  written: 1998.5GB 200.1GB/sec        checked: 3997.0GB 199.5GB/sec
+Tester worker logging started at 2026-09-14T15:42:13.601867Z
+Standard 5-minute test of 1: Bus=0x01:00 DevId=0x1B81   8GB NVIDIA GeForce GTX 1070
+      1 iteration. Passed  0.0522 seconds  written:    3.5GB 198.9GB/sec        checked:    7.0GB 202.5GB/sec
+     21 iteration. Passed  1.0393 seconds  written:   70.0GB 201.8GB/sec        checked:  140.0GB 202.2GB/sec
+    116 iteration. Passed  5.0025 seconds  written:  332.5GB 199.4GB/sec        checked:  665.0GB 199.4GB/sec
+    688 iteration. Passed 30.0250 seconds  written: 2002.0GB 199.4GB/sec        checked: 4004.0GB 200.3GB/sec
+   1259 iteration. Passed 30.0397 seconds  written: 1998.5GB 199.3GB/sec        checked: 3997.0GB 199.7GB/sec
+   1829 iteration. Passed 30.0170 seconds  written: 1995.0GB 199.6GB/sec        checked: 3990.0GB 199.3GB/sec
+   2400 iteration. Passed 30.0119 seconds  written: 1998.5GB 199.6GB/sec        checked: 3997.0GB 199.8GB/sec
+   2969 iteration. Passed 30.0391 seconds  written: 1991.5GB 198.6GB/sec        checked: 3983.0GB 199.1GB/sec
+   3532 iteration. Passed 30.0258 seconds  written: 1970.5GB 196.6GB/sec        checked: 3941.0GB 197.0GB/sec
+   4100 iteration. Passed 30.0146 seconds  written: 1988.0GB 198.4GB/sec        checked: 3976.0GB 198.8GB/sec
+   4663 iteration. Passed 30.0129 seconds  written: 1970.5GB 197.0GB/sec        checked: 3941.0GB 197.0GB/sec
+   5229 iteration. Passed 30.0261 seconds  written: 1981.0GB 197.9GB/sec        checked: 3962.0GB 197.9GB/sec
+Standard 5-minute test PASSed! Just press Ctrl+C unless you plan long test run.
+Extended endless test started; testing more than 2 hours is usually unneeded
+use Ctrl+C to stop it when you decide it's enough
+   6369 iteration. Passed 30.0149 seconds  written: 2002.0GB 200.0GB/sec        checked: 4004.0GB 200.2GB/sec
+   6944 iteration. Passed 30.0308 seconds  written: 2012.5GB 200.7GB/sec        checked: 4025.0GB 201.2GB/sec
+   7516 iteration. Passed 30.0201 seconds  written: 2002.0GB 199.6GB/sec        checked: 4004.0GB 200.3GB/sec
+   8090 iteration. Passed 30.0103 seconds  written: 2009.0GB 200.6GB/sec        checked: 4018.0GB 200.9GB/sec
+   8662 iteration. Passed 30.0437 seconds  written: 2002.0GB 199.5GB/sec        checked: 4004.0GB 200.1GB/sec
+   9245 iteration. Passed 30.0482 seconds  written: 2040.5GB 203.7GB/sec        checked: 4081.0GB 203.7GB/sec
+   9829 iteration. Passed 30.0060 seconds  written: 2044.0GB 204.2GB/sec        checked: 4088.0GB 204.4GB/sec
+  10397 iteration. Passed 30.0036 seconds  written: 1988.0GB 198.4GB/sec        checked: 3976.0GB 199.0GB/sec
+  10984 iteration. Passed 30.0364 seconds  written: 2054.5GB 205.0GB/sec        checked: 4109.0GB 205.3GB/sec
+  11578 iteration. Passed 30.0483 seconds  written: 2079.0GB 207.0GB/sec        checked: 4158.0GB 207.8GB/sec
+  12170 iteration. Passed 30.0198 seconds  written: 2072.0GB 206.5GB/sec        checked: 4144.0GB 207.3GB/sec
+  12758 iteration. Passed 30.0136 seconds  written: 2058.0GB 205.3GB/sec        checked: 4116.0GB 205.9GB/sec
+  13349 iteration. Passed 30.0375 seconds  written: 2068.5GB 206.2GB/sec        checked: 4137.0GB 206.8GB/sec
+  13941 iteration. Passed 30.0290 seconds  written: 2072.0GB 206.5GB/sec        checked: 4144.0GB 207.2GB/sec
+  14534 iteration. Passed 30.0286 seconds  written: 2075.5GB 206.9GB/sec        checked: 4151.0GB 207.6GB/sec
+  15126 iteration. Passed 30.0328 seconds  written: 2072.0GB 206.6GB/sec        checked: 4144.0GB 207.2GB/sec
+  15712 iteration. Passed 30.0082 seconds  written: 2051.0GB 204.9GB/sec        checked: 4102.0GB 205.1GB/sec
+  16296 iteration. Passed 30.0012 seconds  written: 2044.0GB 204.2GB/sec        checked: 4088.0GB 204.5GB/sec
+  16886 iteration. Passed 30.0354 seconds  written: 2065.0GB 206.1GB/sec        checked: 4130.0GB 206.3GB/sec
+  17479 iteration. Passed 30.0297 seconds  written: 2075.5GB 207.0GB/sec        checked: 4151.0GB 207.5GB/sec
+  18062 iteration. Passed 30.0339 seconds  written: 2040.5GB 203.6GB/sec        checked: 4081.0GB 203.9GB/sec
+  18641 iteration. Passed 30.0266 seconds  written: 2026.5GB 202.4GB/sec        checked: 4053.0GB 202.5GB/sec
+  19221 iteration. Passed 30.0499 seconds  written: 2030.0GB 202.8GB/sec        checked: 4060.0GB 202.6GB/sec
+  19799 iteration. Passed 30.0166 seconds  written: 2023.0GB 201.9GB/sec        checked: 4046.0GB 202.3GB/sec
