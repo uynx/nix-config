@@ -40,14 +40,5 @@
         "vm.page-cluster" = 0;
         "vm.vfs_cache_pressure" = 50;
       };
-
-      systemd.services.nvidia-power-limit = {
-        wantedBy = [ "multi-user.target" ];
-        serviceConfig = {
-          Type = "oneshot";
-          ExecStart = "${config.hardware.nvidia.package.bin}/bin/nvidia-smi -pl 170";
-          RemainAfterExit = true;
-        };
-      };
     };
 }
