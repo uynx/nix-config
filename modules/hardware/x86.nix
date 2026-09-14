@@ -17,7 +17,7 @@
         modesetting.enable = true;
       };
 
-      powerManagement.cpuFreqGovernor = "schedutil";
+      powerManagement.cpuFreqGovernor = "powersave";
 
       # nct6775 owns I/O ports ACPI also claims; without lax it refuses to bind and VRM/fan sensors vanish.
       boot.kernelParams = [ "acpi_enforce_resources=lax" ];
