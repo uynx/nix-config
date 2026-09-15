@@ -1,9 +1,9 @@
 {
   "claude-code": {
-    "version": "2.1.270",
+    "version": "2.1.272",
     "hash": {
-      "aarch64-linux": "sha256-e/nzOswSTfmrzPbyNmOXqCp0A3jVNfoS1Cb6d/28mUY=",
-      "x86_64-linux": "sha256-OmJKWnzXm7rU0yvX2zbxGX7PRYvFvx4q7YGDSgGtPvA="
+      "aarch64-linux": "sha256-IUqQ790W7g6oETL/7M7ViNujlNF4zElPKFugS1KIyN4=",
+      "x86_64-linux": "sha256-2BOWpmjrdvvdtJoqWEHxtdevlrTB9lAM7ZLyyYj1vNQ="
     }
   },
   "codex": {
@@ -21,10 +21,10 @@
     }
   },
   "kimi": {
-    "version": "0.42.0",
+    "version": "0.43.1",
     "hash": {
-      "aarch64-linux": "sha256-T6DW96UXFzPZORsHTr/jGOgafug69sZI1RxCg0lhzFo=",
-      "x86_64-linux": "sha256-67TvAthf4KKd2pWlpgvNBgiijB/zMdJ+mb5UudRy4z0="
+      "aarch64-linux": "sha256-OB0ylqWJYiH5+ebNQpJTBDQjxtFEBi6PsT3G+BwyYx8=",
+      "x86_64-linux": "sha256-IBeH3kQVBzL8tfhWF+1csgTlr/Dkut9KC90HdSrMf24="
     }
   },
   "opencode": {
