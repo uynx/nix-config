@@ -24,6 +24,8 @@
         hooks = saved.hooks // {
           enabled = true;
           startup = "noctalia-shell ipc call wallpaper set ${../../wallpapers}/wallpaper.png all";
+          # Nothing else emits logind Unlock; without it lock.target latches active for the boot.
+          screenUnlock = "${pkgs.systemd}/bin/loginctl unlock-session";
         };
       };
 
@@ -45,6 +47,7 @@
         wantedBy = [ "lock.target" ];
         serviceConfig = {
           Type = "oneshot";
+          RemainAfterExit = true;
           ExecStart = "${self'.packages.noctalia-shell}/bin/noctalia-shell ipc call sessionMenu lock";
         };
       };

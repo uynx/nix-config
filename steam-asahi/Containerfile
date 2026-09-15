@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-minimal@sha256:9bb5cffe3cebf098975f05ffd78e8a1d25cd9a9e4fc5e563b56e27b9546eb0c0
+FROM quay.io/fedora/fedora-minimal@sha256:cad3560084cf9a41dce449a4c6fe28f0cc35a627a3fb6f6fefddee3729337cca
 
 RUN dnf install -y "dnf5-command(copr)" && \
     dnf copr enable -y @asahi/fedora-remix-scripts && \
