@@ -29,6 +29,8 @@ confirm-close-surface = false
 font-codepoint-map = U+2070-U+209F="JuliaMono"
 font-codepoint-map = U+2100-U+214F="JuliaMono"
 font-codepoint-map = U+2150-U+218F="JuliaMono"
+# ¹²³·±×÷¬¼½¾ sit in Latin-1, not the math blocks, so without this they fall back to the body font and mismatch
+font-codepoint-map = U+00AC,U+00B1-U+00B3,U+00B7,U+00B9,U+00BC-U+00BE,U+00D7,U+00F7="JuliaMono"
 
 # Mathematical Operators and Supplemental Math
 font-codepoint-map = U+2200-U+22FF="JuliaMono"
