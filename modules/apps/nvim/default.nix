@@ -9,6 +9,11 @@
     { pkgs, system, ... }:
     let
       inherit (pkgs.stdenv.hostPlatform) isDarwin;
+      treeSitterIpynb = pkgs.tree-sitter.buildGrammar {
+        language = "ipynb";
+        version = "0.1";
+        src = "${pkgs.vimPlugins.ipynb-nvim}/tree-sitter-ipynb";
+      };
     in
     {
       packages.nvim =
@@ -18,7 +23,8 @@
             (import ./_config.nix {
               c = self.lib.flexoki;
               tmuxNavigator = pkgs.vimPlugins.vim-tmux-navigator;
-              inherit (pkgs.vimPlugins) vimtex nvim-treesitter-textobjects;
+              inherit (pkgs.vimPlugins) vimtex nvim-treesitter-textobjects ipynb-nvim;
+              inherit treeSitterIpynb;
               flakePath = "${self.lib.user.homeFor system}/nix-config";
               hostAttr =
                 if isDarwin then
