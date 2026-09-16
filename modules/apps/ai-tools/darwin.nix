@@ -8,7 +8,6 @@
       "qwen-code"
     ];
 
-    # Bare executables cannot staple a ticket, so quarantine blocks them offline.
     casks =
       map
         (name: {
