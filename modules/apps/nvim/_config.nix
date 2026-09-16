@@ -1,6 +1,8 @@
 {
   tmuxNavigator,
   vimtex,
+  ipynb-nvim,
+  treeSitterIpynb,
   nvim-treesitter-textobjects,
   flakePath,
   hostAttr,
@@ -61,7 +63,10 @@
       };
     };
     formatter.conform-nvim.enable = true;
-    treesitter.enable = true;
+    treesitter = {
+      enable = true;
+      grammars = [ treeSitterIpynb ];
+    };
     telescope.enable = true;
     autocomplete.nvim-cmp.enable = true;
     snippets.luasnip.enable = true;
@@ -171,6 +176,12 @@
     extraPlugins = {
       vim-tmux-navigator.package = tmuxNavigator;
       vimtex.package = vimtex;
+      ipynb-nvim = {
+        package = ipynb-nvim;
+        setup = ''
+          require("ipynb").setup({})
+        '';
+      };
 
       nvim-treesitter-textobjects = {
         package = nvim-treesitter-textobjects;
