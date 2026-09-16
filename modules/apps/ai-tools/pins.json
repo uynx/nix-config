@@ -35,10 +35,10 @@
     }
   },
   "cursor-agent": {
-    "version": "2026.09.10-fd3934a",
+    "version": "2026.09.15-d2fe57e",
     "hash": {
-      "aarch64-linux": "sha256-4ElEOLAcN7w0hISR0fNHjvRpSUxWyvAg3hF5bRRttko=",
-      "x86_64-linux": "sha256-J5l8g5GthTpacysYRduO+CqLpq+w94KcxzlGT4lm6W4="
+      "aarch64-linux": "sha256-LXQcEsPuelBVhFee+yig7jH/E/78HzR+LTtDaIwEYg0=",
+      "x86_64-linux": "sha256-S3sCbdEE6TWyFsxS+QWlYNdB/ICkpNYu9lVzW5ahXJc="
     }
   }
 }
