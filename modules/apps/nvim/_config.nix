@@ -4,6 +4,7 @@
   ipynb-nvim,
   treeSitterIpynb,
   nvim-treesitter-textobjects,
+  matlabGrammar,
   flakePath,
   hostAttr,
   isDarwin,
@@ -65,7 +66,10 @@
     formatter.conform-nvim.enable = true;
     treesitter = {
       enable = true;
-      grammars = [ treeSitterIpynb ];
+      grammars = [
+        treeSitterIpynb
+        matlabGrammar
+      ];
     };
     telescope.enable = true;
     autocomplete.nvim-cmp.enable = true;
@@ -154,6 +158,7 @@
       bash.enable = true;
       rust.enable = true;
       tex.enable = true;
+      r.enable = true;
     };
 
     globals = {

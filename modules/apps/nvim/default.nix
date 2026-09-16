@@ -25,6 +25,7 @@
               tmuxNavigator = pkgs.vimPlugins.vim-tmux-navigator;
               inherit (pkgs.vimPlugins) vimtex nvim-treesitter-textobjects ipynb-nvim;
               inherit treeSitterIpynb;
+              matlabGrammar = pkgs.vimPlugins.nvim-treesitter.builtGrammars.matlab;
               flakePath = "${self.lib.user.homeFor system}/nix-config";
               hostAttr =
                 if isDarwin then
