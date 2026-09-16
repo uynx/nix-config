@@ -24,6 +24,8 @@
       virt
       gamingNative
 
+      campus-wifi
+
       ./_hardware-configuration.nix
 
       { networking.hostName = "x86"; }
