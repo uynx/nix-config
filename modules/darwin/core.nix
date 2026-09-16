@@ -22,7 +22,7 @@
       ];
 
       documentation.enable = false;
-      time.timeZone = "America/Chicago";
+      time.timeZone = "America/New_York";
 
       environment.etc."ntp.conf".text = ''
         server 162.159.200.123 iburst
