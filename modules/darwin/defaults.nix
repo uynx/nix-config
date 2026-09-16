@@ -157,7 +157,11 @@
 
     power = {
       restartAfterFreeze = true;
-      sleep.allowSleepByPowerButton = true;
+      sleep = {
+        allowSleepByPowerButton = true;
+        display = 15;
+        computer = 30;
+      };
     };
   };
 }
