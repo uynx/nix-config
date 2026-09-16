@@ -8,13 +8,20 @@
       "qwen-code"
     ];
 
-    casks = [
-      "claude-code"
-      "codex"
-      "grok-build"
-      "cursor-cli"
-      "antigravity-cli"
-      "t3-code"
-    ];
+    # Bare executables cannot staple a ticket, so quarantine blocks them offline.
+    casks =
+      map
+        (name: {
+          inherit name;
+          args.no_quarantine = true;
+        })
+        [
+          "claude-code"
+          "codex"
+          "grok-build"
+          "cursor-cli"
+          "antigravity-cli"
+        ]
+      ++ [ "t3-code" ];
   };
 }
