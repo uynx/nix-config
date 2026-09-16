@@ -152,7 +152,18 @@ ssh -T git@github.com           # GitHub greeting; exits 1 even on success
 
 Darwin runs the home tier only — `bundle.darwin` adds nothing but `enteAuth`,
 and sops arrives through `mkBundle`'s shared `home` list. The Linux-only system
-tier exists for eduroam, which macOS has no equivalent of.
+tier exists for eduroam's credentials; macOS keeps them in the login keychain
+instead, entered at first join.
+
+eduroam on macOS is a configuration profile, not a module — nix-darwin cannot
+install one, and Apple requires a human to approve it:
+
+```fish
+open modules/system/umass-eduroam.mobileconfig
+```
+
+then System Settings → General → Device Management → Install. Join `eduroam`
+and enter `<netid>@umass.edu` with the NetID password.
 
 ## 1. Decide how deep the wipe goes
 
