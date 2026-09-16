@@ -119,6 +119,14 @@ in
                 return 1
             end
           '';
+          bg.body = ''
+            if test (count $argv) -eq 0
+                builtin bg
+                return
+            end
+            xdg-open $argv &>/dev/null &
+            disown
+          '';
         };
       };
     }
