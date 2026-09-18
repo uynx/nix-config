@@ -75,7 +75,7 @@
       ];
     };
 
-    systemd.coredump.enable = false;
+    systemd.coredump.enable = true;
 
     security = {
       protectKernelImage = true;
