@@ -26,6 +26,13 @@
       ];
       boot.kernelModules = [ "nct6775" ];
 
+      boot.blacklistedKernelModules = [
+        "mei"
+        "mei_me"
+        "mei_hdcp"
+        "mei_pxp"
+      ];
+
       environment.systemPackages = with pkgs; [
         lm_sensors
         stress-ng
