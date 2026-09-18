@@ -23,6 +23,8 @@
         # nct6775 owns I/O ports ACPI also claims; without lax it refuses to bind and VRM/fan sensors vanish.
         "acpi_enforce_resources=lax"
         "nosgx"
+        # tpm_crb is builtin (CONFIG_TCG_CRB=y), so a module blacklist cannot reach it.
+        "initcall_blacklist=crb_acpi_driver_init"
       ];
       boot.kernelModules = [ "nct6775" ];
 
