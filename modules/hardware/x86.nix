@@ -19,8 +19,11 @@
 
       powerManagement.cpuFreqGovernor = "powersave";
 
-      # nct6775 owns I/O ports ACPI also claims; without lax it refuses to bind and VRM/fan sensors vanish.
-      boot.kernelParams = [ "acpi_enforce_resources=lax" ];
+      boot.kernelParams = [
+        # nct6775 owns I/O ports ACPI also claims; without lax it refuses to bind and VRM/fan sensors vanish.
+        "acpi_enforce_resources=lax"
+        "nosgx"
+      ];
       boot.kernelModules = [ "nct6775" ];
 
       environment.systemPackages = with pkgs; [
