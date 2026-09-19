@@ -55,6 +55,9 @@
     lsp = {
       enable = true;
 
+      # basedpyright defaults to "recommended": every untyped scipy/numpy call becomes a diagnostic.
+      servers.basedpyright.settings.basedpyright.analysis.typeCheckingMode = "standard";
+
       servers.nixd.settings.nixd = {
         nixpkgs.expr = ''import (builtins.getFlake "${flakePath}").inputs.nixpkgs { }'';
         options = {
@@ -100,7 +103,7 @@
     visuals = {
       nvim-web-devicons.enable = true;
       indent-blankline.enable = true;
-      fidget-nvim.enable = true;
+      fidget-nvim.enable = false;
       rainbow-delimiters.enable = true;
     };
 
