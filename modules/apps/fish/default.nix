@@ -129,6 +129,12 @@ in
           '';
         };
       };
+
+      # fish registers `complete --exclusive bg` for the builtin, which kills path completion.
+      xdg.configFile."fish/completions/bg.fish".text = ''
+        complete -c bg -e
+        complete -c bg -F
+      '';
     }
   );
 }
