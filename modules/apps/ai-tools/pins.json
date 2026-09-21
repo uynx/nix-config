@@ -1,30 +1,30 @@
 {
   "claude-code": {
-    "version": "2.1.276",
+    "version": "2.1.278",
     "hash": {
-      "aarch64-linux": "sha256-6aw9+VYINkVXijgq1k7DBEaGZuNiwzv979gDzW/1lrA=",
-      "x86_64-linux": "sha256-ilbIoUvTyyRuK9t+YK7+D2Cb/3jIu8xeprGBfBEcYUU="
+      "aarch64-linux": "sha256-febKsTTkgyEUjjAYLJhhQRjo9GZoGUEr6tRYZRkLNO0=",
+      "x86_64-linux": "sha256-XEc1k3hE6E+KkzBuhBpbDhIlKQmweHD3ibGQRo2hR6s="
     }
   },
   "codex": {
-    "version": "0.155.0",
+    "version": "0.155.1",
     "hash": {
-      "aarch64-linux": "sha256-7x2sRJUxdTzPsC7H3yAWTzz0j/9ma/G3NIw/hyoTtuk=",
-      "x86_64-linux": "sha256-TEyHTg3/lyd/Leks/oLo2E3cLYDyBnefOMgxvS4Udkc="
+      "aarch64-linux": "sha256-faPnvqbbR1HRuDfwRsnOwIkYrH8FQn3Qtbz2TqbIWWQ=",
+      "x86_64-linux": "sha256-8RDMzdULC+gTC4T0WzFE6ndcIz8ci9gibabucZ1j0gY="
     }
   },
   "grok": {
-    "version": "1.0.34",
+    "version": "1.0.40",
     "hash": {
-      "aarch64-linux": "sha256-OauHZmh31k7zpAqmD74MO2pqzXABt4/mDix2u2z8SpQ=",
-      "x86_64-linux": "sha256-vlkF4QfSuLXzwULSHs/kyP0yqRPS/VUbeIcHkwxNyA0="
+      "aarch64-linux": "sha256-oW0mzwaJLrs+yppwLGXgMaBTQx7U3eOyO+vFipK2EX8=",
+      "x86_64-linux": "sha256-ksmX39EJwGctQNWub70Vg11T/68Sz56hJNIqrvP/I/w="
     }
   },
   "kimi": {
-    "version": "2.0.1",
+    "version": "2.0.2",
     "hash": {
-      "aarch64-linux": "sha256-8qPJamj1/RUfdJTENcSh0BWEPiJJYFoFAE4e4HOAjUs=",
-      "x86_64-linux": "sha256-GuHV2hbLoH3xl5xfWUGt3YbDauU8wuOWlqdjWXchCCM="
+      "aarch64-linux": "sha256-YxW46GpHSL8JZXMgsr6FaycjTDaPcpVIKyTqOvQoiwU=",
+      "x86_64-linux": "sha256-NkpzehEzTtX9E8hSEWr5FnO7xsESmMLd9UIE9O3R4iA="
     }
   },
   "opencode": {
@@ -35,10 +35,10 @@
     }
   },
   "cursor-agent": {
-    "version": "2026.09.15-d2fe57e",
+    "version": "2026.09.18-9a7762b",
     "hash": {
-      "aarch64-linux": "sha256-LXQcEsPuelBVhFee+yig7jH/E/78HzR+LTtDaIwEYg0=",
-      "x86_64-linux": "sha256-S3sCbdEE6TWyFsxS+QWlYNdB/ICkpNYu9lVzW5ahXJc="
+      "aarch64-linux": "sha256-IQ1Y+FD0YW5PJl/3AGxVjVoqAI/OPiv4oBBcJa40VqA=",
+      "x86_64-linux": "sha256-sTCPWi/AVFi52JZnUphrsjqXG7zGfIQsHflMS4Eyutk="
     }
   }
 }
