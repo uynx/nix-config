@@ -26,6 +26,7 @@
               inherit (pkgs.vimPlugins) vimtex nvim-treesitter-textobjects ipynb-nvim;
               inherit treeSitterIpynb;
               matlabGrammar = pkgs.vimPlugins.nvim-treesitter.builtGrammars.matlab;
+              typosLsp = pkgs.typos-lsp;
               flakePath = "${self.lib.user.homeFor system}/nix-config";
               hostAttr =
                 if isDarwin then
@@ -45,6 +46,8 @@
     { self', ... }:
     {
       home.packages = [ self'.packages.nvim ];
+
+      xdg.configFile."nvf/.keep".text = "";
 
       programs.fish.shellAliases.v = "nvim";
 
