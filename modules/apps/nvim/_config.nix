@@ -5,6 +5,7 @@
   treeSitterIpynb,
   nvim-treesitter-textobjects,
   matlabGrammar,
+  typosLsp,
   flakePath,
   hostAttr,
   isDarwin,
@@ -27,6 +28,7 @@
       expandtab = true;
       autoread = true;
       scrolloff = 8;
+      spelloptions = "camel";
     };
 
     theme = {
@@ -58,6 +60,17 @@
       # basedpyright defaults to "recommended": every untyped scipy/numpy call becomes a diagnostic.
       servers.basedpyright.settings.basedpyright.analysis.typeCheckingMode = "standard";
 
+      servers.typos_lsp = {
+        cmd = [ "${typosLsp}/bin/typos-lsp" ];
+        root_markers = [
+          "typos.toml"
+          "_typos.toml"
+          ".typos.toml"
+          ".git"
+        ];
+        init_options.diagnosticSeverity = "Info";
+      };
+
       servers.nixd.settings.nixd = {
         nixpkgs.expr = ''import (builtins.getFlake "${flakePath}").inputs.nixpkgs { }'';
         options = {
@@ -87,7 +100,7 @@
     filetree.neo-tree.enable = true;
     dashboard.alpha.enable = true;
     terminal.toggleterm.enable = true;
-    spellcheck.enable = true;
+    spellcheck.enable = false;
 
     git = {
       enable = true;
@@ -163,6 +176,21 @@
       tex.enable = true;
       r.enable = true;
     };
+
+    keymaps = [
+      {
+        key = "<leader>us";
+        mode = "n";
+        lua = true;
+        action = ''
+          function()
+            vim.opt_local.spell = not vim.opt_local.spell:get()
+            vim.notify("Dictionary spell " .. (vim.wo.spell and "on" or "off"))
+          end
+        '';
+        desc = "Toggle dictionary spellcheck";
+      }
+    ];
 
     globals = {
       vimtex_view_method = "sioyek";
