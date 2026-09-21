@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-minimal@sha256:dd3488a176bb158bde9deeef3f687023fc83aaad91f523e3ce81e078bf5bb473
+FROM quay.io/fedora/fedora-minimal@sha256:39102c778ef644cd79b8762bdc187e6c1ccb192ffb7f09fffc83fd773c6d77bf
 
 RUN dnf install -y "dnf5-command(copr)" && \
     dnf copr enable -y @asahi/fedora-remix-scripts && \
@@ -16,7 +16,7 @@ RUN dnf install -y "dnf5-command(copr)" && \
       gtk2-2.24.33-25.fc44.aarch64 \
       ibus-1.5.34-4.fc44.aarch64 \
       NetworkManager-1.56.1-2.fc44.aarch64 \
-      nss-3.127.0-1.fc44.aarch64 \
+      nss-3.129.0-1.fc44.aarch64 \
       openal-soft-1.24.2-6.fc44.aarch64 \
       libvdpau-1.5-11.fc44.aarch64 \
       fontconfig-devel-2.17.0-4.fc44.aarch64 \
