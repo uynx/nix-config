@@ -5,6 +5,26 @@ imported automatically and modules find each other by output name, never by
 path — so files can be moved freely, and directories are pure navigation.
 Anything prefixed `_` is skipped by import-tree.
 
+**This file is the layout of record.** Nothing else describes the tree, so a
+change that adds a directory, moves one, renames a module output, adds or drops
+a host, or changes what a named file holds is not finished until this file says
+so in the same commit. A stale line here is the only copy and it misdirects the
+next session before it ever opens the repo.
+
+## Hosts
+
+| Attribute | Machine | `hostName` |
+|---|---|---|
+| `asahi` | MacBook Pro, NixOS-Asahi, the primary machine | `asahi` |
+| `x86` | the x86_64 desktop, GTX 1070 | `x86` |
+| `darwin` | the same MacBook under macOS | `MacBook-Pro` |
+| `arm` | minimal aarch64 shell/programming target | `arm` |
+| `waydroid` | Android-in-a-VM guest | `waydroid` |
+| `iso` / `iso-x86` | installer images, aarch64 and x86_64 | — |
+
+`asahi` and `x86` take nearly the same bundle list, so anything added to a
+shared module lands on both at once — check what else takes it before editing.
+
 ## Layout
 
 | Path | Role |
@@ -17,6 +37,7 @@ Anything prefixed `_` is skipped by import-tree.
 | `modules/darwin/` | The same for macOS — nix-darwin has its own module system |
 | `modules/apps/` | One dir per program, holding **every** tier it needs |
 | `modules/bundles/` | The host-facing switches — one line each, both tiers |
+| `modules/wallpapers/` | The wallpaper image, referenced by the desktop bundles |
 | `steam-asahi/` | Fedora Asahi Steam container and runbook |
 
 `modules/apps/<name>/` is the unit of *implementation*: niri's NixOS module and
@@ -95,14 +116,30 @@ together.
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
 | `gaming` | Steam via the Fedora/FEX distrobox container | — |
 
+Three host lines are single modules rather than bundles, because a bundle around
+one name only restates it: `virt` (`apps/virt/`), `gamingNative`
+(`bundles/gaming.nix`, the native Steam path `x86` takes instead of the
+container) and `campus-wifi` (`system/campus-wifi.nix`, the UMass eduroam
+profile).
+
 Every bundle needs `homeManagerBase`, on either platform — it carries the Home
 Manager wiring and the `shellHooks` option declarations.
 
-On macOS the AI CLIs come from Homebrew rather than the pins in
-`modules/apps/ai-tools/linux.nix`, which are aarch64-linux artifacts, and the
-desktop apps come along with them. `update-ai-clis` still maintains the tools
-that have neither a pin nor a formula (agy, openclaw, t3 and hermes);
-`greedyCasks` keeps the rest current on every rebuild.
+On macOS the whole AI toolchain is Homebrew, not pins: the pins in
+`modules/apps/ai-tools/linux.nix` are aarch64-linux artifacts, and the desktop
+apps come along with the casks. `update-ai-clis` rolls the unpinnable tools
+(agy, openclaw, qwen, hermes, t3) on **Linux only** — since 2026-09-02 each of
+those has a formula or cask on the Mac, so the script installs nothing there.
+`greedyCasks` plus `onActivation.upgrade` keep the rest current on every
+rebuild.
+
+## The family configs
+
+Two more trees share this layout and most of these modules: `treyalex333/NixConfiguration`
+(x86_64 NixOS, two machines, Plasma) and `azalexander/nix-config` (macOS only).
+Each has its own README describing its own tree. Their divergences from this one
+are deliberate and listed there — do not resolve a difference by copying this
+repo over either of them.
 
 ## Commands
 
