@@ -14,7 +14,9 @@
       sharedSkills =
         if builtins.pathExists skillsDir then
           builtins.attrNames (
-            lib.filterAttrs (n: t: t == "directory" && !lib.hasPrefix "." n) (builtins.readDir skillsDir)
+            lib.filterAttrs (
+              n: t: t == "directory" && builtins.pathExists "${skillsDir}/${n}/SKILL.md"
+            ) (builtins.readDir skillsDir)
           )
         else
           [ ];
