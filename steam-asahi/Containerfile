@@ -1,9 +1,10 @@
 FROM quay.io/fedora/fedora-minimal@sha256:30030d1218c1e29a0a77706dffb52d4b9b8e00e5681eaf60a2573a84710658c7
 
-RUN dnf install -y "dnf5-command(copr)" && \
+RUN --mount=type=cache,target=/var/cache/libdnf5 \
+    dnf install -y --setopt=keepcache=True --setopt=max_parallel_downloads=20 "dnf5-command(copr)" && \
     dnf copr enable -y @asahi/fedora-remix-scripts && \
     dnf copr enable -y @asahi/steam && \
-    dnf install -y \
+    dnf install -y --setopt=keepcache=True --setopt=max_parallel_downloads=20 \
       asahi-platform-metapackage-fex-0-29.fc44.aarch64 \
       muvm-0.6.0-3.fc44.aarch64 \
       libkrun-1.19.0-1.fc44.aarch64 \
@@ -38,15 +39,9 @@ RUN dnf install -y "dnf5-command(copr)" && \
       vulkan-loader-1.4.341.0-1.fc44.aarch64 \
       vulkan-loader-devel-1.4.341.0-1.fc44.aarch64 \
       xorg-x11-server-Xwayland-24.1.13-1.fc44.aarch64 && \
-    dnf clean all && \
-    rm -rf /var/cache/dnf/* /tmp/* /var/tmp/*
+    rm -rf /tmp/* /var/tmp/*
 
-# Fedora's wrapper normally downloads this into mutable user state on first
-# launch. Bake the fixed, hash-verified Valve bootstrap into the image instead.
-# curl, not requests: `-f` refuses to save an error body, so a transient
-# edge-cache 403 can no longer reach sha256sum and be reported as a checksum
-# mismatch that reads like a stale pin. --retry-all-errors is the point of the
-# retry here, since 403 is not in curl's default retryable set.
+# curl -f + --retry-all-errors: a transient edge-cache 403 must not surface as a fake checksum mismatch.
 RUN curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
       --connect-timeout 10 --max-time 300 \
       -o /tmp/steam.tar.gz \
@@ -56,8 +51,7 @@ RUN curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
     python3 -c 'import tarfile; names=["steam-launcher/steam_subscriber_agreement.txt", "steam-launcher/bin_steam.sh", "steam-launcher/bootstraplinux_ubuntu12_32.tar.xz"]; archive=tarfile.open("/tmp/steam.tar.gz"); archive.extractall("/opt/fex-steam", members=[archive.getmember(name) for name in names], filter="data")' && \
     rm /tmp/steam.tar.gz
 
-# Valve's ARM64 public beta avoids running Steam's desktop UI through FEX. The
-# client updates this bootstrap in persistent user state after first launch.
+# Steam self-updates this bootstrap into persistent user state after first launch.
 RUN curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
       --connect-timeout 10 --max-time 300 \
       -o /tmp/steam-arm64.zip \
@@ -68,13 +62,9 @@ RUN curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
     chmod -R 0755 /opt/steam-arm64/steamrtarm64 && \
     rm /tmp/steam-arm64.zip
 
-# The Asahi Steam wrapper's Qt bootstrap splash is oversized on this desktop.
-# Steam itself remains unchanged; only the wrapper's transient splash is disabled.
 RUN sed -i 's/^show_splash = True/show_splash = False/' /usr/bin/steam
 
-# muvm's --execute-pre accepts an executable path (without arguments). Run
-# this as root in the guest before Steam so large Windows games have enough
-# virtual memory map slots.
+# muvm --execute-pre takes a bare executable path, no arguments.
 COPY steam-guest-tune /usr/local/libexec/steam-guest-tune
 RUN chmod 0755 /usr/local/libexec/steam-guest-tune
 
