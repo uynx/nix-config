@@ -57,7 +57,6 @@
     lsp = {
       enable = true;
 
-      # basedpyright defaults to "recommended": every untyped scipy/numpy call becomes a diagnostic.
       servers.basedpyright.settings.basedpyright.analysis.typeCheckingMode = "standard";
 
       servers.typos_lsp = {
