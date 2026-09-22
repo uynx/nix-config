@@ -59,8 +59,7 @@
           export CI=1
 
           skipped=0
-          step=0
-          total=0
+          sk=$(mktemp)
 
           ${lib.optionalString isLinux ''
             file=${home}/nix-config/modules/apps/ai-tools/pins.json
@@ -176,8 +175,8 @@
                   | sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e '/^[[:space:]]*$/d' \
                   | tail -1 || true)
               fi
-              printf '  [%d/%d] %-12s %s %-8s %.40s\r' \
-                "$step" "$total" "$name" "$c" "$t" "$last"
+              printf '  %-12s %s %-8s %.40s\r' \
+                "$name" "$c" "$t" "$last"
               sleep 0.1
             done
             printf '\r\033[K'
@@ -189,7 +188,6 @@
             if [ -n "$missingOnly" ] && command -v "$name" >/dev/null 2>&1; then
               return
             fi
-            step=$((step + 1))
             before=$(get_ver "$name" || true)
             tmp=$(mktemp)
             "$@" >"$tmp" 2>&1 &
@@ -209,19 +207,17 @@
             else
               printf '  %-12s FAILED\n' "$name"
               tail -3 "$tmp" | sed 's/^/               /'
-              skipped=$((skipped + 1))
+              echo >>"$sk"
             fi
             rm -f "$tmp"
           }
 
           ${lib.optionalString isLinux ''
-            # Bump alongside the roll calls below.
-            total=5
             if command -v agy >/dev/null 2>&1; then
               roll agy    agy update
             else
               roll agy    sh -c 'curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://antigravity.google/cli/install.sh | bash'
-            fi
+            fi &
           ''}
           ${lib.optionalString (!isLinux) ''
             if [ -f /opt/homebrew/bin/agy ] && [ ! -L /opt/homebrew/bin/agy ]; then
@@ -229,9 +225,12 @@
             fi
           ''}
           ${lib.optionalString isLinux ''
-            roll openclaw npm install -g --prefix "${home}/.local" openclaw
-            roll t3       npm install -g --prefix "${home}/.local" t3
-            roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
+            # Sequential: concurrent npm installs into one prefix race on its bin links.
+            {
+              roll openclaw npm install -g --prefix "${home}/.local" openclaw
+              roll t3       npm install -g --prefix "${home}/.local" t3
+              roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
+            } &
           ''}
           ${lib.optionalString isLinux ''
             if ! command -v hermes >/dev/null 2>&1; then
@@ -242,7 +241,6 @@
               rm -f "${home}/.hermes/hermes-agent/.git/"*.lock 2>/dev/null || true
               git -C "${home}/.hermes/hermes-agent" config url."https://github.com/".insteadOf "https://github.com/" 2>/dev/null || true
               ver=$(get_ver hermes || true)
-              step=$((step + 1))
               tmp=$(mktemp)
               timeout 60 hermes update --check >"$tmp" 2>&1 &
               pid=$!
@@ -253,15 +251,18 @@
               rm -f "$tmp"
               if [ "$rc" -eq 124 ]; then
                 printf '  %-12s SKIPPED (update check timed out)\n' hermes
-                skipped=$((skipped + 1))
+                echo >>"$sk"
               elif printf '%s' "$check" | grep -q 'Already up to date'; then
                 printf '  %-12s %s (up to date)\n' hermes "$ver"
               else
                 roll hermes timeout 600 hermes update --yes
               fi
-            fi
+            fi &
           ''}
 
+          wait
+          skipped=$((skipped + $(wc -l <"$sk")))
+          rm -f "$sk"
           if [ "$skipped" -gt 0 ]; then
             echo
             echo "$skipped not updated this run — rerun to retry."
