@@ -51,7 +51,6 @@ RUN curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
     python3 -c 'import tarfile; names=["steam-launcher/steam_subscriber_agreement.txt", "steam-launcher/bin_steam.sh", "steam-launcher/bootstraplinux_ubuntu12_32.tar.xz"]; archive=tarfile.open("/tmp/steam.tar.gz"); archive.extractall("/opt/fex-steam", members=[archive.getmember(name) for name in names], filter="data")' && \
     rm /tmp/steam.tar.gz
 
-# Steam self-updates this bootstrap into persistent user state after first launch.
 RUN curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
       --connect-timeout 10 --max-time 300 \
       -o /tmp/steam-arm64.zip \
