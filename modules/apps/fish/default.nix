@@ -53,8 +53,8 @@ in
           default = [ ];
           example = [ "update-ai-clis" ];
           description = ''
-            Pin updaters `update` runs before relocking. Each is run in turn and
-            the first failure aborts, so nothing relocks on a half-updated pin.
+            Pin updaters `update` runs concurrently before relocking. They must
+            write disjoint files; any failure aborts before relocking.
           '';
         };
         rebPostSwitch = lib.mkOption {
@@ -81,7 +81,13 @@ in
 
       updateTools = lib.optionalString (config.shellHooks.update != [ ]) ''
         if test (count $argv) -eq 0
-            ${lib.concatMapStringsSep "\n    " (c: "${c}; or return 1") config.shellHooks.update}
+            sh -c 'd=$(mktemp -d); n=0
+              for c; do
+                n=$((n + 1))
+                { { sh -c "$c"; echo $? >"$d/$n"; } 2>&1 | while IFS= read -r l; do printf "[%s] %s\n" "$c" "$l"; done; } &
+              done
+              wait; ! grep -qvx 0 "$d"/*; r=$?; rm -rf "$d"; exit $r' _ ${lib.escapeShellArgs config.shellHooks.update}
+            or return 1
         end
       '';
     in
