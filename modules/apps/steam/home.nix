@@ -103,7 +103,7 @@
               gsub(/['"'"' \\&]/, "", line)
               if (!seen[line]++) print line
             }
-            /dnf clean all/ { f = 0 }
+            /^$/ { f = 0 }
           ' "$FILE"
         )
 
