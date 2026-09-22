@@ -1,2 +1,1 @@
-# Both fire on deliberate style: palettes map to consumer key names; `flake.nixosModules.x` stays greppable.
 disabled = ["manual_inherit_from", "repeated_keys"]
