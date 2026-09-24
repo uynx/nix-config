@@ -6,7 +6,7 @@
     nixpkgs-stable.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-26.05-chilled/*";
     determinate.url = "https://flakehub.com/f/DeterminateSystems/determinate/*";
     nixos-apple-silicon = {
-      url = "github:nix-community/nixos-apple-silicon/3902c801519264191a7c3dfec8dd1f9faeb38fd5";
+      url = "github:nix-community/nixos-apple-silicon";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {
