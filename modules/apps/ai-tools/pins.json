@@ -1,9 +1,9 @@
 {
   "claude-code": {
-    "version": "2.1.280",
+    "version": "2.1.281",
     "hash": {
-      "aarch64-linux": "sha256-kvK0/QXQvc97mg1ODs70oeSzaLKQzY/QfP+aUAE/RaI=",
-      "x86_64-linux": "sha256-HghQPb3zwssNcG0y80CCdziNHHbvEIZz6P5CwbMikls="
+      "aarch64-linux": "sha256-3SezZDik/tFnDNKbrS/aanO2KLbaVUQ+XC9kf+btMo8=",
+      "x86_64-linux": "sha256-Vv49qIRYRl+yfX6Smd3bP+rVV1D7nC3nlfIzte6m3OE="
     }
   },
   "codex": {
@@ -35,10 +35,10 @@
     }
   },
   "cursor-agent": {
-    "version": "2026.09.18-9a7762b",
+    "version": "2026.09.23-86fc751",
     "hash": {
-      "aarch64-linux": "sha256-IQ1Y+FD0YW5PJl/3AGxVjVoqAI/OPiv4oBBcJa40VqA=",
-      "x86_64-linux": "sha256-sTCPWi/AVFi52JZnUphrsjqXG7zGfIQsHflMS4Eyutk="
+      "aarch64-linux": "sha256-ONFILJRRcpJueAIG/OjMUcZ91PlhYrzsaAkDqnDYBBc=",
+      "x86_64-linux": "sha256-dA3Z1uta7DbKkOrt+f1eLEic1nTWm1FHs8JnDwLZd20="
     }
   }
 }
