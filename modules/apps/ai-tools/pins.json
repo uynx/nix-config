@@ -21,10 +21,10 @@
     }
   },
   "kimi": {
-    "version": "2.1.0",
+    "version": "2.1.1",
     "hash": {
-      "aarch64-linux": "sha256-ouK2ekvyhunLMa39w7lKYBGYorO+eX0Q2+gaih2aNRM=",
-      "x86_64-linux": "sha256-az0I/lukbIH1zaAIL7BmnWdLtdExMm7Wbl064UHIyTY="
+      "aarch64-linux": "sha256-i8wKImeg7LH/SMrShPfjZFKKAVmPONaW7BuqawaaiMg=",
+      "x86_64-linux": "sha256-ZvR1NuQLArsdV3zdMkdo9z05uLlHLgyhQOc9jiJc194="
     }
   },
   "opencode": {
