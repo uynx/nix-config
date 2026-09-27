@@ -68,73 +68,75 @@
         obscura-gui-desktop
       ];
 
-      systemd.services.obscura-lockdown = {
-        description = "Obscura egress lockdown";
-        wantedBy = [ "sysinit.target" ];
-        before = [
-          "network-pre.target"
-          "shutdown.target"
-        ];
-        wants = [ "network-pre.target" ];
-        conflicts = [ "shutdown.target" ];
-        unitConfig = {
-          DefaultDependencies = false;
-          ConditionCapability = "CAP_NET_ADMIN";
+      systemd.services = {
+        obscura-lockdown = {
+          description = "Obscura egress lockdown";
+          wantedBy = [ "sysinit.target" ];
+          before = [
+            "network-pre.target"
+            "shutdown.target"
+          ];
+          wants = [ "network-pre.target" ];
+          conflicts = [ "shutdown.target" ];
+          unitConfig = {
+            DefaultDependencies = false;
+            ConditionCapability = "CAP_NET_ADMIN";
+          };
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = "${pkgs.nftables}/bin/nft -f ${lockdown-rules}";
+            ExecStop = "${pkgs.nftables}/bin/nft destroy table inet obscura-lockdown";
+          };
         };
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = "${pkgs.nftables}/bin/nft -f ${lockdown-rules}";
-          ExecStop = "${pkgs.nftables}/bin/nft destroy table inet obscura-lockdown";
+
+        obscura = {
+          description = "Obscura VPN";
+          wantedBy = [ "multi-user.target" ];
+          wants = [ "NetworkManager.service" ];
+          after = [
+            "network.target"
+            "NetworkManager.service"
+          ];
+
+          startLimitIntervalSec = 0;
+
+          restartIfChanged = false;
+
+          serviceConfig = {
+            ExecStart = "${obscura}/bin/obscura service --dns network-manager";
+            Group = "obscura";
+            UMask = "0007";
+            StateDirectory = "obscura";
+            StateDirectoryMode = "0700";
+            LogsDirectory = "obscura";
+            LogsDirectoryMode = "0700";
+
+            Type = "notify";
+            FileDescriptorStoreMax = 8;
+
+            Restart = "always";
+            RestartSec = 1;
+            RestartSteps = 5;
+            RestartMaxDelaySec = 30;
+          };
         };
-      };
 
-      systemd.services.obscura = {
-        description = "Obscura VPN";
-        wantedBy = [ "multi-user.target" ];
-        wants = [ "NetworkManager.service" ];
-        after = [
-          "network.target"
-          "NetworkManager.service"
-        ];
+        obscura-connect = {
+          description = "Obscura VPN tunnel";
+          wantedBy = [ "multi-user.target" ];
+          requires = [ "obscura.service" ];
+          after = [ "obscura.service" ];
 
-        startLimitIntervalSec = 0;
+          restartIfChanged = false;
 
-        restartIfChanged = false;
-
-        serviceConfig = {
-          ExecStart = "${obscura}/bin/obscura service --dns network-manager";
-          Group = "obscura";
-          UMask = "0007";
-          StateDirectory = "obscura";
-          StateDirectoryMode = "0700";
-          LogsDirectory = "obscura";
-          LogsDirectoryMode = "0700";
-
-          Type = "notify";
-          FileDescriptorStoreMax = 8;
-
-          Restart = "always";
-          RestartSec = 1;
-          RestartSteps = 5;
-          RestartMaxDelaySec = 30;
-        };
-      };
-
-      systemd.services.obscura-connect = {
-        description = "Obscura VPN tunnel";
-        wantedBy = [ "multi-user.target" ];
-        requires = [ "obscura.service" ];
-        after = [ "obscura.service" ];
-
-        restartIfChanged = false;
-
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = "${pkgs.coreutils}/bin/timeout 90 ${obscura}/bin/obscura connect";
-          TimeoutStartSec = 120;
-          SuccessExitStatus = "SIGTERM 124";
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            ExecStart = "${pkgs.coreutils}/bin/timeout 90 ${obscura}/bin/obscura connect";
+            TimeoutStartSec = 120;
+            SuccessExitStatus = "SIGTERM 124";
+          };
         };
       };
 

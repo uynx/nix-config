@@ -63,18 +63,20 @@
         package = pkgs.callPackage ./_brave-origin.nix { };
       };
 
-      xdg.configFile."mimeapps.list".force = true;
-      xdg.dataFile."applications/mimeapps.list".force = true;
+      xdg = {
+        configFile."mimeapps.list".force = true;
+        dataFile."applications/mimeapps.list".force = true;
 
-      xdg.mimeApps = {
-        enable = true;
-        defaultApplications = lib.genAttrs [
-          "text/html"
-          "x-scheme-handler/http"
-          "x-scheme-handler/https"
-          "x-scheme-handler/about"
-          "x-scheme-handler/unknown"
-        ] (_: "brave-origin.desktop");
+        mimeApps = {
+          enable = true;
+          defaultApplications = lib.genAttrs [
+            "text/html"
+            "x-scheme-handler/http"
+            "x-scheme-handler/https"
+            "x-scheme-handler/about"
+            "x-scheme-handler/unknown"
+          ] (_: "brave-origin.desktop");
+        };
       };
     };
 }

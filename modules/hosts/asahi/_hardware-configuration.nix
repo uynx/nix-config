@@ -1,27 +1,44 @@
-{ config, lib, pkgs, modulesPath, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  modulesPath,
+  ...
+}:
 
 {
-  imports =
-    [ (modulesPath + "/installer/scan/not-detected.nix")
-    ];
+  imports = [
+    (modulesPath + "/installer/scan/not-detected.nix")
+  ];
 
-  boot.initrd.availableKernelModules = [ "usb_storage" "sdhci_pci" ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ ];
-  boot.extraModulePackages = [ ];
+  boot = {
+    initrd = {
+      availableKernelModules = [
+        "usb_storage"
+        "sdhci_pci"
+      ];
+      kernelModules = [ ];
+      luks.devices."cryptroot".device = "/dev/disk/by-uuid/100bda55-00bb-4021-88f3-768f334ebad4";
+    };
+    kernelModules = [ ];
+    extraModulePackages = [ ];
+  };
 
-  fileSystems."/" =
-    { device = "/dev/mapper/cryptroot";
+  fileSystems = {
+    "/" = {
+      device = "/dev/mapper/cryptroot";
       fsType = "ext4";
     };
 
-  boot.initrd.luks.devices."cryptroot".device = "/dev/disk/by-uuid/100bda55-00bb-4021-88f3-768f334ebad4";
-
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/C81C-16FD";
+    "/boot" = {
+      device = "/dev/disk/by-uuid/C81C-16FD";
       fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
+      options = [
+        "fmask=0022"
+        "dmask=0022"
+      ];
     };
+  };
 
   swapDevices = [ ];
 

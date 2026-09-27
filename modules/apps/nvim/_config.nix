@@ -57,24 +57,26 @@
     lsp = {
       enable = true;
 
-      servers.basedpyright.settings.basedpyright.analysis.typeCheckingMode = "standard";
+      servers = {
+        basedpyright.settings.basedpyright.analysis.typeCheckingMode = "standard";
 
-      servers.typos_lsp = {
-        cmd = [ "${typosLsp}/bin/typos-lsp" ];
-        root_markers = [
-          "typos.toml"
-          "_typos.toml"
-          ".typos.toml"
-          ".git"
-        ];
-        init_options.diagnosticSeverity = "Info";
-      };
+        typos_lsp = {
+          cmd = [ "${typosLsp}/bin/typos-lsp" ];
+          root_markers = [
+            "typos.toml"
+            "_typos.toml"
+            ".typos.toml"
+            ".git"
+          ];
+          init_options.diagnosticSeverity = "Info";
+        };
 
-      servers.nixd.settings.nixd = {
-        nixpkgs.expr = ''import (builtins.getFlake "${flakePath}").inputs.nixpkgs { }'';
-        options = {
-          nixos.expr = ''(builtins.getFlake "${flakePath}").${hostAttr}.options'';
-          home_manager.expr = ''(builtins.getFlake "${flakePath}").${hostAttr}.options.home-manager.users.type.getSubOptions [ ]'';
+        nixd.settings.nixd = {
+          nixpkgs.expr = ''import (builtins.getFlake "${flakePath}").inputs.nixpkgs { }'';
+          options = {
+            nixos.expr = ''(builtins.getFlake "${flakePath}").${hostAttr}.options'';
+            home_manager.expr = ''(builtins.getFlake "${flakePath}").${hostAttr}.options.home-manager.users.type.getSubOptions [ ]'';
+          };
         };
       };
     };

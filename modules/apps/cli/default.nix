@@ -93,7 +93,7 @@ in
           historyWidget.command = "";
           colors = {
             "bg+" = c.selection;
-            bg = c.bg;
+            inherit (c) bg;
             fg = c.gray;
             "fg+" = c.fg;
             hl = c.yellow;
