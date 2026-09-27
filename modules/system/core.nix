@@ -25,6 +25,8 @@
       brightnessctl
     ];
 
+    documentation.nixos.enable = false;
+
     system.stateVersion = "26.05";
   };
 }
