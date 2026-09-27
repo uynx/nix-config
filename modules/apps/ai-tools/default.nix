@@ -55,6 +55,7 @@
             exit 0
           fi
           export PATH="$PATH:${home}/.local/bin${lib.optionalString isLinux ":${home}/.hermes/bin"}"
+          ${lib.optionalString isLinux "export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"}
 
           export CI=1
 
