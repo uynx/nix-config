@@ -14,9 +14,9 @@
       sharedSkills =
         if builtins.pathExists skillsDir then
           builtins.attrNames (
-            lib.filterAttrs (
-              n: t: t == "directory" && builtins.pathExists "${skillsDir}/${n}/SKILL.md"
-            ) (builtins.readDir skillsDir)
+            lib.filterAttrs (n: t: t == "directory" && builtins.pathExists "${skillsDir}/${n}/SKILL.md") (
+              builtins.readDir skillsDir
+            )
           )
         else
           [ ];
@@ -272,91 +272,96 @@
       };
     in
     {
-      home.packages = [ update-ai-clis ];
+      home = {
+        packages = [ update-ai-clis ];
 
-      shellHooks.update = [ "update-ai-clis" ];
+        sessionVariables = {
+          DISABLE_AUTOUPDATER = "1";
+          CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1";
+          GROK_DISABLE_AUTOUPDATER = "1";
+          AGY_CLI_DISABLE_AUTO_UPDATE = "1";
+          OPENCODE_DISABLE_AUTOUPDATE = "1";
 
-      home.sessionVariables = {
-        DISABLE_AUTOUPDATER = "1";
-        CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1";
-        GROK_DISABLE_AUTOUPDATER = "1";
-        AGY_CLI_DISABLE_AUTO_UPDATE = "1";
-        OPENCODE_DISABLE_AUTOUPDATE = "1";
+          PATH = "$PATH:${home}/.local/bin";
+        }
+        // lib.optionalAttrs config.programs.chromium.enable {
+          AGENT_BROWSER_EXECUTABLE_PATH = "${config.programs.chromium.package}/bin/brave-origin";
+        };
 
-        PATH = "$PATH:${home}/.local/bin";
-      }
-      // lib.optionalAttrs config.programs.chromium.enable {
-        AGENT_BROWSER_EXECUTABLE_PATH = "${config.programs.chromium.package}/bin/brave-origin";
-      };
-
-      home.file =
-        lib.genAttrs
-          [
-            ".agents/AGENTS.md"
-            ".claude/CLAUDE.md"
-            ".codex/AGENTS.md"
-            ".cursorrules"
-            ".cursor/rules/system.mdc"
-            ".gemini/AGENTS.md"
-            ".grok/AGENTS.md"
-            ".kimi-code/AGENTS.md"
-            ".openclaw/AGENTS.md"
-            ".qwen/QWEN.md"
-            ".config/opencode/AGENTS.md"
-          ]
-          (_: {
-            source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
-          })
-        //
+        file =
           lib.genAttrs
             [
-              ".agents/skills"
-              ".claude/skills"
-              ".cursor/skills"
-              ".gemini/skills"
-              ".grok/skills"
-              ".kimi-code/skills"
-              ".openclaw/skills"
-              ".qwen/skills"
-              ".config/opencode/skills"
+              ".agents/AGENTS.md"
+              ".claude/CLAUDE.md"
+              ".codex/AGENTS.md"
+              ".cursorrules"
+              ".cursor/rules/system.mdc"
+              ".gemini/AGENTS.md"
+              ".grok/AGENTS.md"
+              ".kimi-code/AGENTS.md"
+              ".openclaw/AGENTS.md"
+              ".qwen/QWEN.md"
+              ".config/opencode/AGENTS.md"
             ]
             (_: {
-              source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
+              source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
             })
-        // lib.listToAttrs (
-          map (skill: {
-            name = ".codex/skills/${skill}";
-            value.source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills/${skill}";
-          }) sharedSkills
-        )
-        // {
-          ".claude/settings.json".source =
-            config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/claude-settings.json";
-        }
-        // lib.optionalAttrs isLinux {
-          ".local/share/applications/t3.desktop".text = ''
-            [Desktop Entry]
-            Type=Application
-            Name=T3 Code
-            GenericName=AI coding workspace
-            Exec=${home}/.local/bin/t3
-            Terminal=false
-            Categories=Development;
+          //
+            lib.genAttrs
+              [
+                ".agents/skills"
+                ".claude/skills"
+                ".cursor/skills"
+                ".gemini/skills"
+                ".grok/skills"
+                ".kimi-code/skills"
+                ".openclaw/skills"
+                ".qwen/skills"
+                ".config/opencode/skills"
+              ]
+              (_: {
+                source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
+              })
+          // lib.listToAttrs (
+            map (skill: {
+              name = ".codex/skills/${skill}";
+              value.source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills/${skill}";
+            }) sharedSkills
+          )
+          // {
+            ".claude/settings.json".source =
+              config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/claude-settings.json";
+          }
+          // lib.optionalAttrs isLinux {
+            ".local/share/applications/t3.desktop".text = ''
+              [Desktop Entry]
+              Type=Application
+              Name=T3 Code
+              GenericName=AI coding workspace
+              Exec=${home}/.local/bin/t3
+              Terminal=false
+              Categories=Development;
+            '';
+          };
+
+        activation = {
+          hermesSharedSkills = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            cfg="${home}/.hermes/config.yaml"
+            if [ -f "$cfg" ] && ! grep -qE '^skills:|external_dirs' "$cfg"; then
+              printf '\nskills:\n  external_dirs:\n    - %s\n' "${home}/.agents/skills" >>"$cfg"
+            fi
+          '';
+
+          installRollingAiClis = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            ${update-ai-clis}/bin/update-ai-clis --missing-only || true
           '';
         };
+      };
+
+      shellHooks.update = [ "update-ai-clis" ];
 
       systemd.user.tmpfiles.rules = lib.optionals isLinux [
         "e ${home}/.hermes/state-snapshots - - - 7d"
       ];
-      home.activation.hermesSharedSkills = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        cfg="${home}/.hermes/config.yaml"
-        if [ -f "$cfg" ] && ! grep -qE '^skills:|external_dirs' "$cfg"; then
-          printf '\nskills:\n  external_dirs:\n    - %s\n' "${home}/.agents/skills" >>"$cfg"
-        fi
-      '';
-
-      home.activation.installRollingAiClis = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        ${update-ai-clis}/bin/update-ai-clis --missing-only || true
-      '';
     };
 }

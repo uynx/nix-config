@@ -14,12 +14,12 @@ in
         palette = "flexoki";
         palettes.flexoki = {
           black = c.bg;
-          red = c.red;
-          green = c.green;
-          yellow = c.yellow;
-          blue = c.blue;
+          inherit (c) red;
+          inherit (c) green;
+          inherit (c) yellow;
+          inherit (c) blue;
           purple = c.magenta;
-          cyan = c.cyan;
+          inherit (c) cyan;
           white = c.fg;
         };
       };

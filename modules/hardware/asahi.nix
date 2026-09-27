@@ -38,9 +38,16 @@ _: {
       '';
     };
 
-    systemd.services.display-manager = {
-      preStart = "until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done";
-      serviceConfig.TimeoutStartSec = "60s";
+    systemd = {
+      services.display-manager = {
+        preStart = "until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done";
+        serviceConfig.TimeoutStartSec = "60s";
+      };
+
+      # apple-drm cannot suspend; every attempt wedges the machine - do not re-enable
+      sleep.settings.Sleep.AllowSuspend = false;
+
+      settings.Manager.RuntimeWatchdogSec = "2min";
     };
 
     services.logind.settings.Login = {
@@ -48,11 +55,6 @@ _: {
       HandleLidSwitchExternalPower = "lock";
       HandlePowerKey = "lock";
     };
-
-    # apple-drm cannot suspend; every attempt wedges the machine - do not re-enable
-    systemd.sleep.settings.Sleep.AllowSuspend = false;
-
-    systemd.settings.Manager.RuntimeWatchdogSec = "2min";
 
     swapDevices = [
       {
