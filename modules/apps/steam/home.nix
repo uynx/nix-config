@@ -191,6 +191,10 @@
 
         ${shellHelpers}
 
+        LOCK="/run/user/$(${pkgs.coreutils}/bin/id -u)/steam-asahi-bootstrap.lock"
+        exec 9>"$LOCK"
+        ${pkgs.util-linux}/bin/flock 9
+
         SOURCE=${config.home.homeDirectory}/nix-config/steam-asahi
         LABEL=io.uynx.steam-asahi.config
 
