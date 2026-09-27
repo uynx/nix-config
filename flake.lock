@@ -280,12 +280,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1790365885,
-        "narHash": "sha256-iQ0ebhiVo64NktTnwft9hNxlFu4j5cvljVxyJaEVIP4=",
-        "rev": "7b4c5ec4bedaf1e062bbc1bcaeddbc6bd242aa1b",
-        "revCount": 7379,
+        "lastModified": 1790275434,
+        "narHash": "sha256-9dZF1EviQA/XKCjHChddQh7skrfKnZPSqPOqEeOKW0k=",
+        "rev": "f2981148865f7390d187a91d4b1a3a7616047d6d",
+        "revCount": 7335,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-community/home-manager/0.1.7379%2Brev-7b4c5ec4bedaf1e062bbc1bcaeddbc6bd242aa1b/01a0da3d-6a46-79d1-9f56-7ad92cd8a237/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/nix-community/home-manager/0.1.7335%2Brev-f2981148865f7390d187a91d4b1a3a7616047d6d/01a0d4bc-467c-7dc0-9c0c-59d9ecad4104/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -410,11 +410,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790499302,
-        "narHash": "sha256-Gbf/U9ptJhQh0qnDnJ/+a8MAcq1HXunbArUTHR2wNYk=",
+        "lastModified": 1789892076,
+        "narHash": "sha256-Dkg4VKPmDPqTwaiw2WH5br73tXoL1qrOO0xJnR4TlcA=",
         "owner": "nix-community",
         "repo": "nix-index-database",
-        "rev": "161d7c91accd93034bb3c295224d9d895a778573",
+        "rev": "9ad722673ab3b3f91f02135e53775825b240b869",
         "type": "github"
       },
       "original": {
@@ -612,11 +612,11 @@
     },
     "nixpkgs_7": {
       "locked": {
-        "lastModified": 1790463110,
-        "narHash": "sha256-hKlVl12B1dF0Q5vd9dY3lIJM5mFGWYSlXwSLAqHZ1+s=",
+        "lastModified": 1755186698,
+        "narHash": "sha256-wNO3+Ks2jZJ4nTHMuks+cxAiVBGNuEBXsT29Bz6HASo=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e158d9ed9b51c98974c5e66e1ba1c9e0255fecaa",
+        "rev": "fbcf476f790d8a217c3eab4e12033dc4a0f6d23c",
         "type": "github"
       },
       "original": {
@@ -671,11 +671,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1790431604,
-        "narHash": "sha256-hgYMsmnlKRzHezEzFM3L9PYIQ1KNpuf88UHOVh3gm5k=",
+        "lastModified": 1790156317,
+        "narHash": "sha256-yqUcZwhiltZ3v3UsCipFSCgU9hEFVblfFXQh9IH2x/o=",
         "owner": "Sovereign-Engineering",
         "repo": "obscuravpn-client",
-        "rev": "2bc0738c21ae310b73e442f982d9d82671d9dd4d",
+        "rev": "3adceb63bcead738a50be453a508045f4996dd22",
         "type": "github"
       },
       "original": {
@@ -728,12 +728,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1790498116,
-        "narHash": "sha256-rs9meAYxW3zzrh43yaW7htrqCD+X9+pupDPHN86fumI=",
-        "rev": "5efb5a6f4f5ab192817d28557dd4d650fa14d866",
-        "revCount": 1248,
+        "lastModified": 1790247521,
+        "narHash": "sha256-TNfgoHsqsYYvaJImlWctfRkh4PseTagzegU1Dgdbehw=",
+        "rev": "2bd00bd9bb35fe6d114888c8f1c2e946c541dd8f",
+        "revCount": 1247,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/Mic92/sops-nix/0.1.1248%2Brev-5efb5a6f4f5ab192817d28557dd4d650fa14d866/01a0e208-9630-7672-88f3-63de1c46a13f/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/Mic92/sops-nix/0.1.1247%2Brev-2bd00bd9bb35fe6d114888c8f1c2e946c541dd8f/01a0d329-0930-74c2-8db2-b348696c9ba2/source.tar.gz"
       },
       "original": {
         "type": "tarball",
