@@ -1,14 +1,14 @@
-# Reinstalling this machine
+# Reinstalling a machine
 
-Assembled 2026-08-18, macOS half added 2026-09-01, audited 2026-09-02. The only thing not in this
-repo is the age identity that decrypts `secrets/`; everything else converges
-from `reb`.
+Covers `asahi` (NixOS beside macOS on the MacBook), `darwin` (that macOS) and
+`x86` (the desktop). The repo reproduces the *system*; the only secret it cannot
+hold is the age identity that decrypts `secrets/`, kept in Bitwarden. Everything
+else converges from `reb`.
 
-## -1. Back up what the repo does not contain
+## 1. Before wiping anything
 
-The repo reproduces the *system*, not the files. Nothing below is in git, in
-Drive or in iCloud, and `tmutil` has no destination configured — copy it to an
-external disk first.
+Nothing in this table is in git, Drive or iCloud, and `tmutil` has no
+destination. Copy it to an external disk.
 
 | macOS | Asahi |
 |---|---|
@@ -16,61 +16,61 @@ external disk first.
 | `~/Documents ~/Pictures ~/Music ~/Downloads` | Steam library, if worth 236 GB of copying |
 | `~/.local/share/atuin` (shell history) | `~/.local/share/atuin` |
 
-`~/gdrive` is an rclone mount, not a backup — its contents live in Drive and
-come back on their own.
+`~/gdrive` needs nothing: it is an rclone mount, and its contents come back once
+secrets land.
 
-Confirm from a *phone*, not from this machine, that the Bitwarden secure note
-`sops age key` is reachable and non-empty. That note is the entire recovery for
-both hosts — one age identity, one recipient in `.sops.yaml`. The older
-`GPG master key` note decrypts nothing since the age migration and can be
-ignored.
+Then, while this machine still works:
 
-Two more things only work *before* the erase:
+* **Open the Bitwarden secure note `sops age key` from the phone** and check it
+  is non-empty. It is the entire recovery for every host — one age identity, one
+  recipient in `.sops.yaml`. The older `GPG master key` note decrypts nothing.
+* **Get a Bitwarden 2FA code on the phone.** The chain is
+  `Bitwarden → age key → everything`; if the second factor lives only in Ente
+  Auth on the machine being erased, the vault holding the key is locked. Ente
+  syncs server-side, so the phone app or the Ente recovery key is enough —
+  confirm it, do not assume it.
+* **Push `~/nix-config`, `~/dotfiles` and `~/ai_memory`.** Every clone below
+  comes from GitHub, never from a backup.
 
-* **Check you can get a Bitwarden 2FA code from the phone.** The whole recovery
-  chain is `Bitwarden → age key → everything`. If the second factor lives only
-  in Ente Auth on this Mac, erasing it locks you out of the vault holding the
-  key. Ente syncs server-side, so the app on the phone or the Ente recovery key
-  is enough — but confirm it, do not assume it.
-* **Push all three repos.** `~/nix-config`, `~/dotfiles`, `~/ai_memory`. A
-  commit that exists only on this disk dies with it, and the flake is cloned
-  from GitHub in step 0.5 and step 3, never from a backup.
+## 2. Choose the depth (MacBook)
 
-## 0. Build the stick — on the Asahi side only
+* **NixOS root only** — macOS, the Asahi stub (p3) and the ESP (p4) stay. Skip
+  steps 4 and 5; in step 6, reformat the existing root instead of creating one.
+* **Full** — macOS is reinstalled too, which destroys p3, p4 and the root. Do
+  every step, in order.
 
-**This ISO has only ever booted in QEMU, never on real hardware.** Keep a stock
-Asahi ISO on a second stick. If the custom image fails, boot the stock one and
-run Determinate's installer inside the live environment — you lose only faster
-eval and preconfigured substituters.
+## 3. Build the Asahi installer stick
 
-The flake has no `linux-builder` and no `extra-platforms`, so the
-`aarch64-linux` ISO **cannot be built from the Mac**. It has to come off the
-running NixOS install, which means getting that install online first — USB-C
-ethernet or phone tethering is enough, and is the fallback for a dead `wlan0`
-anyway. No Linux box, no custom ISO: use the stock Asahi one.
+The flake has no `linux-builder` and no `extra-platforms`, so the `aarch64-linux`
+ISO **cannot be built on the Mac** — build it from the running NixOS install,
+before wiping it.
 
 ```bash
+cd ~/nix-config
 nix build .#nixosConfigurations.iso.config.system.build.isoImage --impure
 sudo dd if=result/iso/*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-The image carries `claude` alongside `vim`, `git`, `gh`, `bw`, `rg` and `fd`,
-so the whole install can be driven from an agent session. Two things it does
-not carry: a browser, so Claude Code's login is the paste-the-code flow on a
-phone, same as `gh auth login` in step 3; and `~/dotfiles`, so until that is
-cloned the session runs with no `CLAUDE.md` and no skills.
+**This image has only been booted in QEMU.** Keep a stock Asahi ISO on a second
+stick; if the custom one fails, boot the stock one and run Determinate's
+installer in its live environment. That costs only faster eval and the
+preconfigured substituters.
 
-## 0.25 The macOS stick
+The image carries `claude`, `vim`, `git`, `gh`, `bw`, `rg` and `fd`, so the
+install can be driven from an agent session. It has no browser, so Claude Code
+and `gh` both log in with the paste-a-code flow on a phone, and no `~/dotfiles`,
+so the session runs without `CLAUDE.md` or skills until that is cloned.
 
-Not needed for Erase All Content and Settings, which is the normal path. This is
-the fallback for a Mac that boots but will not erase; a Mac that does not boot at
-all needs DFU and a second Mac, which the stick cannot help with either.
+## 4. The macOS stick (fallback only)
 
-**The installer app's `Info.plist` does not say what it installs.**
+Erase All Content and Settings needs no stick. This is for a Mac that boots but
+will not erase; one that does not boot at all needs a DFU restore from a second
+Mac instead.
+
+The installer app's `Info.plist` does not say what it installs —
 `DTPlatformVersion`, `CFBundleShortVersionString` and `DTSDKBuild` describe the
-SDK the InstallAssistant was compiled against and do not move between point
-releases — a 26.6.2 installer reports `26.6.1` / `21.6.01` / `25G74`, and 25G74
-is not a shipping build of anything. Read the payload instead:
+SDK it was built against (a 26.6.2 installer reports `26.6.1` / `21.6.01` /
+`25G74`). Read the payload:
 
 ```bash
 hdiutil attach -nobrowse -readonly -noverify \
@@ -80,8 +80,8 @@ rg -o '<key>(OSVersion|Build)</key>\s*<string>[^<]*' -U \
 hdiutil detach "/Volumes/Shared Support"
 ```
 
-Rewrite it only if that build is older than what `softwareupdate
---list-full-installers` offers:
+Rewrite the stick only if that build is older than what
+`softwareupdate --list-full-installers` offers:
 
 ```bash
 softwareupdate --fetch-full-installer --full-installer-version <version>
@@ -89,45 +89,39 @@ sudo "/Applications/Install macOS Tahoe.app/Contents/Resources/createinstallmedi
   --volume "/Volumes/Install macOS Tahoe"
 ```
 
-`softwareupdate` exits 0 even when the download fails — it printed
-`PKDownloadError Code=8` at 90% and still returned success. Confirm
-`/Applications/Install macOS Tahoe.app` exists before believing it. Re-read the
-disk identifier immediately before writing, too: it is not stable across
-replugs, and the same stick came back as `disk7` and then `disk6`.
+`softwareupdate` exits 0 even when the download fails (`PKDownloadError Code=8`
+at 90%), so check `/Applications/Install macOS Tahoe.app` exists. Re-read the
+stick's disk identifier right before writing; it changes across replugs.
 
-## 0.5 Reinstall macOS
+## 5. Reinstall macOS
 
-Do the whole macOS reinstall **before** touching the Linux side. A macOS
-install pushes shared Apple SFR, and m1n1 has to be newer than the SFR it boots
-against — installing NixOS first and macOS second can leave a stub that no
-longer boots.
+Always before the Linux side: a macOS install updates the shared Apple SFR, and
+m1n1 must be newer than the SFR it boots against, so macOS-after-NixOS can leave
+a stub that no longer boots.
 
-Erase All Content and Settings is enough and keeps the recovery path short; a
-DFU restore from another Mac is only needed if the machine will not boot at
-all. Either way the Asahi partitions go with it, so this is a full
-p3/p4/p5 rebuild, not the p5-only case in step 1.
-
-Then, still in macOS:
+Erase All Content and Settings, then, still in macOS:
 
 ```bash
-curl https://alx.sh | sh     # resize APFS, UEFI environment only
+curl https://alx.sh | sh     # choose "UEFI environment only"
 ```
 
-Take the **UEFI environment only** option — the NixOS partitions get made by
-hand in step 2. Leave FileVault **off** until after this run, then turn it on
-(`sudo fdesetup enable`, local recovery key rather than iCloud escrow, key into
-Bitwarden). It is near-instant on Apple Silicon, so deferring costs nothing and
-keeps the resize from needing a `diskutil apfs unlockVolume` first. FileVault is
-the only option for the macOS side — LUKS covers p5 and nothing else. This is also the run that writes a fresh `vendorfw/`, which is
-the only way that blob ever refreshes.
+The NixOS partition is made by hand in step 6. This run also writes a fresh
+`vendorfw/` to the ESP — the only way that firmware ever refreshes.
 
-Bootstrap the Mac itself while you are there. Neither Nix nor Homebrew is
-declarative at this stage, and `mas` needs you signed into the App Store or
-`cakewallet` silently never installs:
+Leave FileVault **off** until `alx.sh` finishes, so the resize needs no
+`diskutil apfs unlockVolume`. Then `sudo fdesetup enable` with a local recovery
+key, not iCloud escrow, and store that key in Bitwarden. It is near-instant on
+Apple Silicon. LUKS covers only the NixOS root; FileVault is the only encryption
+macOS gets.
+
+Bootstrap nix-darwin. Sign into the App Store first — `mas` needs it, or
+`cakewallet` silently never installs.
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# new terminal, so nix is on PATH
+nix shell nixpkgs#bitwarden-cli nixpkgs#gh
 bw login && bw unlock
 bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.txt
 gh auth login
@@ -135,13 +129,8 @@ git clone https://github.com/uynx/nix-config.git ~/nix-config
 nix run nix-darwin -- switch --flake ~/nix-config#darwin --impure
 ```
 
-The age key goes in before the first switch here for the same reason it does on
-Linux — see step 5. After that first switch `reb` works normally.
-
-**macOS fails the same silent way, not a milder one.** The identity is
-unencrypted and `generateKey` stays false, so nothing ever prompts: a missing
-key fails the launchd agent while `darwin-rebuild` still exits 0. Verify rather
-than assume:
+The age key goes in before the first switch for the reason in step 9: a missing
+key fails the sops launchd agent while `darwin-rebuild` still exits 0. Verify:
 
 ```fish
 launchctl list | rg sops        # org.nix-community.home.sops-nix, status 0
@@ -150,68 +139,50 @@ ls ~/.config/sops-nix/secrets   # six files: the ssh key plus five rclone
 ssh -T git@github.com           # GitHub greeting; exits 1 even on success
 ```
 
-Darwin runs the home tier only — `bundle.darwin` adds nothing but `enteAuth`,
-and sops arrives through `mkBundle`'s shared `home` list. The Linux-only system
-tier exists for eduroam's credentials; macOS keeps them in the login keychain
-instead, entered at first join.
+From here `reb` works normally.
 
-eduroam on macOS is a configuration profile, not a module — nix-darwin cannot
-install one, and Apple requires a human to approve it:
+eduroam is a configuration profile, which nix-darwin cannot install and Apple
+makes a human approve; its credentials live in the login keychain, not sops:
 
 ```fish
 open modules/system/umass-eduroam.mobileconfig
 ```
 
-then System Settings → General → Device Management → Install. Join `eduroam`
+Then System Settings → General → Device Management → Install, join `eduroam`,
 and enter `<netid>@umass.edu` with the NetID password.
 
-## 1. Decide how deep the wipe goes
+## 6. Live environment
 
-Wiping **the NixOS root only** needs no macOS-side work. p3 (Asahi stub,
-m1n1 + U-Boot) and p4 (`EFI - NIXOS`, `/boot`) both came from the macOS-side
-`alx.sh` run and are not NixOS-managed.
+Boot the stick; it autologs in. Bring up networking with `nmcli` or `iwctl`.
+Keep USB-C ethernet or phone tethering at hand: if firmware extraction failed,
+there is no Wi-Fi.
+
+### Partitions
 
 **Partition numbers do not survive a macOS reinstall. Read the table before
-typing any device node.** Through the 2026-08 install this doc said p5 was the
-NixOS root. After the 2026-09-03 rebuild the disk came back as:
+typing any device node** — `sgdisk -p /dev/nvme0n1` and
+`parted /dev/nvme0n1 unit GiB print free`. After the 2026-09-03 rebuild:
 
-| part | contents | |
+| part | contents | rule |
 |---|---|---|
 | p1 | `iBootSystemContainer` | never touch |
 | p2 | macOS APFS container | never touch |
 | p3 | Asahi stub, m1n1 + U-Boot | from `alx.sh` |
 | p4 | `EFI - NIXOS`, the ESP | **never `mkfs`** |
 | p5 | `RecoveryOSContainer` | **never touch — this index used to be the root** |
-| p6 | NixOS root | created by hand in step 2 |
+| p6 | NixOS root | created by hand below |
 
-`alx.sh` puts its partitions in the space it frees, and macOS recovery ends up
-last on the disk holding whatever index is spare — p5 this time. Running the old
-step 2 verbatim would have run `luksFormat` over macOS Recovery. Upstream says
-damage to the first partition or the **last** one (recovery) can cost the whole
-disk. Confirm with `sgdisk -p /dev/nvme0n1` and `parted /dev/nvme0n1 unit GiB
-print free` every time: the root is the partition you create, never one you find.
+macOS Recovery lands on whatever index is spare, and upstream warns that damaging
+the first or the last partition can cost the whole disk. The root is the
+partition you create, never one you find.
 
-**Never `mkfs` p4.** It holds `vendorfw/firmware.cpio`, `m1n1/` and `EFI/` —
-`vendorfw/firmware.cpio` replaced the old internal `asahi/all_firmware.tar.gz`
-format upstream, and `hardware.asahi.peripheralFirmwareDirectory` here already
-points at `/boot/vendorfw` expecting the new format (`modules/hardware/asahi.nix`).
-The installer mounts it by the partuuid at
-`/proc/device-tree/chosen/asahi,efi-system-partition` to extract firmware.
-Reformat it and the installer loses Wi-Fi *and* the installed system loses its
-bootloader — recoverable only by redoing the macOS-side install.
+p4 holds `vendorfw/firmware.cpio`, `m1n1/` and `EFI/`; the installer finds it
+through `/proc/device-tree/chosen/asahi,efi-system-partition` to extract
+firmware. Reformat it and the installer loses Wi-Fi and the installed system
+loses its bootloader, recoverable only by redoing step 5.
 
-A macOS reinstall wipes p3, p4 and the root, so after step 0.5 this is always
-the deep case: p3 and p4 come back from `alx.sh`, the root is made below.
-
-## 2. Live environment
-
-Boot the stick, autologin. Bring up networking (`nmcli` or `iwctl`, both on the
-image). Keep a USB-C ethernet adapter or phone tethering available — if
-firmware extraction failed, there is no Wi-Fi.
-
-After a macOS reinstall the root partition **does not exist** — `alx.sh` leaves
-the space it freed unallocated (802 GiB, between p4 and recovery). Create it in
-the largest free block; it takes the next spare index, p6 in 2026-09:
+After a full wipe the root does not exist — `alx.sh` leaves the freed space
+unallocated between p4 and recovery. Create it in the largest free block:
 
 ```bash
 sgdisk -n 0:0:0 -t 0:8300 -c 0:NIXOS /dev/nvme0n1
@@ -219,66 +190,56 @@ partprobe /dev/nvme0n1
 lsblk -o NAME,SIZE,FSTYPE,PARTLABEL /dev/nvme0n1    # confirm the number it got
 ```
 
-Encryption wraps the block device, so it precedes `mkfs`. This is the only
-moment full-disk encryption can be added; it cannot be retrofitted later.
+For a root-only wipe, skip that and use the existing root's number.
+
+### Encrypt, format, mount
+
+LUKS wraps the block device, so it comes before `mkfs` and cannot be added later.
 
 ```bash
-cryptsetup luksFormat /dev/nvme0n1p6      # the partition just created
+cryptsetup luksFormat /dev/nvme0n1p6      # the root, as read above
 cryptsetup open /dev/nvme0n1p6 cryptroot
 mkfs.ext4 -L nixos /dev/mapper/cryptroot
 mount /dev/mapper/cryptroot /mnt
 mkdir -p /mnt/boot && mount /dev/nvme0n1p4 /mnt/boot
-```
-
-`cryptsetup` needs a real TTY for its `YES` confirmation and the passphrase, so
-it cannot be driven from an agent session's non-interactive shell — it fails
-with `Nothing to read on input` and writes nothing. Run it from the console, or
-suspend the agent with `Ctrl+Z` and `fg` back. `gh auth login` in step 3 is the
-same.
-
-Then, before anything evaluates the flake:
-
-```bash
 mkdir -p /boot && mount --bind /mnt/boot /boot
 ```
 
-`peripheralFirmwareDirectory = /boot/vendorfw` is an absolute path literal read
-at **eval** time under `--impure` (`modules/hardware/asahi.nix`). The live image
-has no `/boot`, so without the bind mount `nixos-install` dies before building
-anything. Upstream's module falls back to `/mnt/boot/vendorfw` on its own, but
-that default is overridden here.
+`cryptsetup` and `gh auth login` need a real TTY. From an agent's shell,
+`cryptsetup` fails with `Nothing to read on input` and writes nothing; run them
+at the console, or suspend the agent with `Ctrl+Z` and `fg` back.
 
-The live image has **no swap** and the machine has 16 GB. `nixos-install`
-defaults to `max-jobs = auto` — ten parallel jobs here — and the OOM killer
-takes out `nix` itself partway through the Rust builds. It exits 137 with no
-error in the log, which reads as a mystery until `dmesg` shows `Out of memory:
-Killed process ... (nix)`:
+The bind mount exists because `peripheralFirmwareDirectory = /boot/vendorfw` in
+`modules/hardware/asahi.nix` is a path literal read at eval time, and the live
+image has no `/boot`. Without it `nixos-install` dies before building anything.
+
+### Swap
+
+The live image has no swap and the machine has 16 GB. Without swap the OOM killer
+takes out `nix` partway through the Rust builds: exit 137, nothing in the log,
+`Out of memory: Killed process ... (nix)` only in `dmesg`.
 
 ```bash
 fallocate -l 32G /mnt/.swapfile && chmod 600 /mnt/.swapfile
 mkswap /mnt/.swapfile && swapon /mnt/.swapfile
 ```
 
-Remove it after installing; the installed system makes its own 16 GB
-`/swapfile` from `swapDevices`.
+## 7. Clone the flake
 
-## 3. Get the flake onto the target
-
-`gh auth login` happens **here**, in the live environment. The repo is private
-and the SSH key that would authenticate is inside the repo being cloned, so the
-browser flow over HTTPS is the only way in.
+The repo is private and the SSH key that would authenticate is inside it, so
+HTTPS through `gh` is the only way in:
 
 ```bash
-gh auth login                     # HTTPS, browser flow
+gh auth login
 mkdir -p /mnt/home/uynx
 git clone https://github.com/uynx/nix-config.git /mnt/home/uynx/nix-config
 ```
 
-Clone into the target home so no second clone is needed later. The HTTPS URL is
-deliberate and keeps working after first boot: git's `insteadOf` rewrite to SSH
-fires at connect time, not clone time.
+The clone lives in the target home, so it is the one the installed system uses.
+The HTTPS remote keeps working after first boot: git's `insteadOf` rewrite to
+SSH applies at connect time.
 
-## 4. Hardware config, then install
+## 8. Hardware config and install
 
 ```bash
 nixos-generate-config --root /mnt
@@ -286,23 +247,17 @@ cp /mnt/etc/nixos/hardware-configuration.nix \
    /mnt/home/uynx/nix-config/modules/hosts/asahi/_hardware-configuration.nix
 ```
 
-Do not skip this because the repo already has that file. It pins the old root
-UUID and ESP `E6D0-19FC`; fresh partitions invalidate the root UUID
-unconditionally, and LUKS changes it even if p4 was kept.
-`nixos-generate-config` detects the LUKS container and writes the
-`boot.initrd.luks.devices.cryptroot.*` entries itself.
+Never skip this because the file already exists: it pins the old root and LUKS
+UUIDs, which change on every reformat. `nixos-generate-config` writes the
+`boot.initrd.luks.devices.cryptroot` entry itself.
 
-The generated `boot.initrd.availableKernelModules` comes back nearly empty
-(`usb_storage`, `sdhci_pci`). That is correct and must not be "fixed": the
-option is a merged list, and `apple-silicon-support` contributes the Asahi set
-(`spi-apple`, `spi-hid-apple`, `spi-hid-apple-of`, `usbhid`, `hid_generic`). The
-built initrd does carry `hid-apple.ko` and both `spi-hid-apple` modules
-alongside `cryptsetup` and `dm-crypt`, so the internal keyboard works at the
-passphrase prompt. Worth verifying once on a machine that boots LUKS for the
-first time — a keyboard-less prompt is unrecoverable without a USB keyboard.
+The generated `boot.initrd.availableKernelModules` is nearly empty (`usb_storage`,
+`sdhci_pci`). Leave it: the option merges with the Asahi set from
+`apple-silicon-support`, and the built initrd carries `hid-apple` and both
+`spi-hid-apple` modules, so the internal keyboard works at the passphrase
+prompt.
 
-Commit before building — the flake cannot see untracked files, and under
-`import-tree` that failure is silent.
+Commit, then install — `import-tree` silently skips untracked files:
 
 ```bash
 cd /mnt/home/uynx/nix-config && git add -A && git commit -m "hardware config"
@@ -310,54 +265,44 @@ nixos-install --flake /mnt/home/uynx/nix-config#asahi --impure \
   --no-root-passwd --max-jobs 2 --cores 4
 ```
 
-`--impure` is required: the Asahi firmware directory has to stay a real path.
-`--max-jobs 2 --cores 4` is what keeps the heavy Rust builds — `wasmtime`,
-`determinate-nix`, `obs-studio`, the `obscuravpn`/`obscura-gui` chain — inside
-16 GB. The full build is roughly 50 GB written and about 75 minutes at that
-concurrency, with no kernel compile: `linux-asahi` comes from the cache the ISO
-was built against.
+`--impure` keeps the firmware directory a real path. `--max-jobs 2 --cores 4`
+keeps the Rust builds (`wasmtime`, `determinate-nix`, `obs-studio`, the
+`obscuravpn` chain) inside 16 GB. Expect about 75 minutes and 50 GB written;
+`linux-asahi` comes from the cache, so there is no kernel compile. Check
+`nixos-install`'s own exit status — piping it into `tail` reports `tail`'s.
 
-Check the real exit status of `nixos-install` itself. Chaining it into
-`; tail ...` reports `tail`'s status and a failed install looks like a clean
-one.
+`sops-install-secrets` failing with
+`cannot read keyfile '/home/uynx/.config/sops/age/keys.txt'` is expected here;
+step 9 fixes it.
 
-Then the three things `nixos-install` does not do:
+Then the four things `nixos-install` leaves undone:
 
 ```bash
 chown -R 1000:100 /mnt/home/uynx
 rm -f /mnt/etc/nixos/*.nix && rmdir /mnt/etc/nixos
+swapoff /mnt/.swapfile && rm /mnt/.swapfile
 nixos-enter --root /mnt -c 'passwd uynx'
 reboot
 ```
 
-**Set the password or the install is unreachable.** `modules/system/user.nix`
-declares no `hashedPassword` and `mutableUsers` stays true, so credentials live
-in `/etc/shadow` on a root filesystem that was just created empty. Nothing in
-the repo or in `nixos-install` fills it: the result is a green install, a
-working desktop and no way past the greeter.
+* **`passwd` is not optional.** `modules/system/user.nix` sets no
+  `hashedPassword` and `mutableUsers` is true, so the password lives only in the
+  new, empty `/etc/shadow`. Skip it and the install is green, the desktop works,
+  and nothing gets past the greeter.
+* **`/etc/nixos` must go** because `core.nix` makes it a symlink to
+  `/home/uynx/nix-config`, and activation will not replace a directory holding
+  real files. The symptom is `could not create symlink /etc/nixos`.
+* The installed system makes its own 16 GB `/swapfile`.
 
-`/etc/nixos` must be emptied because `core.nix` points
-`environment.etc."nixos".source` at `/home/uynx/nix-config`, and `setup-etc`
-will not replace a directory containing real files — the two
-`nixos-generate-config` just wrote there. The symptom is
-`could not create symlink /etc/nixos` during activation, after which
-`nixos-rebuild` with no `--flake` reads nothing.
+The ESP fits **three** generations: 476 M, of which ~126 M is firmware and each
+kernel/initrd pair is 91 M. `configurationLimit` in
+`modules/hardware/asahi.nix` is 10, so the fourth generation's activation dies
+with ENOSPC mid-write.
 
-`sops-install-secrets` failing during activation with
-`cannot read keyfile '/home/uynx/.config/sops/age/keys.txt'` is expected at this
-point, not a fault — that is step 5.
+## 9. First boot: the age key
 
-The ESP holds **three** generations, not the ten
-`boot.loader.systemd-boot.configurationLimit` permits: 476 M total, ~126 M of it
-permanently firmware (`asahi/` 55 M, `vendorfw/` 63 M, `m1n1/` 7.6 M), and 91 M
-per kernel/initrd pair. Generation 1 leaves 260 M free. At the current limit,
-generation 4 is where activation dies mid-write with ENOSPC — the exact failure
-the comment in `modules/hardware/asahi.nix` sets out to prevent.
-
-## 5. First boot — the one manual secret
-
-Log in as `uynx`. Everything works except secrets; `sops-nix.service` has
-failed because its key is not there yet.
+Log in as `uynx`. Everything works except secrets — `sops-nix.service` has
+failed because its key is missing.
 
 ```fish
 bw login && bw unlock
@@ -365,144 +310,96 @@ bw get notes 'sops age key' | install -Dm600 /dev/stdin ~/.config/sops/age/keys.
 systemctl --user restart sops-nix.service
 ```
 
-If `bw unlock` reports `The decryption operation failed` against a correct
-password, the CLI's cached key material is stale after a vault KDF change.
-`bw logout && bw login` is the only fix — `bw unlock` is offline and `bw sync`
-needs an unlocked vault.
+If `bw unlock` says `The decryption operation failed` with the right password,
+the CLI's cached keys are stale after a vault KDF change; `bw logout && bw login`
+is the only fix.
 
-Verify before trusting it:
+Verify:
 
 ```fish
 systemctl --user status sops-nix.service    # active (exited)
 ls -l ~/.ssh/id_ed25519                     # symlink into ~/.config/sops-nix/secrets
-ssh -T git@github.com                       # prints the GitHub greeting; exits 1 even on success
+ssh -T git@github.com                       # GitHub greeting; exits 1 even on success
 ```
 
-The SSH keypair needs no manual restore. The public half has been registered on
-GitHub since 2026-01-17; the private half is ciphertext already in
-`secrets/secrets.yaml` and gets written out now that the age key exists.
+The SSH key needs no restore: the public half is already on GitHub, and the
+private half is ciphertext in `secrets/secrets.yaml`. The `.pub` file that
+commit signing reads is derived from it by a `home.activation` hook in
+`modules/apps/sops` on the next `reb`.
 
-sops-nix only writes that private half; the public half git's SSH commit
-signing needs (`user.signingkey = ~/.ssh/id_ed25519.pub`) is derived by a
-`home.activation` hook in `modules/apps/sops`, ordered after `sops-nix` and
-guarded to skip until the private key actually exists — needed because
-sops-nix's darwin activation only triggers its launchd agent, it doesn't wait
-on it. First `reb` after the private key lands produces it; no manual step.
+**The age key must be in place before the first `reb`.** A missing key fails the
+user unit while `nixos-rebuild` still exits 0: a green rebuild, a working
+desktop, no SSH key, no Drive mount, and only an inactive unit to show for it.
 
-## 6. Converge
+## 10. Converge
 
 ```fish
 cd ~/nix-config && reb
 ```
 
-Then reboot once. AI CLIs self-install via `home.activation.installRollingAiClis`
-and the Steam container rebuilds on first launch. What does not come back:
-Steam game data, and `~/gdrive` contents (encrypted in Drive, remounted by
-rclone once secrets land).
+Reboot once. The AI CLIs install themselves through
+`home.activation.installRollingAiClis`, the Steam container rebuilds on first
+launch, and rclone remounts `~/gdrive`. Steam game data is gone unless it was
+backed up in step 1.
 
-**The one hard ordering rule: the age key goes in before the first `reb`.** A
-missing key fails the user unit, but `nixos-rebuild` still exits 0 — so the
-wrong order gives a green rebuild, a working desktop, no SSH key, no Drive
-mount, and nothing but an inactive unit to explain it.
+## 11. The x86 desktop
 
-## 7. The x86 desktop
+Steps 9 and 10 apply unchanged. Steps 2–8 are Apple-specific; this replaces them.
 
-Written 2026-09-07, never executed. The `x86` host has existed since 2026-08-31
-and evaluates clean; nothing below has been run on the machine.
+### 11.1 The stick
 
-Steps 5 and 6 apply unchanged — the age key and `reb` work the same on every
-host. Steps 0.25 through 4 are Apple-specific and are replaced by this section.
-
-### 7.1 The stick
+Build it on the desktop itself before wiping, or on the MacBook's NixOS, where
+`boot.binfmt.emulatedSystems = [ "x86_64-linux" ]` makes it buildable. The Mac
+has no `linux-builder`.
 
 ```bash
 nix build .#nixosConfigurations.iso-x86.config.system.build.isoImage
 sudo dd if=result/iso/*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-**This has to be built on the Asahi laptop**, which is the only Linux machine
-here — `boot.binfmt.emulatedSystems = [ "x86_64-linux" ]` on that host is what
-makes an x86_64 image buildable at all, and the Mac has no `linux-builder`.
-Budget ~35 minutes, almost all of it the 3.1 GiB fetch; the emulated squashfs
-and xorriso are minutes. The image is 3.3 GiB.
+About 35 minutes, nearly all of it the 3.1 GiB fetch; the image is 3.3 GiB.
 
-Unlike the aarch64 image this one is graphical: GNOME with autologin as `nixos`,
-plus Brave, so the Bitwarden **web** vault opens on the machine being installed
-and the age key never has to be retyped off a phone. `bw`, `sops`, `rage`,
-`cryptsetup`, `gh` and `claude` are all on it, and `REINSTALL.md` is in the live
-home. Keep a stock NixOS graphical ISO on a second stick: the 1070 runs on
-nouveau in the live image, GDM may fall back to X11, and none of this has been
-booted on real hardware.
+It is graphical — GNOME, autologin as `nixos`, Brave — so the Bitwarden web
+vault opens on the machine being installed and the age key is never retyped off
+a phone. `bw`, `sops`, `rage`, `cryptsetup`, `gh` and `claude` are on it, and so
+is this file. Keep a stock NixOS graphical ISO on a second stick: the 1070 runs
+on nouveau in the live image and GDM may fall back to X11.
 
-### 7.2 Partition
+### 11.2 Partition
 
-**Read the disk, never assume it.** This machine has no `alx.sh` history and no
-partitions that must survive, but it may still hold a Windows ESP worth reusing
-or data worth keeping.
+Read the disk first — it may hold a Windows ESP worth reusing or data worth
+keeping:
 
 ```bash
 lsblk -o NAME,SIZE,TYPE,FSTYPE,PARTLABEL
 sgdisk -p /dev/nvme0n1
 ```
 
-Wiping the whole disk, ESP plus LUKS root:
+Wiping the whole disk:
 
 ```bash
 sgdisk -Z /dev/nvme0n1
-sgdisk -n 1:0:+1G   -t 1:ef00 -c 1:ESP   /dev/nvme0n1
-sgdisk -n 2:0:0     -t 2:8300 -c 2:NIXOS /dev/nvme0n1
+sgdisk -n 1:0:+1G -t 1:ef00 -c 1:ESP   /dev/nvme0n1
+sgdisk -n 2:0:0   -t 2:8300 -c 2:NIXOS /dev/nvme0n1
 partprobe /dev/nvme0n1
 
 mkfs.fat -F32 -n BOOT /dev/nvme0n1p1
 cryptsetup luksFormat /dev/nvme0n1p2
 cryptsetup open /dev/nvme0n1p2 cryptroot
-mkfs.xfs -L nixos /dev/mapper/cryptroot
+mkfs.ext4 -L nixos /dev/mapper/cryptroot
 
 mount /dev/mapper/cryptroot /mnt
 mkdir -p /mnt/boot && mount /dev/nvme0n1p1 /mnt/boot
 ```
 
-**XFS, not the laptop's ext4** (decided 2026-09-07). The two are within noise
-for a desktop, but XFS leads on large-file throughput — which here means the
-Steam library and the VM images under `virt` — and pays no copy-on-write tax the
-way Btrfs would. Btrfs was rejected on purpose: its selling points are snapshots
-and compression, neither of which is wanted. XFS's one real weakness, that it
-can never be shrunk, is irrelevant to a single root spanning the whole disk.
-Revert to `mkfs.ext4` if matching the laptop is worth more than the throughput.
+The 1 GiB ESP has no Apple firmware in it, so `configurationLimit = 10` fits.
+The same TTY rule as step 6 applies to `cryptsetup` and `gh auth login`. No
+`/boot` bind mount is needed; that is an Asahi firmware quirk.
 
-After `nixos-generate-config`, add `allowDiscards` to the LUKS entry it writes:
-
-```nix
-boot.initrd.luks.devices."cryptroot".allowDiscards = true;
-```
-
-Without it LUKS blocks discards, the weekly `fstrim` does nothing, and write
-performance decays as the drive fills. The cost is that someone holding the disk
-can tell how much of the volume is in use.
-
-1 GiB for the ESP, not the laptop's 476 M: that one is cramped only because
-Apple firmware eats 126 M of it, and it caps this config at three generations.
-Nothing eats into this one, so `configurationLimit = 10` fits comfortably.
-
-**Encryption is settled: this machine gets it** (decided 2026-09-07), which is
-why LUKS is in the path above rather than an option beside it. It wraps the
-block device, so this is the only moment it can happen.
-
-`cryptsetup` needs a real TTY for its `YES` and its passphrase and cannot be
-driven from an agent session; the same is true of `gh auth login` below.
-
-Confirm the generated `boot.initrd.availableKernelModules` carries `xhci_pci`
-and `usbhid` before rebooting into the passphrase prompt. Unlike the laptop,
-whose internal keyboard modules come from `apple-silicon-support`, everything
-here is USB — a prompt that cannot read a keyboard is unrecoverable.
-
-No bind mount of `/boot` is needed. That step exists on the laptop only because
-`peripheralFirmwareDirectory` is an absolute path read at eval time.
-
-### 7.3 Flake, hardware config, install
+### 11.3 Flake, hardware config, install
 
 ```bash
-gh auth login                     # HTTPS, browser flow — the repo is private
+gh auth login
 mkdir -p /mnt/home/uynx
 git clone https://github.com/uynx/nix-config.git /mnt/home/uynx/nix-config
 
@@ -511,35 +408,27 @@ cp /mnt/etc/nixos/hardware-configuration.nix \
    /mnt/home/uynx/nix-config/modules/hosts/x86/_hardware-configuration.nix
 ```
 
-**Then uncomment its import in `modules/hosts/x86/default.nix`.** The laptop
-does not need this step; the x86 host ships with that line commented out because
-the file does not exist until now. It is also what supplies
-`nixpkgs.hostPlatform`, since the host still uses the legacy `system =`
-argument, so anything reading `config.nixpkgs.hostPlatform.system` fails until
-the import is live — with a trace pointing somewhere unrelated.
+Before committing, check the new file:
+
+* **Re-add** `boot.initrd.luks.devices."cryptroot".allowDiscards = true;` — the
+  generated file drops it, and without it LUKS blocks discards, the weekly
+  `fstrim` does nothing, and writes slow as the drive fills. The cost is that
+  someone holding the disk can see how much of it is in use.
+* **`availableKernelModules` must include `xhci_pci` and `usbhid`.** Every
+  keyboard here is USB; a passphrase prompt that cannot read one is
+  unrecoverable.
 
 ```bash
 cd /mnt/home/uynx/nix-config && git add -A && git commit -m "x86 hardware config"
 nixos-install --flake /mnt/home/uynx/nix-config#x86 --no-root-passwd
 ```
 
-Commit first: `import-tree` globs `modules/`, so a file that is never `git add`ed
-is skipped silently rather than failing.
+No `--impure`: the x86 host evaluates purely. `--max-jobs`/`--cores` stay at
+their defaults; if `free -g` shows 16 GB, clamp them and add the swapfile as in
+step 6. The NVIDIA driver is unfree, so it is never in the binary cache — expect
+a local kernel-module compile.
 
-**No `--impure` here** — that flag is an Asahi firmware requirement. The x86
-host evaluates purely.
-
-`--max-jobs`/`--cores` are left at their defaults on purpose: those limits exist
-on the laptop to keep Rust builds inside 16 GB. Check `free -g` first and clamp
-the same way if this machine is also at 16 GB, and add the swapfile from step 2
-if so.
-
-The NVIDIA 580 driver is **not** in the binary cache (unfree, so Hydra never
-builds it), so expect a local kernel-module compile. It has never been built
-anywhere — confirming 580.178.04 compiles against the running kernel happens
-here for the first time.
-
-Then the same three things `nixos-install` does not do:
+Then the same cleanup as step 8:
 
 ```bash
 chown -R 1000:100 /mnt/home/uynx
@@ -548,9 +437,5 @@ nixos-enter --root /mnt -c 'passwd uynx'
 reboot
 ```
 
-### 7.4 Differences after first boot
-
-Step 5 (age key) and step 6 (`reb`) run unchanged. Two things do not apply:
-there is no Steam container to rebuild — the `gaming` bundle is Asahi-only and
-native Steam is not written for this host yet — and there is no `eduroam`
-profile, since the machine never leaves the house.
+After first boot there is no Steam container to rebuild: this host uses native
+Steam (`gamingNative`).
