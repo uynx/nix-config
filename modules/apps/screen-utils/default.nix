@@ -13,6 +13,7 @@
         grim
         slurp
         wlrctl
+        wtype
       ];
     };
 }
