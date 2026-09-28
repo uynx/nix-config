@@ -4,6 +4,7 @@ let
     nixos = [ self.nixosModules.obscura ];
     homeLinux = with self.homeModules; [
       privacyBrowsers
+      cakeWallet
       obscura
     ];
     darwin = with self.darwinModules; [
