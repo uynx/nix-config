@@ -2,6 +2,13 @@
   flake.homeModules.waydroid =
     { pkgs, lib, ... }:
     {
+      xdg.desktopEntries.android = {
+        name = "Android";
+        exec = "fish -c android";
+        icon = "phone";
+        terminal = false;
+      };
+
       programs.fish.functions.android.body = ''
         set -l state ~/.local/share/waydroid-vm
         set -l jq ${lib.getExe pkgs.jq}
