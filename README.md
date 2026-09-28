@@ -108,11 +108,11 @@ together.
 | `office` | obsidian, libreoffice | yes (`libreoffice-bin`) |
 | `latex` | texlive scheme-full (stable pin) | yes |
 | `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
-| `comms` | vesktop, whatsapp | whatsapp only, no vesktop |
+| `comms` | vesktop, whatsapp, rustdesk (flatpak on x86, emulated on aarch64) | whatsapp, rustdesk cask |
 | `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
 | `secrets` | sops (age), rage, Bitwarden | Bitwarden only; needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
-| `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
+| `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers, cake wallet (aarch64) | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
 | `gaming` | Steam via the Fedora/FEX distrobox container | — |
 
@@ -121,6 +121,11 @@ one name only restates it: `virt` (`apps/virt/`), `gamingNative`
 (`bundles/gaming.nix`, the native Steam path `x86` takes instead of the
 container) and `campus-wifi` (`system/campus-wifi.nix`, the UMass eduroam
 profile).
+
+On aarch64, apps with no stable ARM build run their official x86_64 release
+under FEX: register them in `x86Apps` (`apps/x86-emu/`), which emits a launcher
+into the `gaming` bundle's muvm VM with a per-app home under
+`~/.local/share/x86-apps/`. Needs the `gaming` bundle on that host.
 
 Every bundle needs `homeManagerBase`, on either platform — it carries the Home
 Manager wiring and the `shellHooks` option declarations.
