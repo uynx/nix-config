@@ -33,26 +33,7 @@
         {
           imports = [ "${modulesPath}/virtualisation/qemu-vm.nix" ];
 
-          boot.kernelPatches = [
-            {
-              name = "iptables-legacy-for-android-netd";
-              patch = null;
-              structuredExtraConfig = with lib.kernel; {
-                NETFILTER_XTABLES_LEGACY = yes;
-                IP_NF_IPTABLES_LEGACY = module;
-                IP6_NF_IPTABLES_LEGACY = module;
-              };
-            }
-          ];
-
-          boot.kernelModules = [
-            "ip_tables"
-            "iptable_filter"
-            "iptable_nat"
-            "iptable_mangle"
-            "iptable_raw"
-            "ip6_tables"
-          ];
+          boot.kernelPackages = pkgs.linuxPackages_latest;
 
           virtualisation = {
             waydroid.enable = true;
@@ -60,6 +41,7 @@
             cores = 4;
             diskSize = 16384;
             graphics = true;
+            qemu.enableSharedMemory = true;
 
             qemu.networkingOptions = lib.mkForce [
               "-netdev passt,id=net0,path=${pkgs.passt}/bin/passt,tcp-ports=2222:22"
