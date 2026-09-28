@@ -8,6 +8,11 @@
   flake.homeModules.screenUtils =
     { pkgs, ... }:
     {
-      home.packages = [ pkgs.woomer ];
+      home.packages = with pkgs; [
+        woomer
+        grim
+        slurp
+        wlrctl
+      ];
     };
 }
