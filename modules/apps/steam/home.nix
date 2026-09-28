@@ -270,7 +270,9 @@
         ${shellHelpers}
 
         RUNTIME_DIR=''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
-        if [ "$(${pkgs.docker}/bin/docker container inspect \
+        KEEP_VM=0
+        ${pkgs.procps}/bin/pgrep -f 'muvm .*/x86-apps/' >/dev/null && KEEP_VM=1
+        if [ "$KEEP_VM" = 0 ] && [ "$(${pkgs.docker}/bin/docker container inspect \
           --format '{{.State.Running}}' "$CONTAINER" 2>/dev/null || true)" = true ]; then
           ${pkgs.docker}/bin/docker container stop --time 5 "$CONTAINER" >/dev/null
         fi
@@ -287,7 +289,7 @@
           rm -rf "$LOCK"
         done
 
-        rm -rf \
+        [ "$KEEP_VM" = 1 ] || rm -rf \
           "$RUNTIME_DIR/krun" \
           "$RUNTIME_DIR/muvm.lock"
         rm -f \
