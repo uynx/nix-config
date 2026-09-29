@@ -56,6 +56,14 @@
         set -l state ~/.local/share/waydroid-vm
         set -l jq ${lib.getExe pkgs.jq}
 
+        mkdir -p $state
+        if not ${pkgs.util-linux}/bin/flock -n $state/launch.lock true
+            set -l id (niri msg -j windows | $jq -r '[.[] | select(.app_id == "qemu")][0].id // empty')
+            test -n "$id"; and niri msg action focus-window --id $id
+            echo "Android is already running or starting."
+            return 0
+        end
+
         set -l output
         if niri msg -j outputs | $jq -e 'has("HDMI-A-1")' >/dev/null 2>&1
             set output (niri msg -j outputs | $jq -c '."HDMI-A-1"')
@@ -74,7 +82,7 @@
         or return 1
 
         set -x QEMU_OPTS "-device virtio-gpu-gl-pci,xres=$size[1],yres=$size[2] -display gtk,gl=on,show-menubar=off -full-screen"
-        nix run ~/nix-config#nixosConfigurations.waydroid.config.system.build.vm
+        ${pkgs.util-linux}/bin/flock -n $state/launch.lock nix run ~/nix-config#nixosConfigurations.waydroid.config.system.build.vm
       '';
     };
 }
