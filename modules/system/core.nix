@@ -25,6 +25,8 @@
       brightnessctl
     ];
 
+    systemd.tmpfiles.rules = [ "L+ /bin/dash - - - - ${pkgs.dash}/bin/dash" ];
+
     documentation.nixos.enable = false;
 
     system.stateVersion = "26.05";
