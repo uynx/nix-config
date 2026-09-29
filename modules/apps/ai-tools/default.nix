@@ -278,6 +278,7 @@
               '') {
                 ".claude/settings.json" = "claude-settings.json";
                 ".gemini/antigravity-cli/settings.json" = "antigravity-cli-settings.json";
+                ".gemini/config/hooks.json" = "agy-hooks.json";
               }
             )
           );
