@@ -65,6 +65,7 @@
 
       xdg = {
         configFile."mimeapps.list".force = true;
+        configFile."yt-dlp/config".text = "--cookies-from-browser brave+gnomekeyring\n";
         dataFile."applications/mimeapps.list".force = true;
 
         mimeApps = {
