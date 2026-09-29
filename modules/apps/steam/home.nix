@@ -280,6 +280,18 @@
             ${N} msg -j windows | ${J} -e --argjson id "$2" 'any(.[]; .id == $id)' >/dev/null || break
             sleep 0.5
           done
+          LC=$(printf '%s' "$3" | tr '[:upper:]' '[:lower:]')
+          [ -z "$(window_id "$LC")" ] || exit 0
+          case "$LC" in
+            ${
+              lib.concatStrings (
+                lib.mapAttrsToList (bin: a: ''
+                  "${lib.toLower a.name}") ${pkgs.procps}/bin/pkill -f 'muvm .*/x86-apps/${bin}/' ;;
+                '') (config.x86Apps or { })
+              )
+            }*) ;;
+          esac
+          [ "''${4:-}" = quit ] || exit 0
           for _ in $(${pkgs.coreutils}/bin/seq 1 20); do
             ${pkgs.procps}/bin/pgrep -f 'muvm .*/x86-apps/' >/dev/null || break
             any_steam_window && exit 0

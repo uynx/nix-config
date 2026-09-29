@@ -85,7 +85,7 @@
             ID=$(printf '%s' "$ACTIVE" | $J -r '.id // empty')
             APP=$(printf '%s' "$ACTIVE" | $J -r '.app_id // ""')
             $N msg action close-window
-            command -v steam-asahi-stop >/dev/null && [ -n "$ID" ] && exec steam-asahi-stop --closed "$ID" "$APP"
+            command -v steam-asahi-stop >/dev/null && [ -n "$ID" ] && exec steam-asahi-stop --closed "$ID" "$APP" "$@"
           '')
         ];
       };

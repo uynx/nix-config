@@ -157,9 +157,9 @@ binds {
     Mod+Space { spawn "sh" "-c" "noctalia-shell ipc call launcher toggle"; }
 
     // Window management
-    // Mod+Q stops the Steam container once the last Steam window is gone; Mod+W only closes the window.
-    Mod+W { close-window; }
-    Mod+Q { spawn "close-active"; }
+    // Closing an x86 app's last window ends the app; Mod+Q also stops the Steam container once no VM window is left.
+    Mod+W { spawn "close-active"; }
+    Mod+Q { spawn "close-active" "quit"; }
     Mod+V { toggle-window-floating; }
     Mod+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
