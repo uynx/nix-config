@@ -12,6 +12,13 @@
           ...
         }:
         let
+          pins = lib.importJSON ./pins.json;
+          image =
+            part:
+            pkgs.runCommand "waydroid-${part}.img" { } ''
+              ${lib.getExe pkgs.unzip} -p ${pkgs.fetchurl pins.${part}} ${part}.img >$out
+            '';
+
           launch = pkgs.writeShellScriptBin "launch-waydroid" ''
             until systemctl is-active --quiet waydroid-container; do
               sleep 2
@@ -58,17 +65,17 @@
 
           systemd.services = {
             waydroid-image = {
-              description = "Fetch the Waydroid Android image on first boot";
+              description = "Point Waydroid at the pinned Android images";
               wantedBy = [ "multi-user.target" ];
               before = [ "waydroid-container.service" ];
-              after = [ "network-online.target" ];
-              wants = [ "network-online.target" ];
               serviceConfig = {
                 Type = "oneshot";
                 RemainAfterExit = true;
               };
               script = ''
-                [ -d /var/lib/waydroid/images ] || ${pkgs.waydroid}/bin/waydroid init -s GAPPS
+                grep -qx 'images_path = /etc/waydroid-extra/images' /var/lib/waydroid/waydroid.cfg 2>/dev/null \
+                  || ${pkgs.waydroid}/bin/waydroid init -f
+                rm -rf /var/lib/waydroid/images
               '';
             };
 
@@ -122,6 +129,10 @@
           };
 
           hardware.graphics.enable = true;
+          environment.etc = lib.genAttrs [ "system" "vendor" ] (part: {
+            target = "waydroid-extra/images/${part}.img";
+            source = image part;
+          });
           environment.systemPackages = [ pkgs.dnsmasq ];
 
           users.users.android = {
