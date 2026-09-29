@@ -23,11 +23,16 @@
             2>/dev/null || true
         }
 
+        VM_APPS='${builtins.toJSON (lib.mapAttrsToList (_: a: lib.toLower a.name) (config.x86Apps or { }))}'
+        VM_APP='$c == "steam" or ($c | test("^steam_app_[0-9]+$")) or ($c | IN($ids[]))'
+
+        is_vm_app() {
+          ${J} -n -e --argjson ids "$VM_APPS" --arg c "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" "$VM_APP" >/dev/null
+        }
+
         any_steam_window() {
-          ${N} msg -j windows 2>/dev/null | ${J} -e '
-            any(.[]; ((.app_id // "") | ascii_downcase) as $c
-                     | $c == "steam" or ($c | test("^steam_app_[0-9]+$")))
-          ' >/dev/null 2>&1
+          ${N} msg -j windows 2>/dev/null | ${J} -e --argjson ids "$VM_APPS" \
+            "any(.[]; ((.app_id // \"\") | ascii_downcase) as \$c | $VM_APP)" >/dev/null 2>&1
         }
 
         CONTAINER=steam-asahi
@@ -269,7 +274,19 @@
         set -eu
         ${shellHelpers}
 
-        [ "''${1:-}" = --if-last ] && any_steam_window && exit 0
+        if [ "''${1:-}" = --closed ]; then
+          is_vm_app "$3" || exit 0
+          for _ in $(${pkgs.coreutils}/bin/seq 1 20); do
+            ${N} msg -j windows | ${J} -e --argjson id "$2" 'any(.[]; .id == $id)' >/dev/null || break
+            sleep 0.5
+          done
+          for _ in $(${pkgs.coreutils}/bin/seq 1 20); do
+            ${pkgs.procps}/bin/pgrep -f 'muvm .*/x86-apps/' >/dev/null || break
+            any_steam_window && exit 0
+            sleep 0.5
+          done
+          any_steam_window && exit 0
+        fi
 
         RUNTIME_DIR=''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
         KEEP_VM=0
