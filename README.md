@@ -112,7 +112,7 @@ together.
 | `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
 | `secrets` | sops (age), rage, Bitwarden | Bitwarden only; needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
-| `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers, cake wallet (aarch64) | three casks, no `vpn` |
+| `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
 | `gaming` | Steam via the Fedora/FEX distrobox container | — |
 
