@@ -41,6 +41,7 @@
           imports = [ "${modulesPath}/virtualisation/qemu-vm.nix" ];
 
           boot.kernelPackages = pkgs.linuxPackages_latest;
+          boot.binfmt.emulatedSystems = [ "armv7l-linux" ];
 
           virtualisation = {
             waydroid.enable = true;
