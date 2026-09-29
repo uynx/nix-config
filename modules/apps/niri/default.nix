@@ -80,16 +80,21 @@
             set -eu
 
             N=${lib.getExe pkgs.niri}
+            J=${lib.getExe pkgs.jq}
             ACTIVE=$($N msg -j focused-window 2>/dev/null || echo '{}')
-            APP=$(printf '%s' "$ACTIVE" | ${lib.getExe pkgs.jq} -r '.app_id // ""' 2>/dev/null || true)
+            ID=$(printf '%s' "$ACTIVE" | $J -r '.id // empty')
+            APP=$(printf '%s' "$ACTIVE" | $J -r '.app_id // ""')
+            $N msg action close-window
             case "$APP" in
               steam|Steam|steam_app_[0-9]*)
-                if command -v steam-asahi-stop >/dev/null 2>&1; then
-                  exec steam-asahi-stop
-                fi
+                for _ in $(${pkgs.coreutils}/bin/seq 1 20); do
+                  $N msg -j windows | $J -e --argjson id "$ID" 'any(.[]; .id == $id)' >/dev/null || break
+                  sleep 0.5
+                done
+                sleep 1
+                exec steam-asahi-stop --if-last
                 ;;
             esac
-            exec $N msg action close-window
           '')
         ];
       };

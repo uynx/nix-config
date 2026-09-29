@@ -7,17 +7,17 @@
     }
   },
   "codex": {
-    "version": "0.158.0",
+    "version": "0.159.0",
     "hash": {
-      "aarch64-linux": "sha256-9M5CdX4QFA4LLwyRbnKUHHB9Pl19kJIkZd+ZJoz1PyI=",
-      "x86_64-linux": "sha256-P+hBBqry+/wTKZBoUQ00s9AVfuua9LN76M9UFvSFprs="
+      "aarch64-linux": "sha256-NGHfehavEREWDwxWpweaiG/3pWJKsDiJ0z7d5Pq/EaA=",
+      "x86_64-linux": "sha256-J6gOGQTHM3/mXZT4gXebp3APQqiofz0GNStUOwEV35g="
     }
   },
   "grok": {
-    "version": "1.0.41",
+    "version": "1.0.44",
     "hash": {
-      "aarch64-linux": "sha256-fAuMlzr2p44gN/Ge2TAzRxuMXnIvn/BLhrCS4GbmDXQ=",
-      "x86_64-linux": "sha256-nOA+0j4W6gEHK0SWJj1iE6J4meHj4QfwCNNu34LnBAc="
+      "aarch64-linux": "sha256-oxUG1ztEVLv3DDwoIeQaBC+ng4BYuhsnGwCakm0XUjk=",
+      "x86_64-linux": "sha256-92Qxhz78XIpQiS0eEkfq7iP2ZkvKOF+9VaBqjn08rtw="
     }
   },
   "kimi": {
