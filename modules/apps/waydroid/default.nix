@@ -24,8 +24,8 @@
           jq -n --argjson r "$r" --arg h "$(nix hash convert --hash-algo sha256 --to sri "$(echo "$r" | jq -r .id)")" \
             '{ name: $r.filename, url: $r.url, hash: $h }'
         }
-        system=$(pin $ota/system/lineage/waydroid_arm64/GAPPS.json)
-        vendor=$(pin $ota/vendor/waydroid_arm64/MAINLINE.json)
+        system=$(pin $ota/system/lineage/waydroid_arm64_only/GAPPS.json)
+        vendor=$(pin $ota/vendor/waydroid_arm64_only/MAINLINE.json)
 
         current=$(jq -r .system.name "$file" 2>/dev/null || echo none)
         latest=$(echo "$system" | jq -r .name)
