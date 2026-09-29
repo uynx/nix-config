@@ -270,9 +270,17 @@
           };
 
         activation = {
-          claudeSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-            ln -sfn ${home}/dotfiles/claude-settings.json ${home}/.claude/settings.json
-          '';
+          aiSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] (
+            lib.concatStrings (
+              lib.mapAttrsToList (target: source: ''
+                mkdir -p "$(dirname ${home}/${target})"
+                ln -sfn ${home}/dotfiles/${source} ${home}/${target}
+              '') {
+                ".claude/settings.json" = "claude-settings.json";
+                ".gemini/antigravity-cli/settings.json" = "antigravity-cli-settings.json";
+              }
+            )
+          );
 
           installRollingAiClis = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
             ${update-ai-clis}/bin/update-ai-clis --missing-only || true
