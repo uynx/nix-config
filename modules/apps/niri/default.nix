@@ -85,16 +85,7 @@
             ID=$(printf '%s' "$ACTIVE" | $J -r '.id // empty')
             APP=$(printf '%s' "$ACTIVE" | $J -r '.app_id // ""')
             $N msg action close-window
-            case "$APP" in
-              steam|Steam|steam_app_[0-9]*)
-                for _ in $(${pkgs.coreutils}/bin/seq 1 20); do
-                  $N msg -j windows | $J -e --argjson id "$ID" 'any(.[]; .id == $id)' >/dev/null || break
-                  sleep 0.5
-                done
-                sleep 1
-                exec steam-asahi-stop --if-last
-                ;;
-            esac
+            command -v steam-asahi-stop >/dev/null && [ -n "$ID" ] && exec steam-asahi-stop --closed "$ID" "$APP"
           '')
         ];
       };
