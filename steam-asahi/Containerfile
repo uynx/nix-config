@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-minimal@sha256:77dae00ae95866fe18f1ee83f2eed8f1e92db3da0dd8396e35f900f050eb9e40
+FROM quay.io/fedora/fedora-minimal@sha256:1c0ef08cb996ba8e212111bbc9fb5b41b517ebc1397de6ef7c3dc192fa44604d
 
 RUN --mount=type=cache,target=/var/cache/libdnf5 \
     dnf install -y --setopt=keepcache=True --setopt=max_parallel_downloads=20 "dnf5-command(copr)" && \

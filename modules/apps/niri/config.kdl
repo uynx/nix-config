@@ -157,9 +157,8 @@ binds {
     Mod+Space { spawn "sh" "-c" "noctalia-shell ipc call launcher toggle"; }
 
     // Window management
-    // close-active, not niri's close-window: a Steam game leaves Proton running
-    // inside the VM when only its window is closed.
-    Mod+W { spawn "close-active"; }
+    // Mod+Q stops the Steam container once the last Steam window is gone; Mod+W only closes the window.
+    Mod+W { close-window; }
     Mod+Q { spawn "close-active"; }
     Mod+V { toggle-window-floating; }
     Mod+F { maximize-column; }

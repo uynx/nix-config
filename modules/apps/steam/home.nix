@@ -269,6 +269,8 @@
         set -eu
         ${shellHelpers}
 
+        [ "''${1:-}" = --if-last ] && any_steam_window && exit 0
+
         RUNTIME_DIR=''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
         KEEP_VM=0
         ${pkgs.procps}/bin/pgrep -f 'muvm .*/x86-apps/' >/dev/null && KEEP_VM=1
