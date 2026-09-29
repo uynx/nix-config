@@ -133,7 +133,7 @@ Manager wiring and the `shellHooks` option declarations.
 On macOS the whole AI toolchain is Homebrew, not pins: the pins in
 `modules/apps/ai-tools/linux.nix` are aarch64-linux artifacts, and the desktop
 apps come along with the casks. `update-ai-clis` rolls the unpinnable tools
-(agy, openclaw, qwen, hermes, t3) on **Linux only** — since 2026-09-02 each of
+(agy, t3) on **Linux only** — since 2026-09-02 each of
 those has a formula or cask on the Mac, so the script installs nothing there.
 `greedyCasks` plus `onActivation.upgrade` keep the rest current on every
 rebuild.

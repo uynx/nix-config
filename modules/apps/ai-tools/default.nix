@@ -35,13 +35,6 @@
             gnused
             jq
             nodejs
-            uv
-            git
-
-            python3
-            gnumake
-            gcc
-            binutils
           ];
         text = ''
           missingOnly=
@@ -54,7 +47,7 @@
             echo "update-ai-clis: another run is already installing, skipping" >&2
             exit 0
           fi
-          export PATH="$PATH:${home}/.local/bin${lib.optionalString isLinux ":${home}/.hermes/bin"}"
+          export PATH="$PATH:${home}/.local/bin"
           ${lib.optionalString isLinux "export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"}
 
           export CI=1
@@ -121,22 +114,6 @@
             try_bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64" \
               "https://x.ai/cli/grok-$grok-linux-x86_64"
 
-            kimi=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://code.kimi.com/kimi-code/latest | tr -d '[:space:]' || true)
-            try_bump kimi "$kimi" \
-              "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-arm64" \
-              "https://code.kimi.com/kimi-code/binaries/$kimi/kimi-code-linux-x64"
-
-            opencode=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://api.github.com/repos/sst/opencode/releases/latest \
-              | jq -r '.tag_name | ltrimstr("v")' || true)
-            try_bump opencode "$opencode" \
-              "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-arm64.tar.gz" \
-              "https://github.com/sst/opencode/releases/download/v$opencode/opencode-linux-x64.tar.gz"
-
-            cursor=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 --compressed https://cursor.com/install | sed -n 's|.*downloads\.cursor\.com/lab/\([^/]*\)/.*|\1|p' | head -1 || true)
-            try_bump cursor-agent "$cursor" \
-              "https://downloads.cursor.com/lab/$cursor/linux/arm64/agent-cli-package.tar.gz" \
-              "https://downloads.cursor.com/lab/$cursor/linux/x64/agent-cli-package.tar.gz"
-
             echo
             echo 'rolling (takes effect now, no rebuild):'
             fi
@@ -146,10 +123,7 @@
             bin=$1
             case "$bin" in
               agy) agy --version 2>/dev/null | head -1 ;;
-              openclaw) openclaw --version 2>/dev/null | head -1 | sed 's/OpenClaw //' ;;
               t3) t3 --version 2>/dev/null | head -1 | sed 's/t3 //' ;;
-              qwen) (qwen --version 2>/dev/null || qwen-code --version 2>/dev/null) | head -1 ;;
-              hermes) hermes --version 2>/dev/null | head -1 | sed -e 's/Hermes Agent //' -e 's/ · local .*//' ;;
               *) echo "" ;;
             esac
           }
@@ -226,41 +200,8 @@
             fi
           ''}
           ${lib.optionalString isLinux ''
-            # Sequential: concurrent npm installs into one prefix race on its bin links.
-            {
-              roll openclaw npm install -g --prefix "${home}/.local" openclaw
-              roll t3       npm install -g --prefix "${home}/.local" t3
-              roll qwen     npm install -g --prefix "${home}/.local" @qwen-code/qwen-code
-            } &
+            roll t3 npm install -g --prefix "${home}/.local" t3 &
           ''}
-          ${lib.optionalString isLinux ''
-            if ! command -v hermes >/dev/null 2>&1; then
-              printf '  %-12s installing, first run takes many minutes...\n' hermes
-              roll hermes timeout 2400 sh -c 'curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://hermes-agent.nousresearch.com/install.sh \
-                | bash -s -- --non-interactive --hermes-home ${home}/.hermes'
-            elif [ -z "$missingOnly" ]; then
-              rm -f "${home}/.hermes/hermes-agent/.git/"*.lock 2>/dev/null || true
-              git -C "${home}/.hermes/hermes-agent" config url."https://github.com/".insteadOf "https://github.com/" 2>/dev/null || true
-              ver=$(get_ver hermes || true)
-              tmp=$(mktemp)
-              timeout 60 hermes update --check >"$tmp" 2>&1 &
-              pid=$!
-              spin hermes "$pid" "$tmp"
-              rc=0
-              wait "$pid" || rc=$?
-              check=$(cat "$tmp")
-              rm -f "$tmp"
-              if [ "$rc" -eq 124 ]; then
-                printf '  %-12s SKIPPED (update check timed out)\n' hermes
-                echo >>"$sk"
-              elif printf '%s' "$check" | grep -q 'Already up to date'; then
-                printf '  %-12s %s (up to date)\n' hermes "$ver"
-              else
-                roll hermes timeout 600 hermes update --yes
-              fi
-            fi &
-          ''}
-
           wait
           skipped=$((skipped + $(wc -l <"$sk")))
           rm -f "$sk"
@@ -280,7 +221,6 @@
           CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1";
           GROK_DISABLE_AUTOUPDATER = "1";
           AGY_CLI_DISABLE_AUTO_UPDATE = "1";
-          OPENCODE_DISABLE_AUTOUPDATE = "1";
 
           PATH = "$PATH:${home}/.local/bin";
         }
@@ -294,14 +234,8 @@
               ".agents/AGENTS.md"
               ".claude/CLAUDE.md"
               ".codex/AGENTS.md"
-              ".cursorrules"
-              ".cursor/rules/system.mdc"
               ".gemini/AGENTS.md"
               ".grok/AGENTS.md"
-              ".kimi-code/AGENTS.md"
-              ".openclaw/AGENTS.md"
-              ".qwen/QWEN.md"
-              ".config/opencode/AGENTS.md"
             ]
             (_: {
               source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
@@ -311,14 +245,9 @@
               [
                 ".agents/skills"
                 ".claude/skills"
-                ".cursor/skills"
-                ".gemini/skills"
+                  ".gemini/skills"
                 ".grok/skills"
-                ".kimi-code/skills"
-                ".openclaw/skills"
-                ".qwen/skills"
-                ".config/opencode/skills"
-              ]
+                      ]
               (_: {
                 source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
               })
@@ -328,10 +257,6 @@
               value.source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills/${skill}";
             }) sharedSkills
           )
-          // {
-            ".claude/settings.json".source =
-              config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/claude-settings.json";
-          }
           // lib.optionalAttrs isLinux {
             ".local/share/applications/t3.desktop".text = ''
               [Desktop Entry]
@@ -345,11 +270,8 @@
           };
 
         activation = {
-          hermesSharedSkills = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            cfg="${home}/.hermes/config.yaml"
-            if [ -f "$cfg" ] && ! grep -qE '^skills:|external_dirs' "$cfg"; then
-              printf '\nskills:\n  external_dirs:\n    - %s\n' "${home}/.agents/skills" >>"$cfg"
-            fi
+          claudeSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+            ln -sfn ${home}/dotfiles/claude-settings.json ${home}/.claude/settings.json
           '';
 
           installRollingAiClis = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -359,9 +281,5 @@
       };
 
       shellHooks.update = [ "update-ai-clis" ];
-
-      systemd.user.tmpfiles.rules = lib.optionals isLinux [
-        "e ${home}/.hermes/state-snapshots - - - 7d"
-      ];
     };
 }

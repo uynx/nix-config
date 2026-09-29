@@ -77,32 +77,4 @@ in
     desc = "x.ai's official Grok CLI";
   };
 
-  kimi = mkPin {
-    pname = "kimi";
-    url = v: "https://code.kimi.com/kimi-code/binaries/${v}/kimi-code-linux-${short}";
-    homepage = "https://code.kimi.com";
-    desc = "Moonshot's Kimi Code CLI";
-  };
-
-  opencode = mkPin {
-    pname = "opencode";
-    url = v: "https://github.com/sst/opencode/releases/download/v${v}/opencode-linux-${short}.tar.gz";
-    sourceRoot = ".";
-    install = ''install -Dm755 opencode "$out/bin/opencode"'';
-    homepage = "https://github.com/sst/opencode";
-    desc = "SST's OpenCode terminal agent";
-  };
-
-  cursor-agent = mkPin {
-    pname = "cursor-agent";
-    url = v: "https://downloads.cursor.com/lab/${v}/linux/${short}/agent-cli-package.tar.gz";
-    sourceRoot = "dist-package";
-    install = ''
-      mkdir -p "$out/libexec" "$out/bin"
-      cp -r . "$out/libexec/cursor-agent"
-      ln -s "$out/libexec/cursor-agent/cursor-agent" "$out/bin/cursor-agent"
-    '';
-    homepage = "https://cursor.com/cli";
-    desc = "Cursor's agent CLI";
-  };
 }
