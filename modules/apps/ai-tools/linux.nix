@@ -23,9 +23,6 @@
         aiClis.claude-code
         aiClis.codex
         aiClis.grok
-        aiClis.kimi
-        aiClis.opencode
-        aiClis.cursor-agent
       ];
     };
 }
