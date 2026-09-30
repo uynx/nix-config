@@ -1,12 +1,12 @@
 {
   "system": {
-    "name": "lineage-20.0-20260403-GAPPS-waydroid_arm64_only-system.zip",
-    "url": "https://sourceforge.net/projects/waydroid/files/images/system/lineage/waydroid_arm64_only/lineage-20.0-20260403-GAPPS-waydroid_arm64_only-system.zip/download",
-    "hash": "sha256-dwawToFYAqyJGMcfHDZLZHYm9ouige3wFk20taQWbYI="
+    "name": "lineage-20.0-20260927-GAPPS-waydroid_arm64_only-system.zip",
+    "url": "https://sourceforge.net/projects/waydroid/files/images/system/lineage/waydroid_arm64_only/lineage-20.0-20260927-GAPPS-waydroid_arm64_only-system.zip/download",
+    "hash": "sha256-Kb99iwp5XytpcqzGvrs2B6/DV7jZGl6VMQM1vah6co0="
   },
   "vendor": {
-    "name": "lineage-20.0-20260403-MAINLINE-waydroid_arm64_only-vendor.zip",
-    "url": "https://sourceforge.net/projects/waydroid/files/images/vendor/waydroid_arm64_only/lineage-20.0-20260403-MAINLINE-waydroid_arm64_only-vendor.zip/download",
-    "hash": "sha256-utXoSipHuHfYqF9qIScg9VYuPusmaWv9Di3lDasew7o="
+    "name": "lineage-20.0-20260927-MAINLINE-waydroid_arm64_only-vendor.zip",
+    "url": "https://sourceforge.net/projects/waydroid/files/images/vendor/waydroid_arm64_only/lineage-20.0-20260927-MAINLINE-waydroid_arm64_only-vendor.zip/download",
+    "hash": "sha256-vVAsU62lAZ4PrTvrb+skjORcnqUAhw9HJeDRJiS67wo="
   }
 }
