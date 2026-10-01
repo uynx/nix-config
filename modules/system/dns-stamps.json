@@ -1,4 +1,4 @@
 {
-  "mullvad-all-doh": "sdns://AgMAAAAAAAAACzE5NC4yNDIuMi45ABNhbGwuZG5zLm11bGx2YWQubmV0Ci9kbnMtcXVlcnk",
-  "mullvad-all-doh-ipv6": "sdns://AgMAAAAAAAAADlsyYTA3OmUzNDA6OjldABNhbGwuZG5zLm11bGx2YWQubmV0Ci9kbnMtcXVlcnk"
+  "quad9-doh-ip4-149": "sdns://AgMAAAAAAAAADzE0OS4xMTIuMTEyLjExMiCwGSB0S7t2yasFPgHge34FDkc9IPefe-pDX6_kPJ0kLxJkbnM5LnF1YWQ5Lm5ldDo0NDMKL2Rucy1xdWVyeQ",
+  "quad9-doh-ip6-port443-filter-pri": "sdns://AgMAAAAAAAAADVsyNjIwOmZlOjpmZV0gsBkgdEu7dsmrBT4B4Ht-BQ5HPSD3n3vqQ1-v5DydJC8RZG5zLnF1YWQ5Lm5ldDo0NDMKL2Rucy1xdWVyeQ"
 }
