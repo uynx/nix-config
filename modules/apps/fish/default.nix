@@ -31,6 +31,9 @@ in
         }
         // lib.optionalAttrs isDarwin {
           unb = "xattr -d com.apple.quarantine";
+        }
+        // lib.optionalAttrs (!isDarwin) {
+          codex = "command codex --no-daemon";
         };
 
         configFile.content = ''
