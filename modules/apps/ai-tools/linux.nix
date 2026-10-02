@@ -17,8 +17,6 @@
         defaultApplications."x-scheme-handler/claude-cli" = "claude-code-url-handler.desktop";
       };
 
-      home.sessionVariables.NO_DAEMON = "1";
-
       home.packages = [
         pkgs.bubblewrap
 
