@@ -57,7 +57,12 @@
               fi
             else
               rm -f "$audio"
-              pw-record --format=s16 --rate=16000 --channels=1 "$audio" >/dev/null 2>&1 &
+              nodes=$(pw-cli ls Node 2>/dev/null || true)
+              target=()
+              case $nodes in
+                *'node.name = "effect_output.j314-mic"'*) target=(--target effect_output.j314-mic) ;;
+              esac
+              pw-record "''${target[@]}" --format=s16 --rate=16000 --channels=1 "$audio" >/dev/null 2>&1 &
               echo $! > "$recordPid"
               notify-send "Dictation" "Recording... press Super+D again to finish." -i media-record-symbolic || true
             fi
