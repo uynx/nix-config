@@ -26,7 +26,12 @@ in
           hyperfine
           bandwhich
           socat
-          nh
+          (nh.override {
+            # nom 2.2.0 can't parse Determinate Nix's activity type 10113 and floods the screen; drop those lines.
+            nix-output-monitor = writeShellScriptBin "nom" ''
+              ${lib.getExe gnugrep} --line-buffered -av '"type":10113' | exec ${lib.getExe nix-output-monitor} "$@"
+            '';
+          })
           nvd
           dash
         ]
