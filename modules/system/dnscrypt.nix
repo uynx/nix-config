@@ -54,6 +54,8 @@ let
               -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
 
             for name in $(jq -r 'keys[]' "$file"); do
+              # hand-built, not an upstream heading
+              [ "$name" = quad9-doh-ip4-149 ] && continue
               latest=$(awk -v h="## $name" \
                 '$0 == h { f = 1; next } f && /^sdns:\/\// { print; exit }' \
                 "$work/public-resolvers.md")
