@@ -27,9 +27,9 @@ in
           bandwhich
           socat
           (nh.override {
-            # nom 2.2.0 can't parse Determinate Nix's activity type 10113 and floods the screen; drop those lines.
+            # nom 2.2.0 can't parse Determinate Nix's 5-digit activity and result types (10111, 10113) and floods the screen.
             nix-output-monitor = writeShellScriptBin "nom" ''
-              ${lib.getExe gnugrep} --line-buffered -av '"type":10113' | exec ${lib.getExe nix-output-monitor} "$@"
+              ${lib.getExe gnugrep} --line-buffered -avE '"type":[0-9]{5}' | exec ${lib.getExe nix-output-monitor} "$@"
             '';
           })
           nvd
