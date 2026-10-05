@@ -25,54 +25,45 @@ let
 
       home-manager.users.${self.lib.user.name} = {
         home.packages = [
-          (pkgs.writers.writeDashBin "update-dns-stamps" ''
-            set -eu
-            export PATH=${
-              lib.makeBinPath (
-                with pkgs;
-                [
-                  coreutils
-                  curl
-                  gawk
-                  jq
-                  minisign
-                ]
-              )
-            }
+          (self.lib.mkUpdater pkgs {
+            name = "update-dns-stamps";
+            inputs = with pkgs; [
+              gawk
+              minisign
+            ];
+            text = ''
+              base=https://download.dnscrypt.info/resolvers-list/v3
+              file=$HOME/nix-config/modules/system/dns-stamps.json
 
-            base=https://download.dnscrypt.info/resolvers-list/v3
-            file=$HOME/nix-config/modules/system/dns-stamps.json
+              work=$(mktemp -d)
+              trap 'rm -rf "$work"' EXIT INT TERM
 
-            work=$(mktemp -d)
-            trap 'rm -rf "$work"' EXIT INT TERM
+              for f in public-resolvers.md public-resolvers.md.minisig; do
+                fetch -o "$work/$f" "$base/$f"
+              done
 
-            for f in public-resolvers.md public-resolvers.md.minisig; do
-              curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 60 -o "$work/$f" "$base/$f"
-            done
+              minisign -Vqm "$work/public-resolvers.md" \
+                -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
 
-            minisign -Vqm "$work/public-resolvers.md" \
-              -P RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3
+              for name in $(jq -r 'keys[]' "$file"); do
+                # hand-built, not an upstream heading
+                [ "$name" = quad9-doh-ip4-149 ] && continue
+                latest=$(awk -v h="## $name" \
+                  '$0 == h { f = 1; next } f && /^sdns:\/\// { print; exit }' \
+                  "$work/public-resolvers.md")
+                current=$(jq -r --arg n "$name" '.[$n]' "$file")
 
-            for name in $(jq -r 'keys[]' "$file"); do
-              # hand-built, not an upstream heading
-              [ "$name" = quad9-doh-ip4-149 ] && continue
-              latest=$(awk -v h="## $name" \
-                '$0 == h { f = 1; next } f && /^sdns:\/\// { print; exit }' \
-                "$work/public-resolvers.md")
-              current=$(jq -r --arg n "$name" '.[$n]' "$file")
-
-              if [ -z "$latest" ]; then
-                printf '%-22s FAILED (not in public-resolvers.md — pin left stale)\n' "$name"
-              elif [ "$latest" = "$current" ]; then
-                printf '%-22s up to date\n' "$name"
-              else
-                tmp=$(mktemp)
-                jq --arg n "$name" --arg s "$latest" '.[$n] = $s' "$file" >"$tmp"
-                mv "$tmp" "$file"
-                printf '%-22s stamp changed\n' "$name"
-              fi
-            done
-          '')
+                if [ -z "$latest" ]; then
+                  printf '%-22s FAILED (not in public-resolvers.md — pin left stale)\n' "$name"
+                elif [ "$latest" = "$current" ]; then
+                  printf '%-22s up to date\n' "$name"
+                else
+                  jq_write "$file" --arg n "$name" --arg s "$latest" '.[$n] = $s' "$file"
+                  printf '%-22s stamp changed\n' "$name"
+                fi
+              done
+            '';
+          })
         ];
 
         shellHooks.update = [ "update-dns-stamps" ];
