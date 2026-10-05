@@ -18,7 +18,7 @@
 +			for (struct wsk_keypress *k = state->keys; k; k = k->next) {
 +				count++;
 +			}
-+			if (count >= 24) {
++			if (count >= 10) {
 +				struct wsk_keypress *oldest = state->keys;
 +				state->keys = oldest->next;
 +				free(oldest);

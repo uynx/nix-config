@@ -15,13 +15,12 @@
     { pkgs, ... }:
     {
       home.packages = with pkgs; [
-        woomer
         wayscriber
         (writers.writeDashBin "toggle-showkeys" ''
           if ${procps}/bin/pgrep -x wshowkeys >/dev/null; then
             exec ${procps}/bin/pkill -x wshowkeys
           fi
-          exec /run/wrappers/bin/wshowkeys -t 86400 -a bottom -a right -m 40 -F 'monospace 28'
+          exec /run/wrappers/bin/wshowkeys -t 86400 -a top -a right -m 20 -F 'monospace 14'
         '')
         grim
         slurp
