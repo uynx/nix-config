@@ -114,8 +114,7 @@ key, not iCloud escrow, and store that key in Bitwarden. It is near-instant on
 Apple Silicon. LUKS covers only the NixOS root; FileVault is the only encryption
 macOS gets.
 
-Bootstrap nix-darwin. Sign into the App Store first — `mas` needs it, or
-`cakewallet` silently never installs.
+Bootstrap nix-darwin.
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
