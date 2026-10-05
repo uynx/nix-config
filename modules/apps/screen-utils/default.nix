@@ -3,6 +3,7 @@
     { pkgs, ... }:
     {
       environment.systemPackages = [ pkgs.showmethekey ];
+      programs.wshowkeys.enable = true;
     };
 
   flake.homeModules.screenUtils =
@@ -10,6 +11,13 @@
     {
       home.packages = with pkgs; [
         woomer
+        wayscriber
+        (writers.writeDashBin "toggle-showkeys" ''
+          if ${procps}/bin/pgrep -x wshowkeys >/dev/null; then
+            exec ${procps}/bin/pkill -x wshowkeys
+          fi
+          exec /run/wrappers/bin/wshowkeys -a bottom -a right -m 40 -F 'monospace 28'
+        '')
         grim
         slurp
         wlrctl
