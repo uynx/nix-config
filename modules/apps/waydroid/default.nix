@@ -41,48 +41,49 @@
       '';
     in
     {
-      home.packages = [ update-android ];
+      config = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 {
+        home.packages = [ update-android ];
 
-      shellHooks.update = [ "update-android" ];
+        shellHooks.update = [ "update-android" ];
 
-      xdg.desktopEntries.android = {
-        name = "Android";
-        exec = "fish -c android";
-        icon = "phone";
-        terminal = false;
+        xdg.desktopEntries.android = {
+          name = "Android";
+          exec = "fish -c android";
+          icon = "phone";
+          terminal = false;
+        };
+
+        programs.fish.functions.android.body = ''
+          set -l state ~/.local/share/waydroid-vm
+          set -l jq ${lib.getExe pkgs.jq}
+
+          mkdir -p $state
+          if not ${pkgs.util-linux}/bin/flock -n $state/launch.lock true
+              set -l id (niri msg -j windows | $jq -r '[.[] | select(.app_id == "qemu")][0].id // empty')
+              test -n "$id"; and niri msg action focus-window --id $id
+              echo "Android is already running or starting."
+              return 0
+          end
+
+          set -l output
+          if niri msg -j outputs | $jq -e 'has("HDMI-A-1")' >/dev/null 2>&1
+              set output (niri msg -j outputs | $jq -c '."HDMI-A-1"')
+          else
+              set output (niri msg -j focused-output)
+          end
+
+          set -l size (printf '%s' "$output" | $jq -er '.logical | "\(.width) \(.height)"' | string split ' ')
+          if test (count $size) -ne 2
+              echo "Could not read the monitor size from niri."
+              return 1
+          end
+
+          cd $state
+          or return 1
+
+          set -x QEMU_OPTS "-device virtio-gpu-gl-pci,xres=$size[1],yres=$size[2] -display gtk,gl=on,show-menubar=off -full-screen"
+          ${pkgs.util-linux}/bin/flock -n $state/launch.lock nix run ~/nix-config#nixosConfigurations.waydroid.config.system.build.vm
+        '';
       };
-
-      programs.fish.functions.android.body = ''
-        set -l state ~/.local/share/waydroid-vm
-        set -l jq ${lib.getExe pkgs.jq}
-
-        mkdir -p $state
-        if not ${pkgs.util-linux}/bin/flock -n $state/launch.lock true
-            set -l id (niri msg -j windows | $jq -r '[.[] | select(.app_id == "qemu")][0].id // empty')
-            test -n "$id"; and niri msg action focus-window --id $id
-            echo "Android is already running or starting."
-            return 0
-        end
-
-        set -l output
-        if niri msg -j outputs | $jq -e 'has("HDMI-A-1")' >/dev/null 2>&1
-            set output (niri msg -j outputs | $jq -c '."HDMI-A-1"')
-        else
-            set output (niri msg -j focused-output)
-        end
-
-        set -l size (printf '%s' "$output" | $jq -er '.logical | "\(.width) \(.height)"' | string split ' ')
-        if test (count $size) -ne 2
-            echo "Could not read the monitor size from niri."
-            return 1
-        end
-
-        mkdir -p $state
-        cd $state
-        or return 1
-
-        set -x QEMU_OPTS "-device virtio-gpu-gl-pci,xres=$size[1],yres=$size[2] -display gtk,gl=on,show-menubar=off -full-screen"
-        ${pkgs.util-linux}/bin/flock -n $state/launch.lock nix run ~/nix-config#nixosConfigurations.waydroid.config.system.build.vm
-      '';
     };
 }
