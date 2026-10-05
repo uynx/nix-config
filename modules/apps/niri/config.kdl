@@ -137,6 +137,12 @@ window-rule {
     open-fullscreen true
 }
 
+// woomer sets no app-id and cannot fullscreen itself on Wayland, so it opens as a tile
+window-rule {
+    match title="^woomer$"
+    open-fullscreen true
+}
+
 // Mod+Shift+Slash still summons it on demand.
 hotkey-overlay {
     skip-at-startup
