@@ -22,7 +22,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nix-flatpak.url = "github:gmodena/nix-flatpak/v0.7.0";
     nix-darwin = {
       url = "https://flakehub.com/f/nix-darwin/nix-darwin/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";

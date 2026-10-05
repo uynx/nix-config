@@ -100,7 +100,7 @@ together.
 
 | Bundle | Contents | macOS |
 |---|---|---|
-| `desktopNiri` | niri, sddm-astronaut greeter, noctalia, GTK theme, screen utils, `android` | — |
+| `desktopNiri` | niri, sddm-astronaut greeter, noctalia, GTK theme, screen utils, `android` (aarch64 only) | — |
 | `desktopKde` | Plasma 6, sddm, spectacle | — |
 | `desktopMacos` | AeroSpace, SketchyBar, JankyBorders, wallpaper, file associations | only |
 | `shell` | fish, ghostty, tmux, starship, yazi, btop, CLI tooling | yes |
@@ -108,7 +108,7 @@ together.
 | `office` | obsidian, libreoffice | yes (`libreoffice-bin`) |
 | `latex` | texlive scheme-full (stable pin) | yes |
 | `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
-| `comms` | vesktop, whatsapp, rustdesk (flatpak on x86, emulated on aarch64) | whatsapp, rustdesk cask |
+| `comms` | vesktop, whatsapp, rustdesk (upstream .deb, native on both) | whatsapp, rustdesk cask |
 | `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
 | `secrets` | sops (age), rage, Bitwarden | Bitwarden only; needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
@@ -134,7 +134,7 @@ On macOS the whole AI toolchain is Homebrew, not pins: the pins in
 `modules/apps/ai-tools/linux.nix` are aarch64-linux artifacts, and the desktop
 apps come along with the casks. `update-ai-clis` rolls the unpinnable tools
 (agy, t3) on **Linux only** — since 2026-09-02 each of
-those has a formula or cask on the Mac, so the script installs nothing there.
+those has a formula or cask on the Mac, so the script does not exist there.
 `greedyCasks` plus `onActivation.upgrade` keep the rest current on every
 rebuild.
 
