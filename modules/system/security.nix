@@ -1,10 +1,6 @@
 {
   flake.nixosModules.security = _: {
-    networking.firewall = {
-      allowedTCPPorts = [ ];
-      allowedUDPPorts = [ ];
-      allowPing = false;
-    };
+    networking.firewall.allowPing = false;
 
     programs.ssh.extraConfig = ''
       Host 192.168.8.1
@@ -66,7 +62,6 @@
 
         "iommu.passthrough=0"
         "efi=disable_early_pci_dma"
-
       ];
 
       blacklistedKernelModules = [
