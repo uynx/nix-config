@@ -137,12 +137,6 @@ window-rule {
     open-fullscreen true
 }
 
-// woomer sets no app-id and cannot fullscreen itself on Wayland, so it opens as a tile
-window-rule {
-    match title="^woomer$"
-    open-fullscreen true
-}
-
 // Mod+Shift+Slash still summons it on demand.
 hotkey-overlay {
     skip-at-startup
@@ -223,8 +217,7 @@ binds {
     Mod+Ctrl+S  { screenshot-screen; }
     Mod+Alt+S   { screenshot-window; }
 
-    // Recording overlays: zoom, draw on screen, key display.
-    Mod+Z      { spawn "sh" "-c" "pgrep -x woomer || exec woomer"; }
+    // Recording overlays: draw and zoom (wayscriber, Ctrl+Alt+scroll to zoom), key display.
     Mod+G      { spawn "wayscriber" "--daemon-toggle"; }
     Mod+Ctrl+K { spawn "toggle-showkeys"; }
 
