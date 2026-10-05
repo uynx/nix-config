@@ -1,57 +1,35 @@
+{ self, ... }:
 {
   flake.homeModules.braveOrigin =
     { pkgs, lib, ... }:
     let
-      update-brave-origin = pkgs.writers.writeDashBin "update-brave-origin" ''
-        set -eu
-        export PATH=${
-          lib.makeBinPath (
-            with pkgs;
-            [
-              coreutils
-              curl
-              gnugrep
-              gnused
-              jq
-              nix
-            ]
-          )
-        }
+      update-brave-origin = self.lib.mkUpdater pkgs {
+        name = "update-brave-origin";
+        inputs = [ pkgs.ripgrep ];
+        text = ''
+          base=https://brave-browser-apt-release.s3.brave.com
+          file=$HOME/nix-config/modules/apps/brave-origin/pins.json
 
-        base=https://brave-browser-apt-release.s3.brave.com
-        file=$HOME/nix-config/modules/apps/brave-origin/pins.json
+          current=$(jq -r .version "$file")
+          latest=$(fetch "$base/dists/stable/main/binary-arm64/Packages" \
+            | rg -A20 '^Package: brave-origin$' \
+            | rg -m1 -o -r '$1' '^Version: ([0-9.]+)' || true)
 
-        current=$(jq -r .version "$file")
-        latest=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 60 \
-          "$base/dists/stable/main/binary-arm64/Packages" \
-          | grep -A20 '^Package: brave-origin$' \
-          | sed -n 's/^Version: \([0-9.]*\).*/\1/p' \
-          | head -1)
+          if [ -z "$latest" ]; then
+            echo "brave-origin: no version in the package index" >&2
+            exit 1
+          fi
 
-        if [ -z "$latest" ]; then
-          echo "brave-origin: no version in the package index" >&2
-          exit 1
-        fi
-        if [ "$current" = "$latest" ]; then
-          printf '%-12s %s (up to date)\n' brave-origin "$current"
-          exit 0
-        fi
-
-        hash_for() {
-          nix hash convert --hash-algo sha256 --to sri \
-            "$(nix-prefetch-url --type sha256 \
-              "$base/pool/main/b/brave-origin/brave-origin_''${latest}_$1.deb")"
-        }
-        arm64=$(hash_for arm64)
-        amd64=$(hash_for amd64)
-
-        tmp=$(mktemp)
-        jq -n --arg v "$latest" --arg a "$arm64" --arg x "$amd64" \
-          '{ version: $v, arm64: $a, amd64: $x }' >"$tmp"
-        mv "$tmp" "$file"
-
-        printf '%-12s %s -> %s\n' brave-origin "$current" "$latest"
-      '';
+          if [ "$current" != "$latest" ]; then
+            deb() { sri "$base/pool/main/b/brave-origin/brave-origin_''${latest}_$1.deb"; }
+            arm64=$(deb arm64)
+            amd64=$(deb amd64)
+            jq_write "$file" -n --arg v "$latest" --arg a "$arm64" --arg x "$amd64" \
+              '{ version: $v, arm64: $a, amd64: $x }'
+          fi
+          report brave-origin "$current" "$latest"
+        '';
+      };
     in
     {
       home.packages = [ update-brave-origin ];

@@ -34,79 +34,64 @@
         icon = "${pkg}/browser/chrome/icons/default/default128.png";
       };
 
-      update-privacy-browsers = pkgs.writers.writeDashBin "update-privacy-browsers" ''
-        set -eu
-        export PATH=${
-          lib.makeBinPath (
-            with pkgs;
-            [
-              coreutils
-              curl
-              gnugrep
-              gnused
-              jq
-              nix
-            ]
-          )
-        }
+      update-privacy-browsers = self.lib.mkUpdater pkgs {
+        name = "update-privacy-browsers";
+        inputs = [ pkgs.ripgrep ];
+        text = ''
+          base=https://dist.torproject.org
+          file=$HOME/nix-config/modules/apps/privacy-browsers/pins.json
+          skipped=0
 
-        base=https://dist.torproject.org
-        file=$HOME/nix-config/modules/apps/privacy-browsers/pins.json
-        skipped=0
-
-        url() {
-          echo "$base/$1/$3/$2-linux-x86_64-$3.tar.xz"
-        }
-
-        newest() {
-          curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 "$base/$1/" \
-            | sed -n 's|.*href="\([0-9][0-9.]*\)/".*|\1|p' \
-            | sort -Vr \
-            | while read -r v; do
-              if curl -fsI --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 \
-                -o /dev/null "$(url "$1" "$2" "$v")"; then
-                echo "$v"
-                break
-              fi
-            done
-        }
-
-        bump() {
-          name=$1 dist=$2
-
-          current=$(jq -r --arg n "$name" '.[$n].version' "$file")
-          latest=$(newest "$dist" "$name" || true)
-          if [ -z "$latest" ]; then
-            printf '%-16s SKIPPED (no x86_64 stable build listed)\n' "$name"
-            skipped=$((skipped + 1))
-            return 0
-          fi
-          if [ "$current" = "$latest" ]; then
-            printf '%-16s %s (up to date)\n' "$name" "$current"
-            return 0
-          fi
-
-          raw=$(nix-prefetch-url --type sha256 "$(url "$dist" "$name" "$latest")") || {
-            printf '%-16s SKIPPED (prefetch failed)\n' "$name"
-            skipped=$((skipped + 1))
-            return 0
+          url() {
+            echo "$base/$1/$3/$2-linux-x86_64-$3.tar.xz"
           }
-          hash=$(nix hash convert --hash-algo sha256 --to sri "$raw")
 
-          tmp=$(mktemp)
-          jq --arg n "$name" --arg v "$latest" --arg h "$hash" \
-            '.[$n] = { version: $v, hash: $h }' "$file" >"$tmp"
-          mv "$tmp" "$file"
-          printf '%-16s %s -> %s\n' "$name" "$current" "$latest"
-        }
+          newest() {
+            fetch "$base/$1/" \
+              | rg -o -r '$1' 'href="([0-9][0-9.]*)/"' \
+              | sort -Vr \
+              | while read -r v; do
+                if fetch -I -o /dev/null "$(url "$1" "$2" "$v")" 2>/dev/null; then
+                  echo "$v"
+                  break
+                fi
+              done
+          }
 
-        bump tor-browser     torbrowser
-        bump mullvad-browser mullvadbrowser
+          skip() {
+            printf '%-16s SKIPPED (%s)\n' "$1" "$2"
+            skipped=$((skipped + 1))
+          }
 
-        if [ "$skipped" -gt 0 ]; then
-          echo "$skipped not updated this run — rerun to retry."
-        fi
-      '';
+          bump() {
+            name=$1 dist=$2
+
+            current=$(jq -r --arg n "$name" '.[$n].version' "$file")
+            latest=$(newest "$dist" "$name" || true)
+            if [ -z "$latest" ]; then
+              skip "$name" "no x86_64 stable build listed"
+              return 0
+            fi
+
+            if [ "$current" != "$latest" ]; then
+              if ! hash=$(sri "$(url "$dist" "$name" "$latest")"); then
+                skip "$name" "prefetch failed"
+                return 0
+              fi
+              jq_write "$file" --arg n "$name" --arg v "$latest" --arg h "$hash" \
+                '.[$n] = { version: $v, hash: $h }' "$file"
+            fi
+            report "$name" "$current" "$latest"
+          }
+
+          bump tor-browser     torbrowser
+          bump mullvad-browser mullvadbrowser
+
+          if [ "$skipped" -gt 0 ]; then
+            echo "$skipped not updated this run — rerun to retry."
+          fi
+        '';
+      };
     in
     {
       imports = [ self.homeModules.x86Emu ];
