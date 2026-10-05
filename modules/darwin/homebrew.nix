@@ -12,7 +12,7 @@
     };
 
     home-manager.users.${self.lib.user.name}.shellHooks.update = [
-      "brew update && brew upgrade"
+      "[ -L /opt/homebrew/bin/agy ] || rm -f /opt/homebrew/bin/agy; brew update && brew upgrade"
     ];
   };
 }

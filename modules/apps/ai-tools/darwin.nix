@@ -1,8 +1,5 @@
 {
   flake.darwinModules.aiTools.homebrew = {
-    brews = [
-    ];
-
     casks =
       map
         (name: {

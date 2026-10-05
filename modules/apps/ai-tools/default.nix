@@ -1,3 +1,4 @@
+{ self, ... }:
 {
   flake.homeModules.aiTools =
     {
@@ -8,34 +9,37 @@
     }:
     let
       home = config.home.homeDirectory;
+      dotfiles = "${home}/dotfiles";
       inherit (pkgs.stdenv.hostPlatform) isLinux;
+      inherit (self.lib) shellFns;
 
-      skillsDir = "${home}/dotfiles/skills";
       sharedSkills =
-        if builtins.pathExists skillsDir then
+        let
+          dir = "${dotfiles}/skills";
+        in
+        if builtins.pathExists dir then
           builtins.attrNames (
-            lib.filterAttrs (n: t: t == "directory" && builtins.pathExists "${skillsDir}/${n}/SKILL.md") (
-              builtins.readDir skillsDir
+            lib.filterAttrs (n: t: t == "directory" && builtins.pathExists "${dir}/${n}/SKILL.md") (
+              builtins.readDir dir
             )
           )
         else
           [ ];
 
+      link = path: { source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}"; };
+
       update-ai-clis = pkgs.writeShellApplication {
         name = "update-ai-clis";
-        runtimeInputs =
-          with pkgs;
-          [
-            coreutils
-            util-linux
-          ]
-          ++ lib.optionals isLinux [
-            curl
-            nix
-            gnused
-            jq
-            nodejs
-          ];
+        excludeShellChecks = [ "SC2016" ];
+        runtimeInputs = with pkgs; [
+          coreutils
+          curl
+          gnused
+          jq
+          nix
+          nodejs
+          util-linux
+        ];
         text = ''
           missingOnly=
           if [ "''${1:-}" = --missing-only ]; then
@@ -48,83 +52,69 @@
             exit 0
           fi
           export PATH="$PATH:${home}/.local/bin"
-          ${lib.optionalString isLinux "export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt"}
-
           export CI=1
 
           skipped=0
           sk=$(mktemp)
+          file=${home}/nix-config/modules/apps/ai-tools/pins.json
 
-          ${lib.optionalString isLinux ''
-            file=${home}/nix-config/modules/apps/ai-tools/pins.json
+          ${shellFns.fetch}
+          ${shellFns.sri}
+          ${shellFns.jqWrite}
+          ${shellFns.report}
 
-            bump() {
-              name=$1 latest=$2 url_arm=$3 url_x86=$4
+          bump() {
+            name=$1 latest=$2 url_arm=$3 url_x86=$4
 
-              if [ -z "$latest" ] || [ "$latest" = null ]; then
-                printf '%-12s SKIPPED (lookup failed)\n' "$name"
+            if [ -z "$latest" ] || [ "$latest" = null ]; then
+              printf '%-16s SKIPPED (lookup failed)\n' "$name"
+              return 1
+            fi
+
+            current=$(jq -r --arg n "$name" '.[$n].version // ""' "$file")
+            if [ -z "$current" ]; then
+              echo "$name: no such pin in $file" >&2
+              return 1
+            fi
+
+            if [ "$current" != "$latest" ]; then
+              if ! hash_arm=$(sri "$url_arm") || ! hash_x86=$(sri "$url_x86"); then
+                printf '%-16s SKIPPED (prefetch failed)\n' "$name"
                 return 1
               fi
+              jq_write "$file" --arg n "$name" --arg v "$latest" --arg a "$hash_arm" --arg x "$hash_x86" \
+                '.[$n] = { version: $v, hash: { "aarch64-linux": $a, "x86_64-linux": $x } }' "$file"
+            fi
+            report "$name" "$current" "$latest"
+          }
 
-              current=$(jq -r --arg n "$name" '.[$n].version // ""' "$file")
-              if [ -z "$current" ]; then
-                echo "$name: no such pin in $file" >&2
-                return 1
-              fi
-              if [ "$current" = "$latest" ]; then
-                printf '%-12s %s (up to date)\n' "$name" "$current"
-                return 0
-              fi
+          try_bump() {
+            bump "$@" || skipped=$((skipped + 1))
+          }
 
-              prefetch() {
-                nix hash convert --hash-algo sha256 --to sri \
-                  "$(nix-prefetch-url --type sha256 "$1")"
-              }
-
-              if ! hash_arm=$(prefetch "$url_arm") || ! hash_x86=$(prefetch "$url_x86"); then
-                printf '%-12s SKIPPED (prefetch failed)\n' "$name"
-                return 1
-              fi
-
-              tmp=$(mktemp)
-              jq --arg n "$name" --arg v "$latest" --arg a "$hash_arm" --arg x "$hash_x86" \
-                '.[$n] = { version: $v, hash: { "aarch64-linux": $a, "x86_64-linux": $x } }' \
-                "$file" >"$tmp"
-              mv "$tmp" "$file"
-
-              printf '%-12s %s -> %s\n' "$name" "$current" "$latest"
-            }
-
-            try_bump() {
-              bump "$@" || skipped=$((skipped + 1))
-            }
-
-            if [ -z "$missingOnly" ]; then
-            claude=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]' || true)
+          if [ -z "$missingOnly" ]; then
+            claude=$(fetch https://downloads.claude.ai/claude-code-releases/latest | tr -d '[:space:]' || true)
             try_bump claude-code "$claude" \
               "https://downloads.claude.ai/claude-code-releases/$claude/linux-arm64/claude" \
               "https://downloads.claude.ai/claude-code-releases/$claude/linux-x64/claude"
 
-            codex=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://registry.npmjs.org/@openai/codex/latest | jq -r '.version' || true)
+            codex=$(fetch https://registry.npmjs.org/@openai/codex/latest | jq -r '.version' || true)
             try_bump codex "$codex" \
               "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-arm64.tgz" \
               "https://registry.npmjs.org/@openai/codex/-/codex-$codex-linux-x64.tgz"
 
-            grok=$(curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://x.ai/cli/stable | tr -d '[:space:]' || true)
+            grok=$(fetch https://x.ai/cli/stable | tr -d '[:space:]' || true)
             try_bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64" \
               "https://x.ai/cli/grok-$grok-linux-x86_64"
 
             echo
             echo 'rolling (takes effect now, no rebuild):'
-            fi
-          ''}
+          fi
 
           get_ver() {
-            bin=$1
-            case "$bin" in
+            case "$1" in
               agy) agy --version 2>/dev/null | head -1 ;;
               t3) t3 --version 2>/dev/null | head -1 | sed 's/t3 //' ;;
-              *) echo "" ;;
             esac
           }
 
@@ -187,22 +177,18 @@
             rm -f "$tmp"
           }
 
-          ${lib.optionalString isLinux ''
-            if command -v agy >/dev/null 2>&1; then
-              roll agy    agy update
-            else
-              roll agy    sh -c 'curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 30 https://antigravity.google/cli/install.sh | bash'
-            fi &
-          ''}
-          ${lib.optionalString (!isLinux) ''
-            if [ -f /opt/homebrew/bin/agy ] && [ ! -L /opt/homebrew/bin/agy ]; then
-              rm -f /opt/homebrew/bin/agy
-            fi
-          ''}
-          ${lib.optionalString isLinux ''
-            roll t3 npm install -g --prefix "${home}/.local" t3 &
-          ''}
+          install_agy() {
+            fetch https://antigravity.google/cli/install.sh | bash
+          }
+
+          if command -v agy >/dev/null 2>&1; then
+            roll agy agy update &
+          else
+            roll agy install_agy &
+          fi
+          roll t3 npm install -g --prefix "${home}/.local" t3 &
           wait
+
           skipped=$((skipped + $(wc -l <"$sk")))
           rm -f "$sk"
           if [ "$skipped" -gt 0 ]; then
@@ -214,14 +200,12 @@
     in
     {
       home = {
-        packages = [ update-ai-clis ];
+        packages = lib.optional isLinux update-ai-clis;
 
         sessionVariables = {
           DISABLE_AUTOUPDATER = "1";
-          CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1";
           GROK_DISABLE_AUTOUPDATER = "1";
           AGY_CLI_DISABLE_AUTO_UPDATE = "1";
-
           PATH = "$PATH:${home}/.local/bin";
         }
         // lib.optionalAttrs config.programs.chromium.enable {
@@ -229,33 +213,21 @@
         };
 
         file =
-          lib.genAttrs
-            [
-              ".agents/AGENTS.md"
-              ".claude/CLAUDE.md"
-              ".codex/AGENTS.md"
-              ".gemini/AGENTS.md"
-              ".grok/AGENTS.md"
-            ]
-            (_: {
-              source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/AGENTS.md";
-            })
-          //
-            lib.genAttrs
-              [
-                ".agents/skills"
-                ".claude/skills"
-                  ".gemini/skills"
-                ".grok/skills"
-                      ]
-              (_: {
-                source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills";
-              })
+          lib.genAttrs [
+            ".agents/AGENTS.md"
+            ".claude/CLAUDE.md"
+            ".codex/AGENTS.md"
+            ".gemini/AGENTS.md"
+            ".grok/AGENTS.md"
+          ] (_: link "AGENTS.md")
+          // lib.genAttrs [
+            ".agents/skills"
+            ".claude/skills"
+            ".gemini/skills"
+            ".grok/skills"
+          ] (_: link "skills")
           // lib.listToAttrs (
-            map (skill: {
-              name = ".codex/skills/${skill}";
-              value.source = config.lib.file.mkOutOfStoreSymlink "${home}/dotfiles/skills/${skill}";
-            }) sharedSkills
+            map (skill: lib.nameValuePair ".codex/skills/${skill}" (link "skills/${skill}")) sharedSkills
           )
           // lib.optionalAttrs isLinux {
             ".local/share/applications/t3.desktop".text = ''
@@ -272,23 +244,26 @@
         activation = {
           aiSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] (
             lib.concatStrings (
-              lib.mapAttrsToList (target: source: ''
-                mkdir -p "$(dirname ${home}/${target})"
-                ln -sfn ${home}/dotfiles/${source} ${home}/${target}
-              '') {
-                ".claude/settings.json" = "claude-settings.json";
-                ".gemini/antigravity-cli/settings.json" = "antigravity-cli-settings.json";
-                ".gemini/config/hooks.json" = "agy-hooks.json";
-              }
+              lib.mapAttrsToList
+                (target: source: ''
+                  mkdir -p "$(dirname ${home}/${target})"
+                  ln -sfn ${dotfiles}/${source} ${home}/${target}
+                '')
+                {
+                  ".claude/settings.json" = "claude-settings.json";
+                  ".gemini/antigravity-cli/settings.json" = "antigravity-cli-settings.json";
+                  ".gemini/config/hooks.json" = "agy-hooks.json";
+                }
             )
           );
-
+        }
+        // lib.optionalAttrs isLinux {
           installRollingAiClis = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
             ${update-ai-clis}/bin/update-ai-clis --missing-only || true
           '';
         };
       };
 
-      shellHooks.update = [ "update-ai-clis" ];
+      shellHooks.update = lib.optional isLinux "update-ai-clis";
     };
 }
