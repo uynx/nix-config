@@ -16,7 +16,10 @@
       {
         imports = [ wlib.modules.default ];
 
-        package = pkgs.niri;
+        # niri has no option for the initial screenshot selection
+        package = pkgs.niri.overrideAttrs (old: {
+          patches = (old.patches or [ ]) ++ [ ./screenshot-full-selection.patch ];
+        });
 
         passthru.providedSessions = [ "niri" ];
 

@@ -1,0 +1,22 @@
+--- a/src/ui/screenshot_ui.rs	2026-10-05 16:49:16.801627947 -0400
++++ b/src/ui/screenshot_ui.rs	2026-10-05 16:49:16.820570920 -0400
+@@ -161,7 +161,6 @@
+             .take()
+             .and_then(|(weak, sel)| weak.upgrade().map(|output| (output, sel)));
+         let selection = match last_selection {
+-            Some(selection) if screenshots.contains_key(&selection.0) => selection,
+             _ => {
+                 let output = default_output;
+                 let output_transform = output.current_transform();
+@@ -169,10 +168,7 @@
+                 let size = output_transform.transform_size(output_mode.size);
+                 (
+                     output,
+-                    Rectangle::new(
+-                        Point::from((size.w / 4, size.h / 4)),
+-                        Size::from((size.w / 2, size.h / 2)),
+-                    ),
++                    Rectangle::new(Point::from((0, 0)), Size::from((size.w, size.h))),
+                 )
+             }
+         };

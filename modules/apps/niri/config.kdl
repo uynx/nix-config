@@ -84,6 +84,7 @@ xwayland-satellite {
     path "@xwaylandSatellite@"
 }
 spawn-at-startup "noctalia-shell"
+spawn-at-startup "wayscriber" "--daemon" "--no-tray"
 
 // Tile everything. A window-rule with no `match` applies to every window, so
 // apps that ask to be floating — Proton VPN, Steam's updater, assorted dialogs
@@ -215,6 +216,11 @@ binds {
     Mod+S       { screenshot; }
     Mod+Ctrl+S  { screenshot-screen; }
     Mod+Alt+S   { screenshot-window; }
+
+    // Recording overlays: zoom, draw on screen, key display.
+    Mod+Z      { spawn "sh" "-c" "pgrep -x woomer || exec woomer"; }
+    Mod+G      { spawn "wayscriber" "--daemon-toggle"; }
+    Mod+Ctrl+K { spawn "toggle-showkeys"; }
 
     Mod+Ctrl+R { spawn "sh" "-c" "sleep 3 && obs-cmd -w 'obsws://192.168.1.135:4455' recording start"; }
     Mod+Alt+R  { spawn "obs-cmd" "-w" "obsws://192.168.1.135:4455" "recording" "stop"; }
