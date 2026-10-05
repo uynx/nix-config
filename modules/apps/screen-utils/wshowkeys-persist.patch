@@ -1,0 +1,29 @@
+--- a/main.c	2026-10-05 19:29:42.163367368 -0400
++++ b/main.c	2026-10-05 19:29:42.180628028 -0400
+@@ -442,6 +442,26 @@
+ 		/* Who cares */
+ 		break;
+ 	case LIBINPUT_KEY_STATE_PRESSED:
++		{
++			struct timespec now;
++			clock_gettime(CLOCK_MONOTONIC, &now);
++			if (now.tv_sec - state->last_key.tv_sec >= 2) {
++				while (state->keys) {
++					struct wsk_keypress *next = state->keys->next;
++					free(state->keys);
++					state->keys = next;
++				}
++			}
++			int count = 0;
++			for (struct wsk_keypress *k = state->keys; k; k = k->next) {
++				count++;
++			}
++			if (count >= 24) {
++				struct wsk_keypress *oldest = state->keys;
++				state->keys = oldest->next;
++				free(oldest);
++			}
++		}
+ 		keypress = calloc(1, sizeof(struct wsk_keypress));
+ 		assert(keypress);
+ 		keypress->sym = keysym;
