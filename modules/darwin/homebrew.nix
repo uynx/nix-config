@@ -9,9 +9,6 @@
         upgrade = true;
         cleanup = "zap";
       };
-      masApps = {
-        cakewallet = 1334702542;
-      };
     };
 
     home-manager.users.${self.lib.user.name}.shellHooks.update = [
