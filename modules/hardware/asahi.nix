@@ -56,6 +56,10 @@ _: {
       HandlePowerKey = "lock";
     };
 
+    services.udev.extraRules = ''
+      ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x17a0", ATTR{device}=="0x9755", ATTR{power/control}="auto"
+    '';
+
     swapDevices = [
       {
         device = "/swapfile";
