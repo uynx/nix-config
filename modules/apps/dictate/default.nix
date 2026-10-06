@@ -1,16 +1,15 @@
+{ self, ... }:
 {
   flake.homeModules.dictate =
     { pkgs, ... }:
     let
+      pin = builtins.fromJSON (builtins.readFile ./pins.json);
       py = pkgs.python3Packages;
       fermion = py.buildPythonPackage {
         pname = "fermion-research";
-        version = "0.2.9";
+        inherit (pin.wheel) version;
         format = "wheel";
-        src = pkgs.fetchurl {
-          url = "https://files.pythonhosted.org/packages/0a/32/bc70c7911d1ff1719e3e4a0db95d3bea5228e8249edd2b02dad6bc97fbb4/fermion_research-0.2.9-py3-none-any.whl";
-          hash = "sha256-aL01tfKtOXqwICdS7z6g6V2tZNwBmvDzuuvfX5X+MI4=";
-        };
+        src = pkgs.fetchurl { inherit (pin.wheel) url hash; };
         dependencies = with py; [
           torch
           transformers
@@ -25,9 +24,27 @@
         dontStrip = true;
         dontPatchELF = true;
       };
-      phononArchive = pkgs.fetchurl {
-        url = "https://huggingface.co/FermionResearch/Phonon-2/resolve/ca1bef26bcd8ef4a7e16d0636d8a77bb25e298ee/phonon-2.bps.tar.zst";
-        hash = "sha256-mBJXlbbdpy9cbu6boz0ZgV32XcsYtQo1e/n3PJk1MJ4=";
+      phononArchive = pkgs.fetchurl { inherit (pin.model) url hash; };
+      update-phonon = self.lib.mkUpdater pkgs {
+        name = "update-phonon";
+        text = ''
+          file=$HOME/nix-config/modules/apps/dictate/pins.json
+          to_sri() { nix hash convert --hash-algo sha256 --to sri "$1"; }
+
+          meta=$(fetch https://pypi.org/pypi/fermion-research/json)
+          wheel=$(printf '%s' "$meta" | jq -e '[.urls[] | select(.filename | endswith("-py3-none-any.whl"))][0]')
+          rev=$(fetch https://huggingface.co/api/models/FermionResearch/Phonon-2 | jq -er .sha)
+          archive=$(fetch "https://huggingface.co/FermionResearch/Phonon-2/raw/$rev/config.json" | jq -er .artifact.sha256)
+
+          current=$(jq -r .wheel.version "$file" 2>/dev/null || echo none)
+          latest=$(printf '%s' "$meta" | jq -er .info.version)
+          jq_write "$file" -n \
+            --arg v "$latest" --argjson w "$wheel" --arg wh "$(to_sri "$(printf '%s' "$wheel" | jq -r .digests.sha256)")" \
+            --arg r "$rev" --arg mh "$(to_sri "$archive")" \
+            '{ wheel: { version: $v, url: $w.url, hash: $wh },
+               model: { rev: $r, url: "https://huggingface.co/FermionResearch/Phonon-2/resolve/\($r)/phonon-2.bps.tar.zst", hash: $mh } }'
+          report phonon "$current" "$latest"
+        '';
       };
       phononModel = pkgs.runCommand "phonon-2" { nativeBuildInputs = [ pkgs.zstd ]; } ''
         mkdir -p $out/model_phonon2_c4c_int6
@@ -47,7 +64,10 @@
         Install.WantedBy = [ "default.target" ];
       };
 
+      shellHooks.update = [ "update-phonon" ];
+
       home.packages = [
+        update-phonon
         (pkgs.writeShellApplication {
           name = "dictate";
           runtimeInputs = with pkgs; [
