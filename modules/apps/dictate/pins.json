@@ -1,0 +1,12 @@
+{
+  "wheel": {
+    "version": "0.2.9",
+    "url": "https://files.pythonhosted.org/packages/0a/32/bc70c7911d1ff1719e3e4a0db95d3bea5228e8249edd2b02dad6bc97fbb4/fermion_research-0.2.9-py3-none-any.whl",
+    "hash": "sha256-aL01tfKtOXqwICdS7z6g6V2tZNwBmvDzuuvfX5X+MI4="
+  },
+  "model": {
+    "rev": "ca1bef26bcd8ef4a7e16d0636d8a77bb25e298ee",
+    "url": "https://huggingface.co/FermionResearch/Phonon-2/resolve/ca1bef26bcd8ef4a7e16d0636d8a77bb25e298ee/phonon-2.bps.tar.zst",
+    "hash": "sha256-mBJXlbbdpy9cbu6boz0ZgV32XcsYtQo1e/n3PJk1MJ4="
+  }
+}
