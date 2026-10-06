@@ -247,6 +247,10 @@
               lib.mapAttrsToList
                 (target: source: ''
                   mkdir -p "$(dirname ${home}/${target})"
+                  # Apps save by renaming over the link; adopt that file so the relink keeps their edits.
+                  if [ -f ${home}/${target} ] && [ ! -L ${home}/${target} ]; then
+                    cp ${home}/${target} ${dotfiles}/${source}
+                  fi
                   ln -sfn ${dotfiles}/${source} ${home}/${target}
                 '')
                 {
