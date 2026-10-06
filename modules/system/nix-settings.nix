@@ -18,6 +18,7 @@
       };
       settings = {
         auto-optimise-store = true;
+        extra-experimental-features = [ "wasm-builtin" ];
         trusted-users = [ self.lib.user.name ];
         substituters = self.lib.caches.substituters;
         trusted-public-keys = self.lib.caches.publicKeys;
