@@ -33,13 +33,25 @@
         mkdir -p $out/model_phonon2_c4c_int6
         tar --zstd -xf ${phononArchive} -C $out/model_phonon2_c4c_int6
       '';
+      port = "8765";
     in
     {
+      systemd.user.services.phonon = {
+        Unit.Description = "Phonon-2 speech server for dictate";
+        Service = {
+          ExecStart = "${pkgs.python3.withPackages (_: [ fermion ])}/bin/fermion serve ${phononModel}/model_phonon2_c4c_int6 --host 127.0.0.1 --port ${port} --served-model-name phonon-2";
+          Environment = "HF_HUB_OFFLINE=1";
+          Restart = "on-failure";
+          MemoryMax = "2G";
+        };
+        Install.WantedBy = [ "default.target" ];
+      };
+
       home.packages = [
         (pkgs.writeShellApplication {
           name = "dictate";
           runtimeInputs = with pkgs; [
-            (python3.withPackages (_: [ fermion ]))
+            curl
             wl-clipboard
             wtype
             libnotify
@@ -50,7 +62,7 @@
           text = ''
             recordPid=/tmp/whisper-dictate.pid
             audio=/tmp/whisper-dictate.wav
-            model=${phononModel}/model_phonon2_c4c_int6
+            url=http://127.0.0.1:${port}/v1/audio/transcriptions
 
             recording=0
             if [ -f "$recordPid" ]; then
@@ -72,8 +84,13 @@
               [ -f "$audio" ] || exit 0
               notify-send "Dictation" "Transcribing..." -i microphone-sensitivity-high-symbolic || true
 
-              text=$(HF_HUB_OFFLINE=1 fermion transcribe "$model" "$audio" 2>/dev/null \
-                | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
+              if ! text=$(curl -sf --retry 10 --retry-connrefused --retry-delay 2 --max-time 60 \
+                -F file=@"$audio" -F response_format=text "$url" \
+                | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'); then
+                rm -f "$audio"
+                notify-send "Dictation" "The phonon service is not answering" -i dialog-error-symbolic || true
+                exit 0
+              fi
               rm -f "$audio"
 
               if [ -n "$text" ]; then
