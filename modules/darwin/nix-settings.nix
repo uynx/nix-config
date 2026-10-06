@@ -11,6 +11,7 @@
       determinateNixd.garbageCollector.strategy = "automatic";
       customSettings = {
         auto-optimise-store = true;
+        extra-experimental-features = [ "wasm-builtin" ];
         trusted-users = [
           "root"
           self.lib.user.name
