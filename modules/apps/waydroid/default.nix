@@ -23,10 +23,21 @@
           report android "$current" "$latest"
         '';
       };
+      lid-saver = pkgs.writeShellApplication {
+        name = "lid-saver";
+        runtimeInputs = with pkgs; [
+          jq
+          socat
+        ];
+        text = builtins.readFile ./lid-saver.sh;
+      };
     in
     {
       config = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 {
-        home.packages = [ update-android ];
+        home.packages = [
+          update-android
+          lid-saver
+        ];
 
         shellHooks.update = [ "update-android" ];
 

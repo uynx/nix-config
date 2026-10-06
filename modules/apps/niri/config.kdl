@@ -86,6 +86,11 @@ xwayland-satellite {
 spawn-at-startup "noctalia-shell"
 spawn-at-startup "wayscriber" "--daemon" "--no-tray"
 
+switch-events {
+    lid-close { spawn "lid-saver" "close"; }
+    lid-open { spawn "lid-saver" "open"; }
+}
+
 // Tile everything. A window-rule with no `match` applies to every window, so
 // apps that ask to be floating — Proton VPN, Steam's updater, assorted dialogs
 // — join the scrolling layout instead of sitting on top of it. Rules are
