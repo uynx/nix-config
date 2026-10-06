@@ -1,5 +1,5 @@
 _: {
-  flake.nixosModules.hardwareAsahi = {
+  flake.nixosModules.hardwareAsahi = { lib, ... }: {
     hardware.asahi = {
       enable = true;
       # A real path, not a string: read at build time, hence rebuilds needing --impure.
@@ -59,6 +59,8 @@ _: {
     services.udev.extraRules = ''
       ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x17a0", ATTR{device}=="0x9755", ATTR{power/control}="auto"
     '';
+
+    specialisation.debugfs.configuration.boot.kernelParams = lib.mkAfter [ "debugfs=on" ];
 
     swapDevices = [
       {
