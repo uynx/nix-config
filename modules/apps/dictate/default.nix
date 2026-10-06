@@ -2,17 +2,44 @@
   flake.homeModules.dictate =
     { pkgs, ... }:
     let
-      whisperModel = pkgs.fetchurl {
-        url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
-        hash = "sha256-oDd5yG3zMjB19eeWyyzlAp8A7Ihp7uP9+4l6/jbG0AI=";
+      py = pkgs.python3Packages;
+      fermion = py.buildPythonPackage {
+        pname = "fermion-research";
+        version = "0.2.9";
+        format = "wheel";
+        src = pkgs.fetchurl {
+          url = "https://files.pythonhosted.org/packages/0a/32/bc70c7911d1ff1719e3e4a0db95d3bea5228e8249edd2b02dad6bc97fbb4/fermion_research-0.2.9-py3-none-any.whl";
+          hash = "sha256-aL01tfKtOXqwICdS7z6g6V2tZNwBmvDzuuvfX5X+MI4=";
+        };
+        dependencies = with py; [
+          torch
+          transformers
+          numpy
+          huggingface-hub
+          soundfile
+          scipy
+          zstandard
+          safetensors
+        ];
+        # The loader checks its prebuilt .so files against pinned SHA-256s, so nothing may rewrite them.
+        dontStrip = true;
+        dontPatchELF = true;
       };
+      phononArchive = pkgs.fetchurl {
+        url = "https://huggingface.co/FermionResearch/Phonon-2/resolve/ca1bef26bcd8ef4a7e16d0636d8a77bb25e298ee/phonon-2.bps.tar.zst";
+        hash = "sha256-mBJXlbbdpy9cbu6boz0ZgV32XcsYtQo1e/n3PJk1MJ4=";
+      };
+      phononModel = pkgs.runCommand "phonon-2" { nativeBuildInputs = [ pkgs.zstd ]; } ''
+        mkdir -p $out/model_phonon2_c4c_int6
+        tar --zstd -xf ${phononArchive} -C $out/model_phonon2_c4c_int6
+      '';
     in
     {
       home.packages = [
         (pkgs.writeShellApplication {
           name = "dictate";
           runtimeInputs = with pkgs; [
-            whisper-cpp
+            (python3.withPackages (_: [ fermion ]))
             wl-clipboard
             wtype
             libnotify
@@ -23,7 +50,7 @@
           text = ''
             recordPid=/tmp/whisper-dictate.pid
             audio=/tmp/whisper-dictate.wav
-            model=${whisperModel}
+            model=${phononModel}/model_phonon2_c4c_int6
 
             recording=0
             if [ -f "$recordPid" ]; then
@@ -45,7 +72,7 @@
               [ -f "$audio" ] || exit 0
               notify-send "Dictation" "Transcribing..." -i microphone-sensitivity-high-symbolic || true
 
-              text=$(whisper-cli -m "$model" -f "$audio" --no-timestamps -nt 2>/dev/null \
+              text=$(HF_HUB_OFFLINE=1 fermion transcribe "$model" "$audio" 2>/dev/null \
                 | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)
               rm -f "$audio"
 
