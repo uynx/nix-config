@@ -2,6 +2,6 @@
   flake.homeModules.rustdesk =
     { pkgs, ... }:
     {
-      home.packages = [ pkgs.rustdesk ];
+      home.packages = [ pkgs.rustdesk-flutter ];
     };
 }
