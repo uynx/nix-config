@@ -15,6 +15,7 @@
         theme
         screenUtils
         waydroid
+        wluma
       ];
     }).nixos;
 }
