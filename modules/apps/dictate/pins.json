@@ -5,8 +5,8 @@
     "hash": "sha256-aL01tfKtOXqwICdS7z6g6V2tZNwBmvDzuuvfX5X+MI4="
   },
   "model": {
-    "rev": "ca1bef26bcd8ef4a7e16d0636d8a77bb25e298ee",
-    "url": "https://huggingface.co/FermionResearch/Phonon-2/resolve/ca1bef26bcd8ef4a7e16d0636d8a77bb25e298ee/phonon-2.bps.tar.zst",
+    "rev": "160671c34ffeae4d80d6f86896c68e40aad971a7",
+    "url": "https://huggingface.co/FermionResearch/Phonon-2/resolve/160671c34ffeae4d80d6f86896c68e40aad971a7/phonon-2.bps.tar.zst",
     "hash": "sha256-mBJXlbbdpy9cbu6boz0ZgV32XcsYtQo1e/n3PJk1MJ4="
   }
 }
