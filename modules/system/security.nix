@@ -1,5 +1,5 @@
 {
-  flake.nixosModules.security = _: {
+  flake.nixosModules.security = { lib, pkgs, ... }: {
     networking.firewall.allowPing = false;
 
     programs.ssh.extraConfig = ''
@@ -61,8 +61,8 @@
         "proc_mem.force_override=never"
 
         "iommu.passthrough=0"
-        "efi=disable_early_pci_dma"
-      ];
+        # asahi's U-Boot has no PCI I/O handles, so this only prints an EFI stub error there
+      ] ++ lib.optional (!pkgs.stdenv.hostPlatform.isAarch64) "efi=disable_early_pci_dma";
 
       blacklistedKernelModules = [
         "rds"
