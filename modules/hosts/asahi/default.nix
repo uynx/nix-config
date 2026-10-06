@@ -6,6 +6,7 @@
     modules = with self.nixosModules; [
       core
       hardwareAsahi
+      cpuBatteryCap
       homeManagerBase
 
       desktopNiri
