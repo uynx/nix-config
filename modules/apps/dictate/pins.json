@@ -1,8 +1,8 @@
 {
   "wheel": {
-    "version": "0.2.9",
-    "url": "https://files.pythonhosted.org/packages/0a/32/bc70c7911d1ff1719e3e4a0db95d3bea5228e8249edd2b02dad6bc97fbb4/fermion_research-0.2.9-py3-none-any.whl",
-    "hash": "sha256-aL01tfKtOXqwICdS7z6g6V2tZNwBmvDzuuvfX5X+MI4="
+    "version": "0.2.10",
+    "url": "https://files.pythonhosted.org/packages/87/ae/2bf70a140ea6ce9a124fc5c2332f7c079a1410ec5ecfb94a87c923853a02/fermion_research-0.2.10-py3-none-any.whl",
+    "hash": "sha256-ESw7mYUZYngscwb1NDpedkoumF2R0ZxM4926v0ymvGk="
   },
   "model": {
     "rev": "160671c34ffeae4d80d6f86896c68e40aad971a7",
