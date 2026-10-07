@@ -29,6 +29,9 @@
       ./_hardware-configuration.nix
 
       { networking.hostName = "x86"; }
+      {
+        boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+      }
     ];
   };
 }
