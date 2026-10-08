@@ -51,6 +51,14 @@
         tar --zstd -xf ${phononArchive} -C $out/model_phonon2_c4c_int6
       '';
       port = "8765";
+      desktopItem = pkgs.makeDesktopItem {
+        name = "dictate";
+        desktopName = "Dictation";
+        exec = "dictate";
+        icon = "dictate-mic";
+        noDisplay = true;
+        extraConfig."X-KDE-Shortcuts" = "Meta+D";
+      };
     in
     {
       systemd.user.services.phonon = {
@@ -68,14 +76,18 @@
 
       xdg.dataFile."icons/hicolor/scalable/apps/dictate-mic.svg".source = ./dictate-mic.svg;
 
+      plasmaShortcuts."dictate.desktop"._launch = "Meta+D";
+
       home.packages = [
         update-phonon
+        desktopItem
         (pkgs.writeShellApplication {
           name = "dictate";
           runtimeInputs = with pkgs; [
             curl
             wl-clipboard
             wtype
+            ydotool
             libnotify
             pipewire
             gnused
@@ -117,7 +129,10 @@
 
               if [ -n "$text" ]; then
                 printf '%s' "$text" | wl-copy
-                wtype "$text" 2>/dev/null || true
+                # KWin rejects wtype; ydotool types through the ydotoold daemon instead.
+                wtype "$text" 2>/dev/null \
+                  || YDOTOOL_SOCKET=''${YDOTOOL_SOCKET:-/run/ydotoold/socket} ydotool type -- "$text" 2>/dev/null \
+                  || true
               else
                 notify-send "Dictation" "No speech detected" -i dictate-mic || true
               fi
@@ -134,6 +149,11 @@
             fi
           '';
         })
+        # kglobalaccel binds shortcuts only to desktop files it finds under share/kglobalaccel.
+        (pkgs.runCommand "dictate-kglobalaccel" { } ''
+          mkdir -p $out/share/kglobalaccel
+          ln -s ${desktopItem}/share/applications/dictate.desktop $out/share/kglobalaccel/dictate.desktop
+        '')
       ];
     };
 }
