@@ -111,6 +111,9 @@ in
                 set -l target ${if isDarwin then "darwin" else "$hostname"}
                 set -l platform ${if isDarwin then "darwin" else "os"}
                 set -l repo ~/nix-config
+                set -l verb switch
+                # A live switch that changes the desktop ends the session, killing nh before it records the generation.
+                if test "$argv[1]" = boot; set verb boot; set -e argv[1]; end
                 if test (count $argv) -gt 0; set target $argv[1]; end
 
                 git -C $repo add -A
@@ -119,8 +122,12 @@ in
                       rm -f /opt/homebrew/bin/agy
                   end
                 ''}
-                if nh $platform switch $repo -H $target -- --impure
-                    ${config.shellHooks.rebPostSwitch}
+                if nh $platform $verb $repo -H $target -- --impure
+                    if test $verb = boot
+                        echo "Reboot to start the new generation."
+                    else
+                        ${config.shellHooks.rebPostSwitch}
+                    end
                     if not git -C $repo diff --cached --quiet
                         git -C $repo commit -q -m "rebuild "(date '+%Y-%m-%d %H:%M:%S')
                         echo "Committed as "(git -C $repo rev-parse --short HEAD)
