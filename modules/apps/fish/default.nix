@@ -113,7 +113,7 @@ in
                 set -l repo ~/nix-config
                 set -l verb switch
                 # A live switch that changes the desktop ends the session, killing nh before it records the generation.
-                if test "$argv[1]" = boot; set verb boot; set -e argv[1]; end
+                if test "$argv[1]" = restart; set verb boot; set -e argv[1]; end
                 if test (count $argv) -gt 0; set target $argv[1]; end
 
                 git -C $repo add -A
@@ -123,15 +123,14 @@ in
                   end
                 ''}
                 if nh $platform $verb $repo -H $target -- --impure
-                    if test $verb = boot
-                        echo "Reboot to start the new generation."
-                    else
+                    test $verb = switch; and begin
                         ${config.shellHooks.rebPostSwitch}
                     end
                     if not git -C $repo diff --cached --quiet
                         git -C $repo commit -q -m "rebuild "(date '+%Y-%m-%d %H:%M:%S')
                         echo "Committed as "(git -C $repo rev-parse --short HEAD)
                     end
+                    test $verb = boot; and systemctl reboot
                 else
                     echo "Rebuild failed. Changes are staged but not committed."
                     return 1
