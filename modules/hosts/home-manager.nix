@@ -13,10 +13,7 @@ let
 in
 {
   flake.nixosModules.homeManagerBase = {
-    imports = [
-      inputs.home-manager.nixosModules.home-manager
-      self.nixosModules.plasmaHostOptions
-    ];
+    imports = [ inputs.home-manager.nixosModules.home-manager ];
     home-manager = shared // {
       sharedModules = shared.sharedModules ++ [ self.homeModules.plasmaOptions ];
     };
