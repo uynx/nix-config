@@ -684,6 +684,8 @@
         or echo "steam-asahi container rebuild failed -- run steam-asahi-bootstrap by hand"
       '';
 
+      xdg.dataFile."icons/hicolor/scalable/apps/steam.svg".source = ./steam.svg;
+
       xdg.desktopEntries.steam = {
         name = "Steam";
         genericName = "Games Store";

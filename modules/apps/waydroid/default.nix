@@ -44,9 +44,10 @@
         xdg.desktopEntries.android = {
           name = "Android";
           exec = "fish -c android";
-          icon = "phone";
+          icon = "android";
           terminal = false;
         };
+        xdg.dataFile."icons/hicolor/scalable/apps/android.svg".source = ./android.svg;
 
         programs.fish.functions.android.body = ''
           set -l state ~/.local/share/waydroid-vm

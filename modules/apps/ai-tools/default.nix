@@ -236,9 +236,11 @@
               Name=T3 Code
               GenericName=AI coding workspace
               Exec=${home}/.local/bin/t3
+              Icon=t3-code
               Terminal=false
               Categories=Development;
             '';
+            ".local/share/icons/hicolor/scalable/apps/t3-code.svg".source = ./t3-code.svg;
           };
 
         activation = {
