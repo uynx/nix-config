@@ -32,8 +32,6 @@
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
 
       { networking.hostName = "asahi"; }
-      # Suspend is off on this Mac, so the launcher would otherwise hide Sleep entirely.
-      { plasmaGreyedSleep = true; }
       {
         boot.binfmt.emulatedSystems = [ "x86_64-linux" ];
       }

@@ -25,18 +25,6 @@
       '';
     in
     {
-      nixpkgs.overlays = lib.optional config.plasmaGreyedSleep (
-        _: prev: {
-          kdePackages = prev.kdePackages.overrideScope (
-            _: kprev: {
-              plasma-desktop = kprev.plasma-desktop.overrideAttrs (old: {
-                patches = (old.patches or [ ]) ++ [ ./kickoff-greyed-sleep.patch ];
-              });
-            }
-          );
-        }
-      );
-
       environment.systemPackages = lib.optional (wallpaper != null) (
         pkgs.writeTextDir "share/sddm/themes/breeze/theme.conf.user" ''
           [General]
@@ -64,12 +52,6 @@
           Unit = "plasmashell-watchdog.service";
         };
       };
-    };
-
-  flake.nixosModules.plasmaHostOptions =
-    { lib, ... }:
-    {
-      options.plasmaGreyedSleep = lib.mkEnableOption "a disabled Sleep button in the launcher on machines that cannot suspend, at the cost of building plasma-desktop locally";
     };
 
   flake.homeModules.plasmaOptions =
