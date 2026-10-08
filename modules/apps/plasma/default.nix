@@ -52,6 +52,12 @@
         '';
       };
 
+      options.plasmaWallpaper = lib.mkOption {
+        type = lib.types.nullOr lib.types.path;
+        default = null;
+        description = "Image for the desktop and the lock screen, re-applied at every Plasma login.";
+      };
+
       options.plasmaShortcuts = lib.mkOption {
         type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
         default = { };
@@ -59,8 +65,10 @@
           "dictate.desktop"._launch = "Meta+Shift+D";
         };
         description = ''
-          Global shortcuts written into kglobalshortcutsrc, keyed by desktop
-          file and then by the service action (`_launch` is "run it").
+          Global shortcuts written into kglobalshortcutsrc. A key ending in
+          `.desktop` is a launcher (action `_launch` is "run it"); any other key
+          is a component group such as `kwin` or `ksmserver`, whose values take
+          kglobalaccel's `active,default,description` form.
         '';
       };
     };
@@ -79,7 +87,7 @@
           lib.mapAttrsToList (
             action: keys: ''
               $DRY_RUN_CMD $kw --file kglobalshortcutsrc \
-                --group services --group ${lib.escapeShellArg desktop} \
+                ${lib.optionalString (lib.hasSuffix ".desktop" desktop) "--group services"} --group ${lib.escapeShellArg desktop} \
                 --key ${lib.escapeShellArg action} ${lib.escapeShellArg keys}''
           )
         ) config.plasmaShortcuts
@@ -121,6 +129,33 @@
           $DRY_RUN_CMD ${pkgs.systemd}/bin/systemctl --user try-restart plasma-kglobalaccel.service || true
         ''
       );
+
+      home.activation.plasmaLockWallpaper = lib.mkIf (config.plasmaWallpaper != null) (
+        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          $DRY_RUN_CMD ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 --file kscreenlockerrc \
+            --group Greeter --group Wallpaper --group org.kde.image --group General \
+            --key Image "file://${config.plasmaWallpaper}"
+        ''
+      );
+
+      systemd.user.services.plasma-wallpaper = lib.mkIf (config.plasmaWallpaper != null) {
+        Unit = {
+          Description = "Set the declared Plasma desktop wallpaper";
+          After = [ "plasma-plasmashell.service" ];
+        };
+        Service = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = pkgs.writeShellScript "plasma-wallpaper" ''
+            for _ in $(${pkgs.coreutils}/bin/seq 30); do
+              ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage ${config.plasmaWallpaper} && exit 0
+              ${pkgs.coreutils}/bin/sleep 2
+            done
+            exit 1
+          '';
+        };
+        Install.WantedBy = [ "plasma-plasmashell.service" ];
+      };
 
       # Pins by desktop ID, never by /nix/store path, which dies on the next reb.
       systemd.user.services.plasma-pinned = lib.mkIf (config.plasmaPinned != [ ]) {
