@@ -8,7 +8,10 @@ let
     backupFileExtension = "bak";
     extraSpecialArgs = { inherit inputs; };
     users.${user.name}.home.stateVersion = "26.05";
-    sharedModules = [ self.homeModules.shellHooks ];
+    sharedModules = [
+      self.homeModules.shellHooks
+      self.homeModules.plasmaOptions
+    ];
   };
 in
 {

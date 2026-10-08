@@ -9,7 +9,9 @@
       cpuBatteryCap
       homeManagerBase
 
+      # Swap these two lines to test dad's and Danush's KDE setup here, then reb and reboot.
       desktopNiri
+      # desktopKde
       shell
       programming
       ai
@@ -36,6 +38,13 @@
       }
       {
         home-manager.users.${self.lib.user.name}.home.sessionVariables.GSK_RENDERER = "gl";
+      }
+      {
+        home-manager.users.${self.lib.user.name}.plasmaPinned = [
+          "brave-origin.desktop"
+          "com.mitchellh.ghostty.desktop"
+          "org.kde.dolphin.desktop"
+        ];
       }
     ];
   };
