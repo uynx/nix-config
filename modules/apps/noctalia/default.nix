@@ -63,6 +63,9 @@
       { self', ... }:
       {
         home.packages = [ self'.packages.noctalia-shell ];
+        # noctalia's fallback icon name; blank, so a missing icon shows nothing instead of a checkerboard.
+        xdg.dataFile."icons/hicolor/scalable/apps/application-x-executable.svg".source =
+          ./application-x-executable.svg;
       }
     );
   };
