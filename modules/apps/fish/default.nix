@@ -113,8 +113,26 @@ in
                 set -l repo ~/nix-config
                 set -l verb switch
                 # A live switch that changes the desktop ends the session, killing nh before it records the generation.
-                if test "$argv[1]" = restart; set verb boot; set -e argv[1]; end
+                set -l flip
+                switch "$argv[1]"
+                    case restart
+                        set verb boot; set -e argv[1]
+                    case switch
+                        set verb boot; set flip 1; set -e argv[1]
+                end
                 if test (count $argv) -gt 0; set target $argv[1]; end
+
+                set -l desktopFile $repo/modules/hosts/$target/desktop
+                set -l oldDesktop
+                if set -q flip[1]
+                    if not test -f $desktopFile
+                        echo "$target has no desktop to switch"
+                        return 1
+                    end
+                    set oldDesktop (string trim < $desktopFile)
+                    test "$oldDesktop" = kde; and echo niri > $desktopFile; or echo kde > $desktopFile
+                    echo "Switching $target from $oldDesktop to "(string trim < $desktopFile)", then rebooting."
+                end
 
                 git -C $repo add -A
                 ${lib.optionalString isDarwin ''
@@ -132,6 +150,7 @@ in
                     end
                     test $verb = boot; and systemctl reboot
                 else
+                    set -q flip[1]; and echo $oldDesktop > $desktopFile
                     echo "Rebuild failed. Changes are staged but not committed."
                     return 1
                 end
