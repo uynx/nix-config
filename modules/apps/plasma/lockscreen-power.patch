@@ -1,0 +1,42 @@
+--- a/contents/lockscreen/LockScreenUi.qml
++++ b/contents/lockscreen/LockScreenUi.qml
+@@ -296,24 +296,28 @@
+ 
+                 actionItems: [
+                     ActionButton {
++                        text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "&Hibernate")
++                        icon.name: "system-suspend-hibernate"
++                        onClicked: sessionManagement.hibernate()
++                        enabled: sessionManagement.canHibernate
++                    },
++                    ActionButton {
+                         text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "Slee&p")
+                         icon.name: "system-suspend"
+                         onClicked: sessionManagement.suspend()
+-                        visible: sessionManagement.canSuspend
++                        enabled: sessionManagement.canSuspend
+                     },
+                     ActionButton {
+-                        text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "&Hibernate")
+-                        icon.name: "system-suspend-hibernate"
+-                        onClicked: sessionManagement.hibernate()
+-                        visible: sessionManagement.canHibernate
++                        text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "&Restart")
++                        icon.name: "system-reboot"
++                        onClicked: sessionManagement.requestReboot(SessionManagement.Skip)
++                        enabled: sessionManagement.canReboot
+                     },
+                     ActionButton {
+-                        text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "Switch &User")
+-                        icon.name: "system-switch-user"
+-                        onClicked: {
+-                            sessionManagement.switchUser();
+-                        }
+-                        visible: sessionManagement.canSwitchUser
++                        text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "Shut &Down")
++                        icon.name: "system-shutdown"
++                        onClicked: sessionManagement.requestShutdown(SessionManagement.Skip)
++                        enabled: sessionManagement.canShutdown
+                     }
+                 ]
+ 

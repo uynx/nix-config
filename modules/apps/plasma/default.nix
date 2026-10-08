@@ -25,6 +25,18 @@
       '';
     in
     {
+      nixpkgs.overlays = lib.optional config.plasmaGreyedSleep (
+        _: prev: {
+          kdePackages = prev.kdePackages.overrideScope (
+            _: kprev: {
+              plasma-desktop = kprev.plasma-desktop.overrideAttrs (old: {
+                patches = (old.patches or [ ]) ++ [ ./kickoff-greyed-sleep.patch ];
+              });
+            }
+          );
+        }
+      );
+
       environment.systemPackages = lib.optional (wallpaper != null) (
         pkgs.writeTextDir "share/sddm/themes/breeze/theme.conf.user" ''
           [General]
@@ -52,6 +64,12 @@
           Unit = "plasmashell-watchdog.service";
         };
       };
+    };
+
+  flake.nixosModules.plasmaHostOptions =
+    { lib, ... }:
+    {
+      options.plasmaGreyedSleep = lib.mkEnableOption "a disabled Sleep button in the launcher on machines that cannot suspend, at the cost of building plasma-desktop locally";
     };
 
   flake.homeModules.plasmaOptions =
@@ -93,6 +111,14 @@
     {
       # Without a user-profile copy the screenshot shortcut never fires.
       home.packages = [ pkgs.kdePackages.spectacle ];
+
+      # Shadows the system shell package so the lock screen shows every power action, unavailable ones disabled.
+      xdg.dataFile."plasma/shells/org.kde.plasma.desktop".source =
+        pkgs.runCommand "plasma-shell-lockscreen-power" { } ''
+          cp -r ${pkgs.kdePackages.plasma-desktop}/share/plasma/shells/org.kde.plasma.desktop $out
+          chmod -R u+w $out
+          cd $out && patch -p1 < ${./lockscreen-power.patch}
+        '';
 
       programs.plasma = {
         enable = true;
