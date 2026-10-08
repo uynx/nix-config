@@ -111,11 +111,11 @@
       kwin."Window Custom Quick Tile Left" = [ ];
       kwin."Window Custom Quick Tile Right" = [ ];
       kwin."Window Custom Quick Tile Top" = [ ];
-      kwin."Window Fullscreen" = [ ];
+      kwin."Window Fullscreen" = "Meta+Shift+F";
       kwin."Window Grow Horizontal" = [ ];
       kwin."Window Grow Vertical" = [ ];
       kwin."Window Lower" = [ ];
-      kwin."Window Maximize" = "Meta+PgUp";
+      kwin."Window Maximize" = ["Meta+F" "Meta+PgUp"];
       kwin."Window Maximize Horizontal" = [ ];
       kwin."Window Maximize Vertical" = [ ];
       kwin."Window Minimize" = "Meta+PgDown";
