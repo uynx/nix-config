@@ -16,7 +16,7 @@
       kmix.mute = "Volume Mute";
       kmix.push_to_talk = [ ];
       ksmserver."Halt Without Confirmation" = [ ];
-      ksmserver."Lock Session" = ["Screensaver" "Meta+L"];
+      ksmserver."Lock Session" = ["Screensaver" "Meta+Ctrl+Q"];
       ksmserver."Log Out" = "Ctrl+Alt+Del";
       ksmserver."Log Out Without Confirmation" = [ ];
       ksmserver.LogOut = [ ];
@@ -106,7 +106,7 @@
       kwin."Walk Through Windows of Current Application Alternative (Reverse)" = [ ];
       kwin."Window Above Other Windows" = [ ];
       kwin."Window Below Other Windows" = [ ];
-      kwin."Window Close" = "Alt+F4";
+      kwin."Window Close" = ["Alt+F4" "Meta+Q"];
       kwin."Window Custom Quick Tile Bottom" = [ ];
       kwin."Window Custom Quick Tile Left" = [ ];
       kwin."Window Custom Quick Tile Right" = [ ];
@@ -234,7 +234,7 @@
       plasmashell.cycleNextAction = [ ];
       plasmashell.cyclePrevAction = [ ];
       plasmashell.edit_clipboard = [ ];
-      plasmashell."manage activities" = "Meta+Q";
+      plasmashell."manage activities" = [ ];
       plasmashell."next activity" = "Meta+A";
       plasmashell."previous activity" = "Meta+Shift+A";
       plasmashell.repeat_action = [ ];
@@ -246,10 +246,12 @@
       plasmashell."toggle do not disturb" = [ ];
       "services/brave-personal.desktop"._launch = "Meta+N";
       "services/brave-school.desktop"._launch = "Meta+M";
-      "services/dictate.desktop"._launch = "Meta+D";
+      "services/com.mitchellh.ghostty.desktop"._launch = ["Ctrl+Alt+T" "Meta+P"];
+      "services/org.kde.kscreen.desktop".ShowOSD = "Display";
       "services/org.kde.spectacle.desktop".CurrentMonitorScreenShot = [ ];
+      "services/org.kde.spectacle.desktop".FullScreenScreenShot = "Meta+Ctrl+S";
       "services/org.kde.spectacle.desktop".OpenWithoutScreenshot = [ ];
-      "services/org.kde.spectacle.desktop".RectangularRegionScreenShot = "Meta+Shift+S";
+      "services/org.kde.spectacle.desktop".RectangularRegionScreenShot = ["Meta+S" "Meta+Shift+S"];
       "services/org.kde.spectacle.desktop"._launch = "Print";
     };
     configFile = {
@@ -259,7 +261,6 @@
       dolphinrc."KFileDialog Settings"."Places Icons Static Size" = 22;
       kactivitymanagerdrc.activities.ff75815e-cf14-430b-a124-297e7fee2255 = "Default";
       kcminputrc.Mouse.cursorSize = 48;
-      kcminputrc.Mouse.cursorTheme = "breeze_cursors";
       kded5rc.Module-device_automounter.autoload = false;
       kdeglobals.KDE.contrast = 4;
       kdeglobals.KDE.frameContrast = 0.2;
@@ -269,7 +270,12 @@
       kdeglobals.WM.inactiveBackground = "32,36,40";
       kdeglobals.WM.inactiveBlend = "161,169,177";
       kdeglobals.WM.inactiveForeground = "161,169,177";
-      kscreenlockerrc."Greeter/Wallpaper/org.kde.image/General".Image = "file:///nix/store/g2rcnz0zwhnq9lj5b2y2p7vp6pcw8kk6-wallpaper.png";
+      kscreenlockerrc.Greeter.WallpaperPlugin = "org.kde.image";
+      kscreenlockerrc."Greeter/Wallpaper/org.kde.image/General".Image = "/nix/store/7nhdx8v4cy9gi3dhanayz0ln11p4mcwa-source/modules/wallpapers/wallpaper.png";
+      kuriikwsfilterrc.General.EnableWebShortcuts = true;
+      kuriikwsfilterrc.General.KeywordDelimiter = ":";
+      kuriikwsfilterrc.General.PreferredWebShortcuts = "";
+      kuriikwsfilterrc.General.UsePreferredWebShortcutsOnly = false;
       kwalletrc.Wallet."First Use" = false;
       kwalletrc."org.freedesktop.secrets".apiEnabled = false;
       kwinrc.Desktops.Id_1 = "792559f4-ff34-488f-92c2-b4cd14d9d9e8";
