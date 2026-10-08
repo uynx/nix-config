@@ -90,7 +90,11 @@
           };
           wallpaper = config.plasmaWallpaper;
         };
-        kscreenlocker.appearance.wallpaper = config.plasmaWallpaper;
+        # The lock screen wants a file:// URL; plasma-manager's kscreenlocker option writes a bare path it ignores.
+        configFile.kscreenlockerrc = lib.mkIf (config.plasmaWallpaper != null) {
+          Greeter.WallpaperPlugin = "org.kde.image";
+          "Greeter/Wallpaper/org.kde.image/General".Image = "file://${config.plasmaWallpaper}";
+        };
 
         shortcuts."services/org.kde.spectacle.desktop" = {
           RectangularRegionScreenShot = "Meta+Shift+S";
