@@ -56,6 +56,11 @@
               "Alt+F4"
             ];
             plasmashell."manage activities" = [ ];
+            "services/org.kde.kscreen.desktop".ShowOSD = "Display";
+            "services/com.mitchellh.ghostty.desktop"._launch = [
+              "Meta+P"
+              "Ctrl+Alt+T"
+            ];
             # Same as niri: this keyboard has no Print key.
             "services/org.kde.spectacle.desktop" = {
               RectangularRegionScreenShot = inputs.nixpkgs.lib.mkForce [
