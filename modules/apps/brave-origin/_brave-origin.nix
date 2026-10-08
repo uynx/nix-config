@@ -160,6 +160,12 @@ stdenv.mkDerivation {
         --replace "/usr/bin/brave-origin-stable" "$out/bin/brave-origin" \
         --replace "/usr/bin/brave-origin" "$out/bin/brave-origin"
 
+    # The deb's postinst registers these icons, and Nix never runs postinst.
+    for s in 16 24 32 48 64 128 256; do
+      install -Dm444 $out/opt/brave.com/brave-origin/product_logo_$s.png \
+        $out/share/icons/hicolor/''${s}x''${s}/apps/brave-origin.png
+    done
+
     ln -sf ${xdg-utils}/bin/xdg-settings $out/opt/brave.com/brave-origin/xdg-settings
     ln -sf ${xdg-utils}/bin/xdg-mime $out/opt/brave.com/brave-origin/xdg-mime
 
