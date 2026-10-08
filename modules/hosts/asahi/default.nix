@@ -40,11 +40,19 @@
         home-manager.users.${self.lib.user.name}.home.sessionVariables.GSK_RENDERER = "gl";
       }
       {
-        home-manager.users.${self.lib.user.name}.plasmaPinned = [
-          "brave-origin.desktop"
-          "com.mitchellh.ghostty.desktop"
-          "org.kde.dolphin.desktop"
-        ];
+        home-manager.users.${self.lib.user.name} = {
+          plasmaPinned = [
+            "brave-origin.desktop"
+            "com.mitchellh.ghostty.desktop"
+            "org.kde.dolphin.desktop"
+          ];
+          plasmaWallpaper = ../../wallpapers/wallpaper.png;
+          plasmaShortcuts = {
+            ksmserver."Lock Session" = "Screensaver\tMeta+Ctrl+Q,Screensaver\tMeta+L,Lock Session";
+            kwin."Window Close" = "Meta+Q\tAlt+F4,Alt+F4,Close Window";
+            plasmashell."manage activities" = "none,Meta+Q,Show Activity Switcher";
+          };
+        };
       }
     ];
   };
