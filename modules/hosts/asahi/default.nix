@@ -57,6 +57,11 @@
               "Meta+Q"
               "Alt+F4"
             ];
+            kwin."Window Maximize" = [
+              "Meta+F"
+              "Meta+PgUp"
+            ];
+            kwin."Window Fullscreen" = "Meta+Shift+F";
             plasmashell."manage activities" = [ ];
             "services/org.kde.kscreen.desktop".ShowOSD = "Display";
             "services/com.mitchellh.ghostty.desktop"._launch = [
