@@ -26,6 +26,8 @@
       statix
     ];
 
+    xdg.dataFile."icons/hicolor/scalable/apps/julia.svg".source = ./julia.svg;
+
     programs = {
       go.enable = true;
       cargo.enable = true;
