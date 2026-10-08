@@ -605,6 +605,11 @@
         exec ${steam-asahi-run}/bin/steam-asahi-run "$APP_ID"
       '';
 
+      steam-game-icon = pkgs.writeShellApplication {
+        name = "steam-game-icon";
+        text = builtins.readFile ./game-icon.sh;
+      };
+
       steam-game-entries = pkgs.writeShellScriptBin "steam-game-entries" ''
         set -eu
 
@@ -641,7 +646,7 @@
             "Name=$NAME" \
             'GenericName=Steam Game' \
             "Exec=${steam-launch}/bin/steam-launch $APP_ID" \
-            'Icon=steam' \
+            "Icon=$(${steam-game-icon}/bin/steam-game-icon "$STEAM_ROOT" "$APP_ID")" \
             'Terminal=false' \
             'Categories=Game;' \
             "X-Steam-AppID=$APP_ID" \
