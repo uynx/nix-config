@@ -47,6 +47,7 @@
           ];
           plasmaWallpaper = ../../wallpapers/wallpaper.png;
           plasmaSnapshotDir = "nix-config/kde-snapshots";
+          programs.plasma.workspace.lookAndFeel = "org.kde.breezedark.desktop";
           programs.plasma.shortcuts = {
             ksmserver."Lock Session" = [
               "Meta+Ctrl+Q"
