@@ -528,6 +528,9 @@
         trap cleanup EXIT
         printf '%s\n' "$$" >"$LOCK/pid"
 
+        # Window lookups need niri; elsewhere a missing window would read as "game closed" and stop Steam.
+        ${N} msg version >/dev/null 2>&1 || exit 0
+
         ID=
         for _ in $(${pkgs.coreutils}/bin/seq 1 600); do
           ID=$(window_id "$APP")
