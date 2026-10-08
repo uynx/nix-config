@@ -1,12 +1,12 @@
 {
   "wheel": {
-    "version": "0.2.10",
-    "url": "https://files.pythonhosted.org/packages/87/ae/2bf70a140ea6ce9a124fc5c2332f7c079a1410ec5ecfb94a87c923853a02/fermion_research-0.2.10-py3-none-any.whl",
-    "hash": "sha256-ESw7mYUZYngscwb1NDpedkoumF2R0ZxM4926v0ymvGk="
+    "version": "0.2.11",
+    "url": "https://files.pythonhosted.org/packages/35/c3/90dc124286ce01004ddb30cd302381aad79fc281899d7dd2973ec85faef6/fermion_research-0.2.11-py3-none-any.whl",
+    "hash": "sha256-xAl1dO9C6WyvMXMglzIdqeFsC5EItcYWqp1dH1QDGfg="
   },
   "model": {
-    "rev": "160671c34ffeae4d80d6f86896c68e40aad971a7",
-    "url": "https://huggingface.co/FermionResearch/Phonon-2/resolve/160671c34ffeae4d80d6f86896c68e40aad971a7/phonon-2.bps.tar.zst",
+    "rev": "7e153e4054c0a10db6d47d6fff5c062d4c77c154",
+    "url": "https://huggingface.co/FermionResearch/Phonon-2/resolve/7e153e4054c0a10db6d47d6fff5c062d4c77c154/phonon-2.bps.tar.zst",
     "hash": "sha256-mBJXlbbdpy9cbu6boz0ZgV32XcsYtQo1e/n3PJk1MJ4="
   }
 }
