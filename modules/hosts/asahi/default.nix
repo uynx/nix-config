@@ -10,8 +10,8 @@
       homeManagerBase
 
       # Swap these two lines to test dad's and Danush's KDE setup here, then reb and reboot.
-      desktopNiri
-      # desktopKde
+      # desktopNiri
+      desktopKde
       shell
       programming
       ai
