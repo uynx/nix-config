@@ -46,6 +46,7 @@
             "org.kde.dolphin.desktop"
           ];
           plasmaWallpaper = ../../wallpapers/wallpaper.png;
+          plasmaSnapshotDir = "nix-config/kde-snapshots";
           programs.plasma.shortcuts = {
             ksmserver."Lock Session" = [
               "Meta+Ctrl+Q"

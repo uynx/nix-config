@@ -197,3 +197,9 @@ nix run nix-darwin -- switch --flake ~/nix-config#darwin --impure
 ```
 
 After that first switch `reb` works like it does on Linux.
+
+## KDE snapshots
+
+Every Plasma login writes `rc2nix`'s dump of the current KDE settings to
+`kde-snapshots/<hostname>.nix`, and `reb` commits it. It is a record, not live
+config: to restore a machine's KDE look, import the parts you want into the host.
