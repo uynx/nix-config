@@ -31,6 +31,8 @@
         };
 
         colors = builtins.fromJSON (builtins.readFile ./Flexoki.json);
+
+        preInstalledPlugins.kbd-backlight.src = "${./kbd-backlight}";
       };
 
     nixosModules.noctalia = moduleWithSystem (
