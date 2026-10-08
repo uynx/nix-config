@@ -9,9 +9,8 @@
       cpuBatteryCap
       homeManagerBase
 
-      # Swap these two lines to test dad's and Danush's KDE setup here, then reb and reboot.
-      # desktopNiri
-      desktopKde
+      # `reb switch` flips ./desktop between niri and kde, then rebuilds and reboots.
+      (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
       shell
       programming
       ai
