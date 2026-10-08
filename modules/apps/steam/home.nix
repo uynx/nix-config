@@ -477,8 +477,15 @@
           set -- "$@" -silent -applaunch "$APP_ID"
         fi
 
-        STATUS=0
-        ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir "$CONTAINER" -- "$@" || STATUS=$?
+        # A self-update exits and relaunches Steam inside the VM, which dies with it, so start it again.
+        BOOT_LOG="$STEAM_ROOT/logs/bootstrap_log.txt"
+        for _ in 1 2 3; do
+          MARK=$(${pkgs.coreutils}/bin/wc -l <"$BOOT_LOG" 2>/dev/null || echo 0)
+          STATUS=0
+          ${pkgs.distrobox}/bin/distrobox enter --no-tty --no-workdir "$CONTAINER" -- "$@" || STATUS=$?
+          ${pkgs.coreutils}/bin/tail -n +"$((MARK + 1))" "$BOOT_LOG" 2>/dev/null \
+            | ${pkgs.ripgrep}/bin/rg -q 'Update complete, launching Steam' || break
+        done
         ${steam-asahi-stop}/bin/steam-asahi-stop
         exit "$STATUS"
       '';
