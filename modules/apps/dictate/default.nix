@@ -76,7 +76,7 @@
 
       xdg.dataFile."icons/hicolor/scalable/apps/dictate-mic.svg".source = ./dictate-mic.svg;
 
-      plasmaShortcuts."dictate.desktop"._launch = "Meta+D";
+      programs.plasma.shortcuts."services/dictate.desktop"._launch = "Meta+D";
 
       home.packages = [
         update-phonon

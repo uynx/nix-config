@@ -1,3 +1,4 @@
+{ inputs, ... }:
 {
   # Peer.Ping succeeds while the panel is frozen: only a QML eval detects the hang, only SIGKILL recovers.
   flake.nixosModules.plasma =
@@ -42,34 +43,19 @@
   flake.homeModules.plasmaOptions =
     { lib, ... }:
     {
+      imports = [ inputs.plasma-manager.homeModules.plasma-manager ];
+
       options.plasmaPinned = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
         example = [ "firefox.desktop" ];
-        description = ''
-          Desktop file IDs pinned to the taskbar, in order. Re-applied at every
-          Plasma login, so pins made by hand do not survive a login.
-        '';
+        description = "Desktop file IDs pinned to the taskbar, in order.";
       };
 
       options.plasmaWallpaper = lib.mkOption {
         type = lib.types.nullOr lib.types.path;
         default = null;
-        description = "Image for the desktop and the lock screen, re-applied at every Plasma login.";
-      };
-
-      options.plasmaShortcuts = lib.mkOption {
-        type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
-        default = { };
-        example = {
-          "dictate.desktop"._launch = "Meta+Shift+D";
-        };
-        description = ''
-          Global shortcuts written into kglobalshortcutsrc. A key ending in
-          `.desktop` is a launcher (action `_launch` is "run it"); any other key
-          is a component group such as `kwin` or `ksmserver`, whose values take
-          kglobalaccel's `active,default,description` form.
-        '';
+        description = "Image for the desktop and the lock screen.";
       };
     };
 
@@ -80,38 +66,44 @@
       config,
       ...
     }:
-    let
-      writes = lib.concatLists (
-        lib.mapAttrsToList (
-          desktop:
-          lib.mapAttrsToList (
-            action: keys: ''
-              $DRY_RUN_CMD $kw --file kglobalshortcutsrc \
-                ${lib.optionalString (lib.hasSuffix ".desktop" desktop) "--group services"} --group ${lib.escapeShellArg desktop} \
-                --key ${lib.escapeShellArg action} ${lib.escapeShellArg keys}''
-          )
-        ) config.plasmaShortcuts
-      );
-      pinJs = pkgs.writeText "plasma-pin.js" (
-        builtins.replaceStrings [ "@launchers@" ] [ (builtins.toJSON config.plasmaPinned) ] (
-          builtins.readFile ./pin.js
-        )
-      );
-    in
     {
       # Without a user-profile copy the screenshot shortcut never fires.
       home.packages = [ pkgs.kdePackages.spectacle ];
 
-      plasmaShortcuts."org.kde.spectacle.desktop" = {
-        RectangularRegionScreenShot = "Meta+Shift+S";
-        _launch = "Print";
-      };
+      programs.plasma = {
+        enable = true;
 
-      xdg.configFile."kcminputrc".text = ''
-        [Mouse]
-        cursorTheme=breeze_cursors
-        cursorSize=48
-      '';
+        workspace = {
+          cursor = {
+            theme = "breeze_cursors";
+            size = 48;
+          };
+          wallpaper = config.plasmaWallpaper;
+        };
+        kscreenlocker.appearance.wallpaper = config.plasmaWallpaper;
+
+        shortcuts."services/org.kde.spectacle.desktop" = {
+          RectangularRegionScreenShot = "Meta+Shift+S";
+          _launch = "Print";
+        };
+
+        # Plasma 6's default bottom panel, with the host's pins in the task manager.
+        panels = lib.mkIf (config.plasmaPinned != [ ]) [
+          {
+            location = "bottom";
+            floating = true;
+            widgets = [
+              "org.kde.plasma.kickoff"
+              "org.kde.plasma.pager"
+              { iconTasks.launchers = map (id: "applications:${id}") config.plasmaPinned; }
+              "org.kde.plasma.marginsseparator"
+              "org.kde.plasma.systemtray"
+              "org.kde.plasma.digitalclock"
+              "org.kde.plasma.showdesktop"
+            ];
+          }
+        ];
+      };
 
       home.pointerCursor = {
         enable = true;
@@ -120,67 +112,6 @@
         size = 48;
         gtk.enable = true;
         x11.enable = true;
-      };
-
-      home.activation.plasmaShortcuts = lib.mkIf (writes != [ ]) (
-        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-          kw=${pkgs.kdePackages.kconfig}/bin/kwriteconfig6
-          ${lib.concatStringsSep "\n" writes}
-          $DRY_RUN_CMD ${pkgs.systemd}/bin/systemctl --user try-restart plasma-kglobalaccel.service || true
-        ''
-      );
-
-      home.activation.plasmaLockWallpaper = lib.mkIf (config.plasmaWallpaper != null) (
-        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-          $DRY_RUN_CMD ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 --file kscreenlockerrc \
-            --group Greeter --group Wallpaper --group org.kde.image --group General \
-            --key Image "file://${config.plasmaWallpaper}"
-        ''
-      );
-
-      systemd.user.services.plasma-wallpaper = lib.mkIf (config.plasmaWallpaper != null) {
-        Unit = {
-          Description = "Set the declared Plasma desktop wallpaper";
-          After = [ "plasma-plasmashell.service" ];
-        };
-        Service = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = pkgs.writeShellScript "plasma-wallpaper" ''
-            for _ in $(${pkgs.coreutils}/bin/seq 30); do
-              ${pkgs.kdePackages.plasma-workspace}/bin/plasma-apply-wallpaperimage ${config.plasmaWallpaper} && exit 0
-              ${pkgs.coreutils}/bin/sleep 2
-            done
-            exit 1
-          '';
-        };
-        Install.WantedBy = [ "plasma-plasmashell.service" ];
-      };
-
-      # Pins by desktop ID, never by /nix/store path, which dies on the next reb.
-      systemd.user.services.plasma-pinned = lib.mkIf (config.plasmaPinned != [ ]) {
-        Unit = {
-          Description = "Pin the declared launchers to the Plasma taskbar";
-          After = [ "plasma-plasmashell.service" ];
-        };
-        Service = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = pkgs.writeShellScript "plasma-pinned" ''
-            script=$(${pkgs.coreutils}/bin/cat ${pinJs})
-            for _ in $(${pkgs.coreutils}/bin/seq 30); do
-              out=$(${pkgs.systemd}/bin/busctl --user call org.kde.plasmashell /PlasmaShell \
-                org.kde.PlasmaShell evaluateScript s "$script" 2>/dev/null || true)
-              case $out in
-                's "'[1-9]*) exit 0 ;;
-              esac
-              ${pkgs.coreutils}/bin/sleep 2
-            done
-            echo "no Plasma task manager answered" >&2
-            exit 1
-          '';
-        };
-        Install.WantedBy = [ "plasma-plasmashell.service" ];
       };
     };
 }

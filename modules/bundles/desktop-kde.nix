@@ -28,16 +28,8 @@
 
       home = [
         self.homeModules.plasma
-        (
-          { pkgs, lib, ... }:
-          {
-            # Leaves org.freedesktop.secrets to gnome-keyring.
-            home.activation.kwalletSecretsOff = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-              $DRY_RUN_CMD ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 --file kwalletrc \
-                --group org.freedesktop.secrets --key apiEnabled false
-            '';
-          }
-        )
+        # Leaves org.freedesktop.secrets to gnome-keyring.
+        { programs.plasma.configFile.kwalletrc."org.freedesktop.secrets".apiEnabled = false; }
       ];
     }).nixos;
 }

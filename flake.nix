@@ -13,6 +13,11 @@
       url = "https://flakehub.com/f/nix-community/home-manager/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    plasma-manager = {
+      url = "github:nix-community/plasma-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
     sops-nix = {
       url = "https://flakehub.com/f/Mic92/sops-nix/0.1.*";
       inputs.nixpkgs.follows = "nixpkgs";

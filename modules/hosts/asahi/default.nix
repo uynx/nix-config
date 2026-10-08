@@ -46,10 +46,16 @@
             "org.kde.dolphin.desktop"
           ];
           plasmaWallpaper = ../../wallpapers/wallpaper.png;
-          plasmaShortcuts = {
-            ksmserver."Lock Session" = "Screensaver\tMeta+Ctrl+Q,Screensaver\tMeta+L,Lock Session";
-            kwin."Window Close" = "Meta+Q\tAlt+F4,Alt+F4,Close Window";
-            plasmashell."manage activities" = "none,Meta+Q,Show Activity Switcher";
+          programs.plasma.shortcuts = {
+            ksmserver."Lock Session" = [
+              "Meta+Ctrl+Q"
+              "Screensaver"
+            ];
+            kwin."Window Close" = [
+              "Meta+Q"
+              "Alt+F4"
+            ];
+            plasmashell."manage activities" = [ ];
           };
         };
       }

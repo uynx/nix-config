@@ -8,16 +8,15 @@ let
     backupFileExtension = "bak";
     extraSpecialArgs = { inherit inputs; };
     users.${user.name}.home.stateVersion = "26.05";
-    sharedModules = [
-      self.homeModules.shellHooks
-      self.homeModules.plasmaOptions
-    ];
+    sharedModules = [ self.homeModules.shellHooks ];
   };
 in
 {
   flake.nixosModules.homeManagerBase = {
     imports = [ inputs.home-manager.nixosModules.home-manager ];
-    home-manager = shared;
+    home-manager = shared // {
+      sharedModules = shared.sharedModules ++ [ self.homeModules.plasmaOptions ];
+    };
   };
 
   flake.darwinModules.homeManagerBase = {

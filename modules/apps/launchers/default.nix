@@ -42,9 +42,9 @@
         (shortcutEntry "school" "School")
       ];
 
-      plasmaShortcuts = {
-        "brave-personal.desktop"._launch = "Meta+N";
-        "brave-school.desktop"._launch = "Meta+M";
+      programs.plasma.shortcuts = {
+        "services/brave-personal.desktop"._launch = "Meta+N";
+        "services/brave-school.desktop"._launch = "Meta+M";
       };
 
       home.file.".local/share/applications/brave-origin.desktop".text = ''
