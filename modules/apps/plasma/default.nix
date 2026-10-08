@@ -52,6 +52,16 @@
         description = "Desktop file IDs pinned to the taskbar, in order.";
       };
 
+      options.plasmaSnapshotDir = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "nix-config/kde-snapshots";
+        description = ''
+          Directory under $HOME where every Plasma login writes rc2nix's dump of
+          the current KDE settings as <hostname>.nix, so reb commits it.
+        '';
+      };
+
       options.plasmaWallpaper = lib.mkOption {
         type = lib.types.nullOr lib.types.path;
         default = null;
@@ -103,6 +113,24 @@
             ];
           }
         ];
+      };
+
+      systemd.user.services.kde-snapshot = lib.mkIf (config.plasmaSnapshotDir != null) {
+        Unit = {
+          Description = "Snapshot the current KDE settings into the config repo";
+          After = [ "plasma-plasmashell.service" ];
+        };
+        Service = {
+          Type = "oneshot";
+          ExecStart = pkgs.writeShellScript "kde-snapshot" ''
+            dir="$HOME/${config.plasmaSnapshotDir}"
+            ${pkgs.coreutils}/bin/mkdir -p "$dir"
+            out="$dir/$(${pkgs.hostname}/bin/hostname).nix"
+            ${inputs.plasma-manager.packages.${pkgs.stdenv.hostPlatform.system}.rc2nix}/bin/rc2nix >"$out.tmp"
+            ${pkgs.coreutils}/bin/mv "$out.tmp" "$out"
+          '';
+        };
+        Install.WantedBy = [ "plasma-plasmashell.service" ];
       };
 
       home.pointerCursor = {
