@@ -271,7 +271,7 @@
       kdeglobals.WM.inactiveBlend = "161,169,177";
       kdeglobals.WM.inactiveForeground = "161,169,177";
       kscreenlockerrc.Greeter.WallpaperPlugin = "org.kde.image";
-      kscreenlockerrc."Greeter/Wallpaper/org.kde.image/General".Image = "/nix/store/7nhdx8v4cy9gi3dhanayz0ln11p4mcwa-source/modules/wallpapers/wallpaper.png";
+      kscreenlockerrc."Greeter/Wallpaper/org.kde.image/General".Image = "file:///nix/store/g2rcnz0zwhnq9lj5b2y2p7vp6pcw8kk6-wallpaper.png";
       kuriikwsfilterrc.General.EnableWebShortcuts = true;
       kuriikwsfilterrc.General.KeywordDelimiter = ":";
       kuriikwsfilterrc.General.PreferredWebShortcuts = "";
