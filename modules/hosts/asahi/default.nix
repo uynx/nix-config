@@ -56,6 +56,14 @@
               "Alt+F4"
             ];
             plasmashell."manage activities" = [ ];
+            # Same as niri: this keyboard has no Print key.
+            "services/org.kde.spectacle.desktop" = {
+              RectangularRegionScreenShot = inputs.nixpkgs.lib.mkForce [
+                "Meta+S"
+                "Meta+Shift+S"
+              ];
+              FullScreenScreenShot = "Meta+Ctrl+S";
+            };
           };
         };
       }
