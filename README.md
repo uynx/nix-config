@@ -94,9 +94,9 @@ A third rule keeps the shell out of it:
 ## Adding or removing a component
 
 Edit exactly one line in `modules/hosts/<host>/default.nix`. Delete `ai` and
-every AI CLI, its skills wiring and dictation are gone. Replace `desktopNiri`
-with `desktopKde` and the compositor, greeter, bar and GTK theme all change
-together.
+every AI CLI, its skills wiring and dictation are gone. `reb switch` flips the host's
+`desktop` file between `niri` and `kde`, so the compositor, greeter, bar and GTK
+theme all change together, then rebuilds and reboots.
 
 | Bundle | Contents | macOS |
 |---|---|---|
