@@ -16,7 +16,9 @@
             touchpad.naturalScrolling = true;
           };
 
-          # No gnome-keyring: a second keyring re-keys what Brave has saved in KWallet.
+          # Brave's key lives in gnome-keyring from niri; KWallet would mint a second key and strand every login.
+          services.gnome.gnome-keyring.enable = true;
+          security.pam.services.sddm.enableGnomeKeyring = true;
 
           # KWin has no virtual-keyboard protocol, so dictate types through ydotool here.
           programs.ydotool.enable = true;
@@ -24,6 +26,18 @@
         }
       ];
 
-      home = [ self.homeModules.plasma ];
+      home = [
+        self.homeModules.plasma
+        (
+          { pkgs, lib, ... }:
+          {
+            # Leaves org.freedesktop.secrets to gnome-keyring.
+            home.activation.kwalletSecretsOff = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+              $DRY_RUN_CMD ${pkgs.kdePackages.kconfig}/bin/kwriteconfig6 --file kwalletrc \
+                --group org.freedesktop.secrets --key apiEnabled false
+            '';
+          }
+        )
+      ];
     }).nixos;
 }
