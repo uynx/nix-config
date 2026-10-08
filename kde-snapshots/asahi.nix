@@ -285,6 +285,7 @@
       kwinrc."Tiling/792559f4-ff34-488f-92c2-b4cd14d9d9e8/b5a684a0-71ff-403b-aef6-6c730e406cd7".tiles = "{\"layoutDirection\":\"horizontal\",\"tiles\":[{\"width\":0.25},{\"width\":0.5},{\"width\":0.25}]}";
       kwinrc.Xwayland.Scale = 1.7;
       plasma-localerc.Formats.LANG = "en_US.UTF-8";
+      plasmanotifyrc."Applications/com.mitchellh.ghostty".Seen = true;
       spectaclerc.ImageSave.translatedScreenshotsFolder = "Screenshots";
       spectaclerc.VideoSave.translatedScreencastsFolder = "Screencasts";
     };
