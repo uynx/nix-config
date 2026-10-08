@@ -1,0 +1,20 @@
+{
+  "id": "kbd-backlight",
+  "name": "Keyboard Backlight",
+  "version": "1.0.0",
+  "minNoctaliaVersion": "4.6.6",
+  "author": "uynx",
+  "license": "MIT",
+  "description": "Slider for the keyboard backlight, through brightnessctl.",
+  "tags": ["System", "Bar"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml",
+    "panel": "Panel.qml"
+  },
+  "dependencies": {
+    "plugins": []
+  },
+  "metadata": {
+    "defaultSettings": {}
+  }
+}

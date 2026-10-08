@@ -208,6 +208,9 @@
           "textColor": "none"
         },
         {
+          "id": "plugin:kbd-backlight"
+        },
+        {
           "colorizeDistroLogo": false,
           "colorizeSystemIcon": "none",
           "colorizeSystemText": "none",
