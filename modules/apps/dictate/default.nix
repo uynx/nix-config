@@ -66,6 +66,8 @@
 
       shellHooks.update = [ "update-phonon" ];
 
+      xdg.dataFile."icons/hicolor/scalable/apps/dictate-mic.svg".source = ./dictate-mic.svg;
+
       home.packages = [
         update-phonon
         (pkgs.writeShellApplication {
@@ -102,13 +104,13 @@
               sleep 0.2
 
               [ -f "$audio" ] || exit 0
-              notify-send "Dictation" "Transcribing..." -i microphone-sensitivity-high-symbolic || true
+              notify-send "Dictation" "Transcribing..." -i dictate-mic || true
 
               if ! text=$(curl -sf --retry 10 --retry-connrefused --retry-delay 2 --max-time 60 \
                 -F file=@"$audio" -F response_format=text "$url" \
                 | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'); then
                 rm -f "$audio"
-                notify-send "Dictation" "The phonon service is not answering" -i dialog-error-symbolic || true
+                notify-send "Dictation" "The phonon service is not answering" -i dictate-mic || true
                 exit 0
               fi
               rm -f "$audio"
@@ -117,7 +119,7 @@
                 printf '%s' "$text" | wl-copy
                 wtype "$text" 2>/dev/null || true
               else
-                notify-send "Dictation" "No speech detected" -i dialog-warning-symbolic || true
+                notify-send "Dictation" "No speech detected" -i dictate-mic || true
               fi
             else
               rm -f "$audio"
@@ -128,7 +130,7 @@
               esac
               pw-record "''${target[@]}" --format=s16 --rate=16000 --channels=1 "$audio" >/dev/null 2>&1 &
               echo $! > "$recordPid"
-              notify-send "Dictation" "Recording... press Super+D again to finish." -i media-record-symbolic || true
+              notify-send "Dictation" "Recording... press Super+D again to finish." -i dictate-mic || true
             fi
           '';
         })
