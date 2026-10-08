@@ -1,9 +1,16 @@
-{ inputs, ... }:
+{ self, inputs, ... }:
 {
   # Peer.Ping succeeds while the panel is frozen: only a QML eval detects the hang, only SIGKILL recovers.
   flake.nixosModules.plasma =
-    { pkgs, ... }:
+    {
+      pkgs,
+      lib,
+      config,
+      ...
+    }:
     let
+      inherit (config.home-manager.users.${self.lib.user.name}) plasmaWallpaper;
+      wallpaper = plasmaWallpaper;
       watchdog = pkgs.writeShellScript "plasmashell-watchdog" ''
         set -eu
         if ${pkgs.coreutils}/bin/timeout 5s ${pkgs.systemd}/bin/busctl --user \
@@ -18,6 +25,13 @@
       '';
     in
     {
+      environment.systemPackages = lib.optional (wallpaper != null) (
+        pkgs.writeTextDir "share/sddm/themes/breeze/theme.conf.user" ''
+          [General]
+          background=${wallpaper}
+        ''
+      );
+
       systemd.user.services.plasmashell-watchdog = {
         description = "Recover a hung Plasma panel";
         after = [ "plasma-plasmashell.service" ];
@@ -65,7 +79,7 @@
       options.plasmaWallpaper = lib.mkOption {
         type = lib.types.nullOr lib.types.path;
         default = null;
-        description = "Image for the desktop and the lock screen.";
+        description = "Image for the desktop, the lock screen and the login screen.";
       };
     };
 
