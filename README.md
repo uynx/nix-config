@@ -95,7 +95,7 @@ A third rule keeps the shell out of it:
 
 Edit exactly one line in `modules/hosts/<host>/default.nix`. Delete `ai` and
 every AI CLI, its skills wiring and dictation are gone. `reb switch` flips the host's
-`desktop` file between `niri` and `kde`, so the compositor, greeter, bar and GTK
+`desktop` file (asahi and x86) between `niri` and `kde`, so the compositor, greeter, bar and GTK
 theme all change together, then rebuilds and reboots.
 
 | Bundle | Contents | macOS |

@@ -8,7 +8,8 @@
       hardwareX86
       homeManagerBase
 
-      desktopNiri
+      # `reb switch` flips ./desktop between niri and kde, then rebuilds and reboots.
+      (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
       shell
       programming
       ai
