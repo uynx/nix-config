@@ -8,8 +8,21 @@
       hardwareArm
       homeManagerBase
 
+      desktopNiri
       shell
       programming
+      ai
+      secrets
+      privacy
+      cloud
+      web
+      media
+      comms
+      office
+      latex
+      gamingArm
+
+      virt
 
       { networking.hostName = "arm"; }
     ];
