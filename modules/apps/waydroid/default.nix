@@ -6,7 +6,7 @@
       update-android = self.lib.mkUpdater pkgs {
         name = "update-android";
         text = ''
-          file=$HOME/nix-config/modules/hosts/waydroid/pins.json
+          file=$HOME/nix-config/modules/apps/waydroid/pins.json
           ota=https://ota.waydro.id
 
           pin() {

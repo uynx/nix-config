@@ -18,7 +18,7 @@ next session before it ever opens the repo.
 | `asahi` | MacBook Pro, NixOS-Asahi, the primary machine | `asahi` |
 | `x86` | the x86_64 desktop, GTX 1070 | `x86` |
 | `darwin` | the same MacBook under macOS | `MacBook-Pro` |
-| `arm` | generic 4 KiB-page aarch64 desktop (Danush's Snapdragon layout), niri, `gamingArm` | `arm` |
+| `arm` | generic 4 KiB-page aarch64 desktop (Danush's Snapdragon layout), niri, `self.lib.gaming "fex"` | `arm` |
 | `waydroid` | Android-in-a-VM guest | `waydroid` |
 | `iso` / `iso-x86` | installer images, aarch64 and x86_64 | — |
 
@@ -38,7 +38,6 @@ shared module lands on both at once — check what else takes it before editing.
 | `modules/apps/` | One dir per program, holding **every** tier it needs |
 | `modules/bundles/` | The host-facing switches — one line each, both tiers |
 | `modules/wallpapers/` | The wallpaper image, referenced by the desktop bundles |
-| `steam-asahi/` | Fedora Asahi Steam container and runbook |
 
 `modules/apps/<name>/` is the unit of *implementation*: niri's NixOS module and
 its KDL config live in the same directory, and a directory may export any mix of
@@ -114,19 +113,17 @@ theme all change together, then rebuilds and reboots.
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
 | `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
-| `gaming` | Steam via the Fedora/FEX distrobox container | — |
-| `gamingArm` | Steam arm64 client plus FEX in a Podman distrobox, no VM layer (4 KiB hosts); sets `x86Runner = "fex"` | — |
+| `self.lib.gaming "<runner>"` | Steam, picked per host: `muvm` (Fedora Asahi container, VM, 16 KiB Apple), `fex` (arm64 client under FEX in Podman, no VM, 4 KiB ARM), `native` (x86, plus lact) | — |
+| `android` | Waydroid launcher and image updater; the VM itself is `apps/waydroid/vm.nix` (aarch64 only, gated inside the module) | — |
 
 Three host lines are single modules rather than bundles, because a bundle around
-one name only restates it: `virt` (`apps/virt/`), `gamingNative`
-(`bundles/gaming.nix`, the native Steam path `x86` takes instead of the
-container) and `campus-wifi` (`system/campus-wifi.nix`, the UMass eduroam
+one name only restates it: `virt` (`apps/virt/`) and `campus-wifi` (`system/campus-wifi.nix`, the UMass eduroam
 profile).
 
 On aarch64, apps with no stable ARM build run their official x86_64 release
 under FEX: register them in `x86Apps` (`apps/x86-emu/`), which emits a launcher
-into the `gaming` bundle's muvm VM (or, with `gamingArm`, its FEX container) with a per-app home under
-`~/.local/share/x86-apps/`. Needs `gaming` or `gamingArm` on that host.
+into the Steam runner's muvm VM or FEX container with a per-app home under
+`~/.local/share/x86-apps/`. Needs the `muvm` or `fex` runner on that host.
 
 Every bundle needs `homeManagerBase`, on either platform — it carries the Home
 Manager wiring and the `shellHooks` option declarations.
