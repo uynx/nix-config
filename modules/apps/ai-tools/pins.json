@@ -1,16 +1,16 @@
 {
   "claude-code": {
-    "version": "2.1.294",
+    "version": "2.1.295",
     "hash": {
-      "aarch64-linux": "sha256-5dLfGfMKbWO/ERiBIfftsndSSbVzUqaSaVCaSxSW52M=",
-      "x86_64-linux": "sha256-JxIsp7Yk9TdUb77zW4DGY3DZdP8ljz2bEKxQu4dx8mI="
+      "aarch64-linux": "sha256-z7ncEzL7b5Kmg/g1gj6RsxeagDOYynhSzSOBo8sd6js=",
+      "x86_64-linux": "sha256-RQO/4Rpsf8weCzm14NNHwEJI91CwOwl3s61rUx/m81g="
     }
   },
   "codex": {
-    "version": "0.161.0",
+    "version": "0.162.0",
     "hash": {
-      "aarch64-linux": "sha256-r7l8V2/c3lkcvoB6Rk9+fPNtlHCu3A/w0ryJ6sPVE8g=",
-      "x86_64-linux": "sha256-1Q4CwnVb5VG1dlJ7KxPGtqSvM0AUmv33ktVJHl2JmXg="
+      "aarch64-linux": "sha256-AJYPU0ALCD69KsxFKbLOFtW6+W2ak8NmUFUToe2KpVg=",
+      "x86_64-linux": "sha256-29NC562JbVPbtQXpJvG4IxS3mp0z4gmwt2Fs7WsGyYM="
     }
   },
   "grok": {
