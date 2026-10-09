@@ -1,5 +1,5 @@
 {
-  flake.homeModules.steamAsahi =
+  flake.homeModules.steamMuvm =
     {
       pkgs,
       lib,
@@ -40,7 +40,7 @@
         INI=distrobox.ini
 
         REL=$(${pkgs.gnugrep}/bin/grep -om1 '\.fc[0-9][0-9]*' \
-          ${config.home.homeDirectory}/nix-config/steam-asahi/Containerfile \
+          ${config.home.homeDirectory}/nix-config/modules/apps/steam/muvm/Containerfile \
           | ${pkgs.gnused}/bin/sed 's/\.fc//')
         IMAGE=localhost/steam-asahi:$REL
       '';
@@ -48,7 +48,7 @@
         set -eu
         ${shellHelpers}
 
-        SOURCE=${config.home.homeDirectory}/nix-config/steam-asahi
+        SOURCE=${config.home.homeDirectory}/nix-config/modules/apps/steam/muvm
 
         [ "$(${pkgs.glibc.bin}/bin/getconf PAGESIZE)" = 16384 ]
         [ -r /dev/kvm ] && [ -w /dev/kvm ]
@@ -74,7 +74,7 @@
       update-steam-asahi-pins = pkgs.writeShellScriptBin "update-steam-asahi-pins" ''
         set -eu
 
-        FILE=${config.home.homeDirectory}/nix-config/steam-asahi/Containerfile
+        FILE=${config.home.homeDirectory}/nix-config/modules/apps/steam/muvm/Containerfile
         DOCKER=${pkgs.docker}/bin/docker
 
         REPO=$(${pkgs.gnused}/bin/sed -n 's|^FROM \([^@:]*\).*|\1|p' "$FILE" | ${pkgs.coreutils}/bin/head -1)
@@ -200,7 +200,7 @@
         exec 9>"$LOCK"
         ${pkgs.util-linux}/bin/flock 9
 
-        SOURCE=${config.home.homeDirectory}/nix-config/steam-asahi
+        SOURCE=${config.home.homeDirectory}/nix-config/modules/apps/steam/muvm
         LABEL=io.uynx.steam-asahi.config
 
         if [ ! -f "$SOURCE/$CFILE" ] \

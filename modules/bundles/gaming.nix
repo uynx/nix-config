@@ -1,26 +1,24 @@
 { self, ... }:
 {
-  flake.nixosModules.gaming =
+  # `(self.lib.gaming "<runner>")` in a host: muvm (16 KiB Apple), fex (4 KiB ARM), native (x86).
+  flake.lib.gaming =
+    runner:
     (self.lib.mkBundle {
-      nixos = [ self.nixosModules.steamAsahi ];
-      home = [ self.homeModules.steamAsahi ];
-    }).nixos;
-
-  flake.nixosModules.gamingArm =
-    (self.lib.mkBundle {
-      nixos = [ self.nixosModules.steamArm ];
-      home = [
-        self.homeModules.x86Emu
-        self.homeModules.steamArm
-        { x86Runner = "fex"; }
-      ];
-    }).nixos;
-
-  flake.nixosModules.gamingNative =
-    (self.lib.mkBundle {
-      nixos = [
+      muvm = {
+        nixos = [ self.nixosModules.steamMuvm ];
+        home = [ self.homeModules.steamMuvm ];
+      };
+      fex = {
+        nixos = [ self.nixosModules.steamFex ];
+        home = [
+          self.homeModules.x86Emu
+          self.homeModules.steamFex
+          { x86Runner = "fex"; }
+        ];
+      };
+      native.nixos = [
         self.nixosModules.steamNative
         self.nixosModules.lact
       ];
-    }).nixos;
+    }.${runner}).nixos;
 }

@@ -1,5 +1,5 @@
 {
-  flake.homeModules.steamArm =
+  flake.homeModules.steamFex =
     {
       pkgs,
       lib,
@@ -40,7 +40,7 @@
         INI=distrobox.ini
 
         REL=$(${pkgs.gnugrep}/bin/grep -om1 '\.fc[0-9][0-9]*' \
-          ${config.home.homeDirectory}/nix-config/steam-arm/Containerfile \
+          ${config.home.homeDirectory}/nix-config/modules/apps/steam/fex/Containerfile \
           | ${pkgs.gnused}/bin/sed 's/\.fc//')
         IMAGE=localhost/steam-arm:$REL
       '';
@@ -48,7 +48,7 @@
         set -eu
         ${shellHelpers}
 
-        SOURCE=${config.home.homeDirectory}/nix-config/steam-arm
+        SOURCE=${config.home.homeDirectory}/nix-config/modules/apps/steam/fex
 
         ${pkgs.podman}/bin/podman image inspect "$IMAGE" >/dev/null
         ${pkgs.podman}/bin/podman container inspect "$CONTAINER" >/dev/null
@@ -72,7 +72,7 @@
       update-steam-arm-pins = pkgs.writeShellScriptBin "update-steam-arm-pins" ''
         set -eu
 
-        FILE=${config.home.homeDirectory}/nix-config/steam-arm/Containerfile
+        FILE=${config.home.homeDirectory}/nix-config/modules/apps/steam/fex/Containerfile
         PODMAN=${pkgs.podman}/bin/podman
 
         REPO=$(${pkgs.gnused}/bin/sed -n 's|^FROM \([^@:]*\).*|\1|p' "$FILE" | ${pkgs.coreutils}/bin/head -1)
@@ -195,7 +195,7 @@
         exec 9>"$LOCK"
         ${pkgs.util-linux}/bin/flock 9
 
-        SOURCE=${config.home.homeDirectory}/nix-config/steam-arm
+        SOURCE=${config.home.homeDirectory}/nix-config/modules/apps/steam/fex
         LABEL=io.uynx.steam-arm.config
 
         if [ ! -f "$SOURCE/$CFILE" ] || [ ! -f "$SOURCE/$INI" ]; then
