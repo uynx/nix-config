@@ -23,7 +23,7 @@
       latex
 
       virt
-      gamingNative
+      (self.lib.gaming "native")
 
       campus-wifi
 

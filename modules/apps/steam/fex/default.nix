@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.nixosModules.steamArm = {
+  flake.nixosModules.steamFex = {
     virtualisation.podman.enable = true;
     systemd.user.sockets.podman.wantedBy = [ "sockets.target" ];
 
