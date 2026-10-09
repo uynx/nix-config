@@ -20,7 +20,8 @@
       comms
       office
       latex
-      gamingArm
+      android
+      (self.lib.gaming "fex")
 
       virt
 

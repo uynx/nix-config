@@ -22,7 +22,8 @@
       comms
       office
       latex
-      gaming
+      android
+      (self.lib.gaming "muvm")
 
       virt
 
