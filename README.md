@@ -18,7 +18,7 @@ next session before it ever opens the repo.
 | `asahi` | MacBook Pro, NixOS-Asahi, the primary machine | `asahi` |
 | `x86` | the x86_64 desktop, GTX 1070 | `x86` |
 | `darwin` | the same MacBook under macOS | `MacBook-Pro` |
-| `arm` | minimal aarch64 shell/programming target | `arm` |
+| `arm` | generic 4 KiB-page aarch64 desktop (Danush's Snapdragon layout), niri, `gamingArm` | `arm` |
 | `waydroid` | Android-in-a-VM guest | `waydroid` |
 | `iso` / `iso-x86` | installer images, aarch64 and x86_64 | — |
 
@@ -115,6 +115,7 @@ theme all change together, then rebuilds and reboots.
 | `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
 | `gaming` | Steam via the Fedora/FEX distrobox container | — |
+| `gamingArm` | Steam arm64 client plus FEX in a Podman distrobox, no VM layer (4 KiB hosts); sets `x86Runner = "fex"` | — |
 
 Three host lines are single modules rather than bundles, because a bundle around
 one name only restates it: `virt` (`apps/virt/`), `gamingNative`
@@ -124,8 +125,8 @@ profile).
 
 On aarch64, apps with no stable ARM build run their official x86_64 release
 under FEX: register them in `x86Apps` (`apps/x86-emu/`), which emits a launcher
-into the `gaming` bundle's muvm VM with a per-app home under
-`~/.local/share/x86-apps/`. Needs the `gaming` bundle on that host.
+into the `gaming` bundle's muvm VM (or, with `gamingArm`, its FEX container) with a per-app home under
+`~/.local/share/x86-apps/`. Needs `gaming` or `gamingArm` on that host.
 
 Every bundle needs `homeManagerBase`, on either platform — it carries the Home
 Manager wiring and the `shellHooks` option declarations.
