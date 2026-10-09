@@ -40,42 +40,13 @@
       }
       {
         home-manager.users.${self.lib.user.name} = {
-          plasmaPinned = [
-            "brave-origin.desktop"
-            "com.mitchellh.ghostty.desktop"
-            "org.kde.dolphin.desktop"
-          ];
-          plasmaWallpaper = ../../wallpapers/wallpaper.png;
-          plasmaSnapshotDir = "nix-config/kde-snapshots";
-          programs.plasma.workspace.lookAndFeel = "org.kde.breezedark.desktop";
-          programs.plasma.shortcuts = {
-            ksmserver."Lock Session" = [
-              "Meta+Ctrl+Q"
-              "Screensaver"
+          # Same as niri: this keyboard has no Print key.
+          programs.plasma.shortcuts."services/org.kde.spectacle.desktop" = {
+            RectangularRegionScreenShot = inputs.nixpkgs.lib.mkForce [
+              "Meta+S"
+              "Meta+Shift+S"
             ];
-            kwin."Window Close" = [
-              "Meta+Q"
-              "Alt+F4"
-            ];
-            kwin."Window Maximize" = [
-              "Meta+F"
-              "Meta+PgUp"
-            ];
-            kwin."Window Fullscreen" = "Meta+Shift+F";
-            plasmashell."manage activities" = [ ];
-            "services/org.kde.kscreen.desktop".ShowOSD = "Display";
-            "services/com.mitchellh.ghostty.desktop"._launch = [
-              "Meta+P"
-              "Ctrl+Alt+T"
-            ];
-            # Same as niri: this keyboard has no Print key.
-            "services/org.kde.spectacle.desktop" = {
-              RectangularRegionScreenShot = inputs.nixpkgs.lib.mkForce [
-                "Meta+S"
-                "Meta+Shift+S"
-              ];
-              FullScreenScreenShot = "Meta+Ctrl+S";
-            };
+            FullScreenScreenShot = "Meta+Ctrl+S";
           };
         };
       }

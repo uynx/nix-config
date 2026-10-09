@@ -30,6 +30,37 @@
         self.homeModules.plasma
         # Leaves org.freedesktop.secrets to gnome-keyring.
         { programs.plasma.configFile.kwalletrc."org.freedesktop.secrets".apiEnabled = false; }
+        {
+          plasmaPinned = [
+            "brave-origin.desktop"
+            "com.mitchellh.ghostty.desktop"
+            "org.kde.dolphin.desktop"
+          ];
+          plasmaWallpaper = ../wallpapers/wallpaper.png;
+          plasmaSnapshotDir = "nix-config/kde-snapshots";
+          programs.plasma.workspace.lookAndFeel = "org.kde.breezedark.desktop";
+          programs.plasma.shortcuts = {
+            ksmserver."Lock Session" = [
+              "Meta+Ctrl+Q"
+              "Screensaver"
+            ];
+            kwin."Window Close" = [
+              "Meta+Q"
+              "Alt+F4"
+            ];
+            kwin."Window Maximize" = [
+              "Meta+F"
+              "Meta+PgUp"
+            ];
+            kwin."Window Fullscreen" = "Meta+Shift+F";
+            plasmashell."manage activities" = [ ];
+            "services/org.kde.kscreen.desktop".ShowOSD = "Display";
+            "services/com.mitchellh.ghostty.desktop"._launch = [
+              "Meta+P"
+              "Ctrl+Alt+T"
+            ];
+          };
+        }
       ];
     }).nixos;
 }
