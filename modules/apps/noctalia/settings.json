@@ -448,13 +448,13 @@
   "hooks": {
     "colorGeneration": "",
     "darkModeChange": "",
-    "enabled": false,
+    "enabled": true,
     "performanceModeDisabled": "",
     "performanceModeEnabled": "",
     "screenLock": "",
-    "screenUnlock": "",
+    "screenUnlock": "loginctl unlock-session",
     "session": "",
-    "startup": "",
+    "startup": "noctalia-shell ipc call wallpaper set /home/uynx/nix-config/modules/wallpapers/wallpaper.png all",
     "wallpaperChange": ""
   },
   "idle": {
@@ -702,7 +702,7 @@
   },
   "wallpaper": {
     "automationEnabled": false,
-    "directory": "/home/uynx/dotfiles",
+    "directory": "/home/uynx/nix-config/modules/wallpapers",
     "enableMultiMonitorDirectories": false,
     "enabled": true,
     "favorites": [],

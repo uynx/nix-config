@@ -196,13 +196,17 @@ nix run nix-darwin -- switch --flake ~/nix-config#darwin --impure
 
 After that first switch `reb` works like it does on Linux.
 
-## Snapshots
+## Snapshots and sync
 
-`reb --snapshot` copies live GUI settings back into the repo before it rebuilds,
-and the same `reb` commits them. A plain `reb` snapshots nothing.
+Every `reb` runs in this order: snapshot, commit, pull with a rebase, build, push `main`.
+Offline, it skips the pull and the push. On a conflict it builds nothing, leaves the
+tree as it was, pushes the commits to `conflict-<host>` and tells you to ask an LLM to
+fix that branch. The next successful `reb` deletes the branch.
 
 - KDE: `rc2nix`'s dump of the current settings goes to `kde-snapshots/<hostname>.nix`.
-  It is a record, not live config: to restore a machine's KDE look, import the
-  parts you want into the host.
-- Noctalia (niri): the live settings overwrite `modules/apps/noctalia/settings.json`,
-  which every niri host shares. Read the diff before keeping it.
+  It is a record, not live config: to move a setting between machines or into the
+  declared config, have an LLM port it from the snapshot diff.
+- Noctalia (niri): `~/.config/noctalia/settings.json` is a symlink to
+  `modules/apps/noctalia/settings.json`, so a change in the panel lands in the repo
+  at once and the next `reb` commits it. Every niri host shares that file, and `reb`
+  restarts Noctalia after a switch.
