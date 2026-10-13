@@ -102,6 +102,16 @@ in
             text = builtins.readFile ./reb-sync.sh;
           };
 
+          repoSync = pkgs.writeShellApplication {
+            name = "reposync";
+            runtimeInputs = with pkgs; [
+              git
+              openssh
+              coreutils
+            ];
+            text = builtins.readFile ./reposync.sh;
+          };
+
           updateTools = lib.optionalString (config.shellHooks.update != [ ]) ''
             if test (count $argv) -eq 0
                 sh -c 'd=$(mktemp -d); n=0
@@ -183,6 +193,9 @@ in
                     echo "Rebuild failed. Nothing was pushed."
                     return 1
                 end
+              '';
+              reposync.body = ''
+                ${repoSync}/bin/reposync ~/dotfiles ~/ai_memory ~/nix-config
               '';
               bg.body = ''
                 if test (count $argv) -eq 0
