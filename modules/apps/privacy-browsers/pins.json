@@ -1,10 +1,10 @@
 {
   "tor-browser": {
-    "version": "15.0.24",
-    "hash": "sha256-sD7vtuvirLU6HWT4LJXA3wztnA+dYmWG6MbIHZgF1gQ="
+    "version": "15.0.25",
+    "hash": "sha256-N0Mtb02bHxGQuiz7vUq52tXM1SwUqkeiF5XQgnP0oWU="
   },
   "mullvad-browser": {
-    "version": "15.0.24",
-    "hash": "sha256-vKVlZ2t9S66AZQ82fUw+csRQtMvOJLrJbbetS33Fb+o="
+    "version": "15.0.25",
+    "hash": "sha256-vlU8kViCqOmtxrSE9RdJ7DjCH0VLWd0fcSs4vwtC3gw="
   }
 }
