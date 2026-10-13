@@ -26,7 +26,8 @@
       statix
     ];
 
-    xdg.dataFile."icons/hicolor/scalable/apps/julia.svg".source = ./julia.svg;
+    xdg.dataFile."icons/hicolor/scalable/apps/julia.svg".source =
+      "${pkgs.papirus-icon-theme}/share/icons/Papirus/64x64/apps/julia.svg";
 
     programs = {
       go.enable = true;

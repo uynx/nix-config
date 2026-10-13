@@ -694,7 +694,8 @@
         or echo "steam-asahi container rebuild failed -- run steam-asahi-bootstrap by hand"
       '';
 
-      xdg.dataFile."icons/hicolor/scalable/apps/steam.svg".source = ../steam.svg;
+      xdg.dataFile."icons/hicolor/scalable/apps/steam.svg".source =
+        "${pkgs.papirus-icon-theme}/share/icons/Papirus/64x64/apps/steam.svg";
 
       xdg.desktopEntries.steam = {
         name = "Steam";

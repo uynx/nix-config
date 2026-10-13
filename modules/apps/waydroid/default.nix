@@ -47,7 +47,8 @@
           icon = "android";
           terminal = false;
         };
-        xdg.dataFile."icons/hicolor/scalable/apps/android.svg".source = ./android.svg;
+        xdg.dataFile."icons/hicolor/scalable/apps/android.svg".source =
+          "${pkgs.papirus-icon-theme}/share/icons/Papirus/64x64/apps/anbox.svg";
 
         programs.fish.functions.android.body = ''
           set -l state ~/.local/share/waydroid-vm
