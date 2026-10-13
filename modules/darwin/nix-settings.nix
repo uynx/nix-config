@@ -11,6 +11,7 @@
       determinateNixd.garbageCollector.strategy = "automatic";
       customSettings = {
         auto-optimise-store = true;
+        max-jobs = 4;
         extra-experimental-features = [ "wasm-builtin" ];
         trusted-users = [
           "root"
