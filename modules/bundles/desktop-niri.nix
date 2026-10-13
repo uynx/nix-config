@@ -14,7 +14,6 @@
         noctalia
         theme
         screenUtils
-        wluma
       ];
     }).nixos;
 }
