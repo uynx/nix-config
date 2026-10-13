@@ -1,6 +1,11 @@
 {
   flake.homeModules.media =
-    { pkgs, lib, ... }:
+    {
+      pkgs,
+      lib,
+      config,
+      ...
+    }:
     {
       home.packages =
         with pkgs;
@@ -23,5 +28,53 @@
           obs-cmd
           v4l-utils
         ];
+
+      xdg.configFile = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
+        "qBittorrent/qBittorrent.conf" = {
+          force = true;
+          text = ''
+            [Application]
+            FileLogger\Age=1
+            FileLogger\AgeType=1
+            FileLogger\Backup=true
+            FileLogger\DeleteOld=true
+            FileLogger\Enabled=true
+            FileLogger\MaxSizeBytes=66560
+            FileLogger\Path=${config.home.homeDirectory}/.local/share/qBittorrent/logs
+            GUI\Notifications\TorrentAdded=false
+
+            [BitTorrent]
+            Session\AnonymousModeEnabled=true
+            Session\DHTEnabled=false
+            Session\Encryption=1
+            Session\Interface=obscuravpn
+            Session\InterfaceName=obscuravpn
+            Session\LSDEnabled=false
+            Session\PeXEnabled=false
+            Session\Port=9479
+            Session\QueueingSystemEnabled=false
+            Session\SSL\Port=21801
+            Session\StartPaused=false
+
+            [Core]
+            AutoDeleteAddedTorrentFile=Never
+
+            [GUI]
+            DownloadTrackerFavicon=false
+            Log\Enabled=false
+
+            [LegalNotice]
+            Accepted=true
+
+            [Network]
+            PortForwardingEnabled=false
+
+            [Preferences]
+            General\CloseToTrayNotified=true
+            General\Locale=en
+          '';
+        };
+      };
     };
 }
+
