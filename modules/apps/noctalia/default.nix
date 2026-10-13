@@ -1,11 +1,8 @@
-{ moduleWithSystem, ... }:
+{ self, moduleWithSystem, ... }:
 {
   flake = {
     wrappers.noctalia-shell =
       { wlib, pkgs, ... }:
-      let
-        saved = builtins.fromJSON (builtins.readFile ./settings.json);
-      in
       {
         imports = [ wlib.wrapperModules.noctalia-shell ];
 
@@ -17,22 +14,11 @@
           '';
         });
 
-        settings = saved // {
-          wallpaper = saved.wallpaper // {
-            directory = "${../../wallpapers}";
-          };
-
-          hooks = saved.hooks // {
-            enabled = true;
-            startup = "noctalia-shell ipc call wallpaper set ${../../wallpapers}/wallpaper.png all";
-            # Nothing else emits logind Unlock; without it lock.target latches active for the boot.
-            screenUnlock = "${pkgs.systemd}/bin/loginctl unlock-session";
-          };
-        };
-
         colors = builtins.fromJSON (builtins.readFile ./Flexoki.json);
 
         preInstalledPlugins.kbd-backlight.src = "${./kbd-backlight}";
+
+        env.NOCTALIA_CONFIG_DIR = pkgs.lib.mkForce "${self.lib.user.home}/.config/noctalia/";
       };
 
     nixosModules.noctalia = moduleWithSystem (
@@ -63,20 +49,31 @@
 
     homeModules.noctalia = moduleWithSystem (
       { self', ... }:
-      { pkgs, ... }:
+      { config, ... }:
+      let
+        generated = self'.packages.noctalia-shell.generatedConfig;
+      in
       {
-        home.packages = [
-          self'.packages.noctalia-shell
-          (pkgs.writeShellApplication {
-            name = "noctalia-snapshot";
-            runtimeInputs = [
-              self'.packages.noctalia-shell
-              pkgs.jq
-            ];
-            text = builtins.readFile ./noctalia-snapshot.sh;
-          })
-        ];
-        shellHooks.rebSnapshot = "noctalia-snapshot";
+        home.packages = [ self'.packages.noctalia-shell ];
+
+        # The panel writes straight into the repo file through this symlink.
+        # settings.json must keep hooks.screenUnlock = "loginctl unlock-session", or lock.target latches active for the boot.
+        xdg.configFile = {
+          "noctalia/settings.json".source =
+            config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/modules/apps/noctalia/settings.json";
+          "noctalia/colors.json".source = "${generated}/colors.json";
+          "noctalia/plugins.json".source = "${generated}/plugins.json";
+          "noctalia/plugins".source = "${generated}/plugins";
+        };
+
+        shellHooks.rebPostSwitch = ''
+          if type -q niri; and niri msg version >/dev/null 2>&1
+              pkill -f '[q]uickshell -p .*noctalia-shell'
+              sleep 1
+              niri msg action spawn -- noctalia-shell
+          end
+        '';
+
         # noctalia's fallback icon name; blank, so a missing icon shows nothing instead of a checkerboard.
         xdg.dataFile."icons/hicolor/scalable/apps/application-x-executable.svg".source =
           ./application-x-executable.svg;
