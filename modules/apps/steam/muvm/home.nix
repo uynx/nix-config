@@ -617,7 +617,7 @@
 
       steam-game-icon = pkgs.writeShellApplication {
         name = "steam-game-icon";
-        text = builtins.readFile ./game-icon.sh;
+        text = builtins.readFile ../game-icon.sh;
       };
 
       steam-game-entries = pkgs.writeShellScriptBin "steam-game-entries" ''
@@ -694,7 +694,7 @@
         or echo "steam-asahi container rebuild failed -- run steam-asahi-bootstrap by hand"
       '';
 
-      xdg.dataFile."icons/hicolor/scalable/apps/steam.svg".source = ./steam.svg;
+      xdg.dataFile."icons/hicolor/scalable/apps/steam.svg".source = ../steam.svg;
 
       xdg.desktopEntries.steam = {
         name = "Steam";
