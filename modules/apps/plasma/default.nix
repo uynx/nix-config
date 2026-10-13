@@ -105,6 +105,11 @@
       programs.plasma = {
         enable = true;
 
+        input.keyboard = {
+          repeatDelay = 250;
+          repeatRate = 12.0;
+        };
+
         workspace = {
           cursor = {
             theme = "breeze_cursors";
