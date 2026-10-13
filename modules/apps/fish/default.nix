@@ -62,6 +62,14 @@ in
                 write disjoint files; any failure aborts before relocking.
               '';
             };
+            rebSnapshot = lib.mkOption {
+              type = lib.types.lines;
+              default = "";
+              description = ''
+                Fish run by `reb --snapshot` before the changes are staged. Copies
+                live GUI settings back into the repo.
+              '';
+            };
             rebPostSwitch = lib.mkOption {
               type = lib.types.lines;
               default = "";
@@ -112,6 +120,8 @@ in
                 set -l platform ${if isDarwin then "darwin" else "os"}
                 set -l repo ~/nix-config
                 set -l verb switch
+                set -l snapshot (contains -i -- --snapshot $argv)
+                set -q snapshot[1]; and set -e argv[$snapshot]
                 # A live switch that changes the desktop ends the session, killing nh before it records the generation.
                 set -l flip
                 switch "$argv[1]"
@@ -132,6 +142,10 @@ in
                     set oldDesktop (string trim < $desktopFile)
                     test "$oldDesktop" = kde; and echo niri > $desktopFile; or echo kde > $desktopFile
                     echo "Switching $target from $oldDesktop to "(string trim < $desktopFile)", then rebooting."
+                end
+
+                if set -q snapshot[1]
+                    ${config.shellHooks.rebSnapshot}
                 end
 
                 git -C $repo add -A
