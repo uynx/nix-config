@@ -63,8 +63,20 @@
 
     homeModules.noctalia = moduleWithSystem (
       { self', ... }:
+      { pkgs, ... }:
       {
-        home.packages = [ self'.packages.noctalia-shell ];
+        home.packages = [
+          self'.packages.noctalia-shell
+          (pkgs.writeShellApplication {
+            name = "noctalia-snapshot";
+            runtimeInputs = [
+              self'.packages.noctalia-shell
+              pkgs.jq
+            ];
+            text = builtins.readFile ./noctalia-snapshot.sh;
+          })
+        ];
+        shellHooks.rebSnapshot = "noctalia-snapshot";
         # noctalia's fallback icon name; blank, so a missing icon shows nothing instead of a checkerboard.
         xdg.dataFile."icons/hicolor/scalable/apps/application-x-executable.svg".source =
           ./application-x-executable.svg;
