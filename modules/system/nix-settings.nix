@@ -18,7 +18,6 @@
       };
       settings = {
         auto-optimise-store = true;
-        max-jobs = 6;
         extra-experimental-features = [ "wasm-builtin" ];
         trusted-users = [ self.lib.user.name ];
         substituters = self.lib.caches.substituters;
