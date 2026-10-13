@@ -66,8 +66,8 @@ in
               type = lib.types.lines;
               default = "";
               description = ''
-                Fish run by `reb --snapshot` before the changes are staged. Copies
-                live GUI settings back into the repo.
+                Fish run by `reb` before it commits. Copies live GUI settings back
+                into the repo. `$hostname` names this machine's file.
               '';
             };
             rebPostSwitch = lib.mkOption {
@@ -91,6 +91,16 @@ in
         }:
         let
           inherit (pkgs.stdenv.hostPlatform) isDarwin;
+
+          rebSync = pkgs.writeShellApplication {
+            name = "reb-sync";
+            runtimeInputs = with pkgs; [
+              git
+              openssh
+              coreutils
+            ];
+            text = builtins.readFile ./reb-sync.sh;
+          };
 
           updateTools = lib.optionalString (config.shellHooks.update != [ ]) ''
             if test (count $argv) -eq 0
@@ -120,8 +130,6 @@ in
                 set -l platform ${if isDarwin then "darwin" else "os"}
                 set -l repo ~/nix-config
                 set -l verb switch
-                set -l snapshot (contains -i -- --snapshot $argv)
-                set -q snapshot[1]; and set -e argv[$snapshot]
                 # A live switch that changes the desktop ends the session, killing nh before it records the generation.
                 set -l flip
                 switch "$argv[1]"
@@ -131,6 +139,16 @@ in
                         set verb boot; set flip 1; set -e argv[1]
                 end
                 if test (count $argv) -gt 0; set target $argv[1]; end
+
+                ${config.shellHooks.rebSnapshot}
+
+                ${rebSync}/bin/reb-sync pull $repo
+                if test $status -eq 3
+                    ${rebSync}/bin/reb-sync push $repo $target 3
+                    echo "Your settings are saved, but they clash with a newer change. Nothing was changed on this computer."
+                    echo "Tell your LLM: fix the conflict-$target branch in nix-config."
+                    return 1
+                end
 
                 set -l desktopFile $repo/modules/hosts/$target/desktop
                 set -l oldDesktop
@@ -142,10 +160,6 @@ in
                     set oldDesktop (string trim < $desktopFile)
                     test "$oldDesktop" = kde; and echo niri > $desktopFile; or echo kde > $desktopFile
                     echo "Switching $target from $oldDesktop to "(string trim < $desktopFile)", then rebooting."
-                end
-
-                if set -q snapshot[1]
-                    ${config.shellHooks.rebSnapshot}
                 end
 
                 git -C $repo add -A
@@ -162,10 +176,11 @@ in
                         git -C $repo commit -q -m "rebuild "(date '+%Y-%m-%d %H:%M:%S')
                         echo "Committed as "(git -C $repo rev-parse --short HEAD)
                     end
+                    ${rebSync}/bin/reb-sync push $repo $target 0
                     test $verb = boot; and systemctl reboot
                 else
                     set -q flip[1]; and echo $oldDesktop > $desktopFile
-                    echo "Rebuild failed. Changes are staged but not committed."
+                    echo "Rebuild failed. Nothing was pushed."
                     return 1
                 end
               '';
