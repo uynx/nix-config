@@ -240,7 +240,14 @@
               Terminal=false
               Categories=Development;
             '';
-            ".local/share/icons/hicolor/scalable/apps/t3-code.svg".source = ./t3-code.svg;
+            ".local/share/icons/hicolor/512x512/apps/t3-code.png".source =
+              pkgs.runCommand "t3-code.png" { nativeBuildInputs = [ pkgs.imagemagick ]; }
+                "magick ${
+                  pkgs.fetchurl {
+                    url = "https://raw.githubusercontent.com/pingdotgg/t3code/283c7ac4baafd96711872d4fe49e3851a8ecaa65/assets/prod/black-universal-1024.png";
+                    hash = "sha256-QD6HRVb/vs7o0bK11hKodDA/rHkSEqJhuzvRtx2D540=";
+                  }
+                } -resize 512x512 $out";
           };
 
         activation = {

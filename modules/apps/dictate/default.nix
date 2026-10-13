@@ -64,7 +64,9 @@
       systemd.user.services.phonon = {
         Unit.Description = "Phonon-2 speech server for dictate";
         Service = {
-          ExecStart = "${pkgs.python3.withPackages (_: [ fermion ])}/bin/fermion serve ${phononModel}/model_phonon2_c4c_int6 --host 127.0.0.1 --port ${port} --served-model-name phonon-2";
+          ExecStart = "${
+            pkgs.python3.withPackages (_: [ fermion ])
+          }/bin/fermion serve ${phononModel}/model_phonon2_c4c_int6 --host 127.0.0.1 --port ${port} --served-model-name phonon-2";
           Environment = "HF_HUB_OFFLINE=1";
           Restart = "on-failure";
           MemoryMax = "2G";
@@ -74,7 +76,8 @@
 
       shellHooks.update = [ "update-phonon" ];
 
-      xdg.dataFile."icons/hicolor/scalable/apps/dictate-mic.svg".source = ./dictate-mic.svg;
+      xdg.dataFile."icons/hicolor/scalable/apps/dictate-mic.svg".source =
+        "${pkgs.papirus-icon-theme}/share/icons/Papirus/64x64/devices/audio-input-microphone.svg";
 
       programs.plasma.shortcuts."services/dictate.desktop"._launch = "Meta+D";
 
