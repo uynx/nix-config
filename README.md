@@ -107,7 +107,7 @@ theme all change together, then rebuilds and reboots.
 | `office` | obsidian, libreoffice | yes (`libreoffice-bin`) |
 | `latex` | texlive scheme-full (stable pin) | yes |
 | `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
-| `comms` | vesktop, whatsapp, rustdesk (nixpkgs) | whatsapp, rustdesk cask |
+| `comms` | vesktop, whatsapp, rustdesk, SimpleX Chat (`apps/simplex/`, nixpkgs) | whatsapp, rustdesk cask |
 | `web` | brave-origin and its profile launchers | cask Brave + menu shortcuts |
 | `secrets` | sops (age), rage, Bitwarden | Bitwarden only; needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
