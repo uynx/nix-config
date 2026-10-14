@@ -6,7 +6,7 @@
       imports = [ wlib.wrapperModules.yazi ];
 
       settings.yazi.mgr = {
-        show_hidden = true;
+        show_hidden = false;
         sort_by = "mtime";
         sort_dir_first = true;
       };
