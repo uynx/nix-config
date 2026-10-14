@@ -14,6 +14,7 @@
         noctalia
         theme
         screenUtils
+        wayscriber
       ];
     }).nixos;
 }
