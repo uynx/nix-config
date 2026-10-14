@@ -20,9 +20,22 @@
 
   flake.homeModules.yazi = moduleWithSystem (
     { self', ... }:
-    { lib, ... }:
+    { pkgs, lib, ... }:
     {
       home.packages = [ self'.packages.yazi ];
+
+      xdg.desktopEntries.yazi = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
+        name = "Yazi";
+        genericName = "File manager";
+        exec = "${lib.getExe self'.packages.ghostty} -e ${lib.getExe self'.packages.fish} -i -C y";
+        icon = "yazi";
+        terminal = false;
+        categories = [
+          "System"
+          "FileTools"
+          "FileManager"
+        ];
+      };
 
       programs.fish.functions.y.body = ''
         set -l tmp (mktemp -t "yazi-cwd.XXXXXX")
