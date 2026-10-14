@@ -1,0 +1,15 @@
+--- a/src/input/state/actions/action_capture_zoom.rs	2026-10-14 15:13:10.011411522 -0400
++++ b/src/input/state/actions/action_capture_zoom.rs	2026-10-14 15:13:10.030829207 -0400
+@@ -54,12 +54,10 @@
+             }
+             Action::ZoomIn => {
+                 self.request_zoom_action(ZoomAction::In);
+-                self.reset_modifiers();
+                 true
+             }
+             Action::ZoomOut => {
+                 self.request_zoom_action(ZoomAction::Out);
+-                self.reset_modifiers();
+                 true
+             }
+             Action::ResetZoom => {
