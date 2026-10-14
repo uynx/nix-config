@@ -15,7 +15,6 @@
     { pkgs, ... }:
     {
       home.packages = with pkgs; [
-        wayscriber
         (writers.writeDashBin "toggle-showkeys" ''
           if ${procps}/bin/pgrep -x wshowkeys >/dev/null; then
             exec ${procps}/bin/pkill -x wshowkeys

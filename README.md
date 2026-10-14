@@ -99,7 +99,7 @@ theme all change together, then rebuilds and reboots.
 
 | Bundle | Contents | macOS |
 |---|---|---|
-| `desktopNiri` | niri, sddm-astronaut greeter, noctalia, GTK theme, screen utils, `android` (aarch64 only) | — |
+| `desktopNiri` | niri, sddm-astronaut greeter, noctalia, GTK theme, screen utils, Wayscriber (`apps/wayscriber/`), `android` (aarch64 only) | — |
 | `desktopKde` | Plasma 6, sddm, spectacle | — |
 | `desktopMacos` | AeroSpace, SketchyBar, JankyBorders, wallpaper, file associations | only |
 | `shell` | fish, ghostty, tmux, starship, yazi, btop, CLI tooling | yes |
