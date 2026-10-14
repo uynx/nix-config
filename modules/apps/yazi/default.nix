@@ -1,20 +1,35 @@
 { moduleWithSystem, ... }:
 {
   flake.wrappers.yazi =
-    { wlib, ... }:
+    {
+      wlib,
+      pkgs,
+      lib,
+      ...
+    }:
     {
       imports = [ wlib.wrapperModules.yazi ];
 
-      settings.yazi.mgr = {
-        show_hidden = false;
-        sort_by = "mtime";
-        sort_dir_first = true;
-      };
-
+      plugins.relative-motions = pkgs.yaziPlugins.relative-motions;
+      initLua = ''
+        require("relative-motions"):setup({ show_numbers = "relative", show_motion = true, only_motions = true })
+      '';
       flavors.flexoki = ./flexoki.yazi;
-      settings.theme.flavor = {
-        dark = "flexoki";
-        light = "flexoki";
+      settings = {
+        yazi.mgr = {
+          show_hidden = false;
+          sort_by = "mtime";
+          sort_dir_first = true;
+        };
+        keymap.mgr.prepend_keymap = map (n: {
+          on = [ (toString n) ];
+          run = "plugin relative-motions ${toString n}";
+          desc = "Move by a line count";
+        }) (lib.range 1 9);
+        theme.flavor = {
+          dark = "flexoki";
+          light = "flexoki";
+        };
       };
     };
 
