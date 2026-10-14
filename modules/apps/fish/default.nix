@@ -136,6 +136,9 @@ in
               '';
 
               reb.body = ''
+                ${repoSync}/bin/reposync ~/dotfiles ~/ai_memory ~/nix-config
+                or return 1
+
                 set -l target ${if isDarwin then "darwin" else "$hostname"}
                 set -l platform ${if isDarwin then "darwin" else "os"}
                 set -l repo ~/nix-config
