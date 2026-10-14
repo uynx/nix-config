@@ -2,7 +2,10 @@
 let
   bundle = self.lib.mkBundle {
     home = [ self.homeModules.comms ];
-    homeLinux = [ self.homeModules.rustdesk ];
+    homeLinux = with self.homeModules; [
+      rustdesk
+      simplex
+    ];
     darwin = [ self.darwinModules.rustdesk ];
   };
 in
