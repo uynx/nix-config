@@ -20,7 +20,7 @@
           if ${procps}/bin/pgrep -x wshowkeys >/dev/null; then
             exec ${procps}/bin/pkill -x wshowkeys
           fi
-          exec /run/wrappers/bin/wshowkeys -a right -a top -F 'Hack Nerd Font 20' -s '#d0a215ff' -f '#cecdc3ff' -b '#100f0fe6' -m 30 -l 10 -t 1000
+          exec /run/wrappers/bin/wshowkeys -a right -a top -F 'Hack Nerd Font 20' -s '#d0a215ff' -f '#cecdc3ff' -b '#100f0fe6' -m 30 -t 1000
         '')
         grim
         slurp
