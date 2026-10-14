@@ -10,7 +10,11 @@
     {
       imports = [ wlib.wrapperModules.yazi ];
 
-      plugins.relative-motions = pkgs.yaziPlugins.relative-motions;
+      plugins.relative-motions = pkgs.yaziPlugins.relative-motions.overrideAttrs (old: {
+        postPatch = (old.postPatch or "") + ''
+          substituteInPlace main.lua --replace-fail ya.mgr_emit ya.emit
+        '';
+      });
       initLua = ''
         require("relative-motions"):setup({ show_numbers = "relative", show_motion = true, only_motions = true })
       '';
