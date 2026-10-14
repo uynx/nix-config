@@ -1,5 +1,16 @@
---- a/main.c	2026-10-05 19:29:42.163367368 -0400
-+++ b/main.c	2026-10-05 19:29:42.180628028 -0400
+--- a/main.c
++++ b/main.c
+@@ -191,8 +191,8 @@
+ 		wl_surface_set_buffer_scale(state->surface, scale);
+ 		wl_surface_attach(state->surface,
+ 				state->current_buffer->buffer, 0, 0);
+-		wl_surface_damage_buffer(state->surface, 0, 0,
+-				state->width, state->height);
++		wl_surface_damage_buffer(state->surface, 0, 0,
++				state->width * scale, state->height * scale);
+ 		wl_surface_commit(state->surface);
+ 	}
+ }
 @@ -442,6 +442,26 @@
  		/* Who cares */
  		break;
