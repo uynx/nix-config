@@ -11,7 +11,7 @@
  		wl_surface_commit(state->surface);
  	}
  }
-@@ -442,6 +442,26 @@
+@@ -442,6 +442,31 @@
  		/* Who cares */
  		break;
  	case LIBINPUT_KEY_STATE_PRESSED:
@@ -26,8 +26,13 @@
 +				}
 +			}
 +			int count = 0;
++			struct wsk_keypress *last = NULL;
 +			for (struct wsk_keypress *k = state->keys; k; k = k->next) {
 +				count++;
++				last = k;
++			}
++			if (last && last->sym == keysym && !last->utf8[0]) {
++				break;
 +			}
 +			if (count >= 10) {
 +				struct wsk_keypress *oldest = state->keys;
