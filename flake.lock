@@ -433,11 +433,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791830269,
-        "narHash": "sha256-A3JRH8qkp+NrP3sSwfutu7nZ5AclDY/HDmn/xDxduM4=",
+        "lastModified": 1784455774,
+        "narHash": "sha256-h2o0y3kebt/AytlhX0YRYg460qpuqCGpJWhwEYSruRw=",
         "owner": "nix-community",
         "repo": "nixos-apple-silicon",
-        "rev": "12cd234285d3037cedfab979aa70b75284a59afc",
+        "rev": "7850219061b37020e202a7528f9376c87a21f7ab",
         "type": "github"
       },
       "original": {
@@ -600,12 +600,12 @@
     },
     "nixpkgs_6": {
       "locked": {
-        "lastModified": 1790578696,
-        "narHash": "sha256-ZoxIApko70jCdbH3l20HWXOBaT2HZd87orzd2yJ9dVE=",
-        "rev": "7a0f122f5090cf4c2ade2a13a0e229d4e19ba71f",
-        "revCount": 1080855,
+        "lastModified": 1791179034,
+        "narHash": "sha256-Ni0LBydzaCi8oek12r4mVreuFHqYlM1eTD6SfiENKfw=",
+        "rev": "494ce7fd23ff6a5dff39e1fb11e9b6f2ac74bf25",
+        "revCount": 1085777,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/nixpkgs-weekly/0.1.1080855%2Brev-7a0f122f5090cf4c2ade2a13a0e229d4e19ba71f/01a10fba-020b-7731-ab22-ae4ea069e18f/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/DeterminateSystems/nixpkgs-weekly/0.1.1085777%2Brev-494ce7fd23ff6a5dff39e1fb11e9b6f2ac74bf25/01a133c9-a3ed-7b73-8056-143ddb2158b1/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -753,12 +753,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1791710405,
-        "narHash": "sha256-mVD4XIc5JkqMW2K04IkFUzHgHmyJZlzw5ktfgMDCbKU=",
-        "rev": "ee48786c6f9160d2c1a084aac841f68195b8420c",
-        "revCount": 1252,
+        "lastModified": 1792056300,
+        "narHash": "sha256-YU1LjDe1o2Ymg5zEiCHbmMXLkDCtxHQRiVqZ3nC5GGk=",
+        "rev": "44931708c62937c2b1bf7953902989fa5bb9ee1b",
+        "revCount": 1254,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/Mic92/sops-nix/0.1.1252%2Brev-ee48786c6f9160d2c1a084aac841f68195b8420c/01a12a4c-a698-7da0-ad53-1ebf09457271/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/Mic92/sops-nix/0.1.1254%2Brev-44931708c62937c2b1bf7953902989fa5bb9ee1b/01a13ee5-cbe5-7162-928d-850173acac08/source.tar.gz"
       },
       "original": {
         "type": "tarball",
