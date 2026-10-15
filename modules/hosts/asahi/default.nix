@@ -24,6 +24,7 @@
       latex
       android
       (self.lib.gaming "muvm")
+      prismlauncher
 
       virt
 
