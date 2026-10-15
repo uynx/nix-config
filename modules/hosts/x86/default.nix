@@ -24,6 +24,7 @@
 
       virt
       (self.lib.gaming "native")
+      prismlauncher
 
       campus-wifi
 
