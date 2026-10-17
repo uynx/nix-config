@@ -271,6 +271,12 @@
                 }
             )
           );
+          codexHookTrust = lib.hm.dag.entryAfter [ "aiSettings" ] ''
+            PATH="$PATH:/etc/profiles/per-user/$USER/bin:/run/current-system/sw/bin:/opt/homebrew/bin"
+            if command -v codex >/dev/null && [ -x "${dotfiles}/hooks/codex-hook-trust" ]; then
+              "${dotfiles}/hooks/codex-hook-trust" || true
+            fi
+          '';
         }
         // lib.optionalAttrs isLinux {
           installRollingAiClis = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
