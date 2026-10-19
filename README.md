@@ -113,7 +113,7 @@ theme all change together, then rebuilds and reboots.
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
 | `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
-| `self.lib.gaming "<runner>"` | Steam, picked per host: `muvm` (Fedora Asahi container, VM, 16 KiB Apple), `fex` (arm64 client under FEX in Podman, no VM, 4 KiB ARM), `native` (x86, plus lact) | — |
+| `self.lib.gaming "<runner>"` | Steam, picked per host: `muvm` (Fedora Asahi container, VM, 16 KiB Apple), `fex` (arm64 client under FEX in Podman, no VM, 4 KiB ARM), `native` (x86, plus lact and gamescope) | — |
 | `prismlauncher` | Prism Launcher (Minecraft) | cask prismlauncher |
 | `android` | Waydroid launcher and image updater; the VM itself is `apps/waydroid/vm.nix` (aarch64 only, gated inside the module) | — |
 
