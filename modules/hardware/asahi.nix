@@ -56,6 +56,14 @@ _: {
       HandlePowerKey = "lock";
     };
 
+    environment.etc."libinput/local-overrides.quirks".text = ''
+      [Apple Laptop Touchpad (SPI) palm]
+      MatchUdevType=touchpad
+      MatchBus=spi
+      MatchVendor=0x05AC
+      AttrPalmSizeThreshold=1000
+    '';
+
     services.udev.extraRules = ''
       ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x17a0", ATTR{device}=="0x9755", ATTR{power/control}="auto"
     '';
