@@ -22,6 +22,7 @@
       latex
       android
       (self.lib.gaming "fex")
+      prismlauncher
 
       virt
 

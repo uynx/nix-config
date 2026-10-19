@@ -16,6 +16,7 @@
       comms
       office
       latex
+      prismlauncher
 
       secrets
       cloud
