@@ -3,6 +3,7 @@ let
   bundle = self.lib.mkBundle {
     homeLinux = with self.homeModules; [
       braveOrigin
+      firefox
       launchers
       ungoogledChromium
     ];
