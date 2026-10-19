@@ -1,9 +1,9 @@
 { self, ... }:
 let
   bundle = self.lib.mkBundle {
+    home = [ self.homeModules.firefox ];
     homeLinux = with self.homeModules; [
       braveOrigin
-      firefox
       launchers
       ungoogledChromium
     ];

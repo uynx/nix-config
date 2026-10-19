@@ -108,7 +108,7 @@ theme all change together, then rebuilds and reboots.
 | `latex` | texlive scheme-full (stable pin) | yes |
 | `media` | obs, mpv, qbittorrent, image tooling | casks OBS/Streamlabs/BlackHole |
 | `comms` | vesktop, whatsapp, rustdesk, SimpleX Chat (`apps/simplex/`, nixpkgs) | whatsapp, rustdesk cask |
-| `web` | brave-origin and its profile launchers, ungoogled-chromium, Firefox with telemetry and Pocket off | cask Brave + menu shortcuts |
+| `web` | brave-origin and its profile launchers, ungoogled-chromium, stripped Firefox | cask Brave + menu shortcuts, stripped Firefox |
 | `secrets` | sops (age), rage, Bitwarden | Bitwarden only; needs its own key in `.sops.yaml` |
 | `cloud` | rclone gdrive + crypt mount (pulls `sops` itself) | needs its own secrets |
 | `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
