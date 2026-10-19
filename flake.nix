@@ -49,8 +49,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # No nixpkgs follows here: it breaks its rust-overlay toolchain fetch. Do not re-add.
-    obscuravpn.url = "github:Sovereign-Engineering/obscuravpn-client";
+    obscuravpn = {
+      url = "github:Sovereign-Engineering/obscuravpn-client";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
