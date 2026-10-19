@@ -109,7 +109,10 @@
     };
 
     ui = {
-      noice.enable = true;
+      noice = {
+        enable = true;
+        setupOpts.lsp.progress.enabled = false;
+      };
       illuminate.enable = true;
       colorizer.enable = true;
     };
