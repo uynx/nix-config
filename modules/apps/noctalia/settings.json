@@ -469,7 +469,7 @@
         "wallpaperChange": ""
     },
     "idle": {
-        "customCommands": "[{\"timeout\": 3600, \"command\": \"systemctl poweroff\", \"resumeCommand\": \"\"}]",
+        "customCommands": "[]",
         "enabled": true,
         "fadeDuration": 5,
         "lockCommand": "",
