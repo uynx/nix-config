@@ -3,7 +3,7 @@
     { pkgs, ... }:
     {
       home.packages = [
-        pkgs.wineWowPackages.stagingFull
+        pkgs.wineWow64Packages.stagingFull
         pkgs.winetricks
       ];
     };
