@@ -23,6 +23,7 @@
         aiClis.claude-code
         aiClis.codex
         aiClis.grok
+        aiClis.opencode
       ];
     };
 }

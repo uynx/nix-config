@@ -77,4 +77,14 @@ in
     desc = "x.ai's official Grok CLI";
   };
 
+  opencode = mkPin {
+    pname = "opencode";
+    url =
+      v: "https://github.com/anomalyco/opencode/releases/download/v${v}/opencode-linux-${short}.tar.gz";
+    sourceRoot = ".";
+    install = ''install -Dm755 opencode "$out/bin/opencode"'';
+    homepage = "https://github.com/anomalyco/opencode";
+    desc = "OpenCode terminal agent";
+  };
+
 }

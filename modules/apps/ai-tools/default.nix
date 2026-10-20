@@ -107,6 +107,11 @@
             try_bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64" \
               "https://x.ai/cli/grok-$grok-linux-x86_64"
 
+            opencode=$(fetch https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r '.tag_name | ltrimstr("v")' || true)
+            try_bump opencode "$opencode" \
+              "https://github.com/anomalyco/opencode/releases/download/v$opencode/opencode-linux-arm64.tar.gz" \
+              "https://github.com/anomalyco/opencode/releases/download/v$opencode/opencode-linux-x64.tar.gz"
+
             echo
             echo 'rolling (takes effect now, no rebuild):'
           fi
@@ -206,6 +211,7 @@
           DISABLE_AUTOUPDATER = "1";
           GROK_DISABLE_AUTOUPDATER = "1";
           AGY_CLI_DISABLE_AUTO_UPDATE = "1";
+          OPENCODE_DISABLE_AUTOUPDATE = "1";
           PATH = "$PATH:${home}/.local/bin";
         }
         // lib.optionalAttrs config.programs.chromium.enable {
@@ -219,6 +225,7 @@
             ".codex/AGENTS.md"
             ".gemini/AGENTS.md"
             ".grok/AGENTS.md"
+            ".config/opencode/AGENTS.md"
           ] (_: link "AGENTS.md")
           // lib.genAttrs [
             ".agents/skills"
