@@ -16,9 +16,12 @@
           { x86Runner = "fex"; }
         ];
       };
-      native.nixos = [
-        self.nixosModules.steamNative
-        self.nixosModules.lact
-      ];
+      native = {
+        nixos = [
+          self.nixosModules.steamNative
+          self.nixosModules.lact
+        ];
+        home = [ self.homeModules.wine ];
+      };
     }.${runner}).nixos;
 }
