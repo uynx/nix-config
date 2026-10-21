@@ -87,6 +87,8 @@
         config.shellHooks.rebPostSwitch = ''
           if type -q niri; and niri msg version >/dev/null 2>&1
               pkill -f '[q]uickshell -p .*noctalia-shell'
+              # noctalia's own stale-wlsunset kill races the new wlsunset, leaving night light on but untinted.
+              pkill -x wlsunset
               sleep 1
               niri msg action spawn -- noctalia-shell
           end
