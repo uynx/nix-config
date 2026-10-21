@@ -11,6 +11,9 @@
             substituteInPlace $out/share/noctalia-shell/Modules/LockScreen/LockScreenPanel.qml \
               --replace-fail 'isSelected ? Color.mOnPrimary : Color.mPrimary' \
                              'isSelected ? Color.mOnPrimary : Color.mOnSurface'
+            substituteInPlace $out/share/noctalia-shell/Services/Power/IdleService.qml \
+              --replace-fail 'const globalEnabled = idle.enabled;' \
+                             'const globalEnabled = idle.enabled && Quickshell.env("NOCTALIA_IDLE") !== "off";'
           '';
         });
 
@@ -49,16 +52,31 @@
 
     homeModules.noctalia = moduleWithSystem (
       { self', ... }:
-      { config, ... }:
+      {
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
       let
         generated = self'.packages.noctalia-shell.generatedConfig;
+        noIdle = pkgs.symlinkJoin {
+          name = "noctalia-shell";
+          paths = [ self'.packages.noctalia-shell ];
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+          postBuild = "wrapProgram $out/bin/noctalia-shell --set NOCTALIA_IDLE off";
+        };
       in
       {
-        home.packages = [ self'.packages.noctalia-shell ];
+        options.noctalia.idle = lib.mkEnableOption "idle screen-off and lock timers" // {
+          default = true;
+        };
+
+        config.home.packages = [ (if config.noctalia.idle then self'.packages.noctalia-shell else noIdle) ];
 
         # The panel writes straight into the repo file through this symlink.
         # settings.json must keep hooks.screenUnlock = "loginctl unlock-session", or lock.target latches active for the boot.
-        xdg.configFile = {
+        config.xdg.configFile = {
           "noctalia/settings.json".source =
             config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/modules/apps/noctalia/settings.json";
           "noctalia/colors.json".source = "${generated}/colors.json";
@@ -66,7 +84,7 @@
           "noctalia/plugins".source = "${generated}/plugins";
         };
 
-        shellHooks.rebPostSwitch = ''
+        config.shellHooks.rebPostSwitch = ''
           if type -q niri; and niri msg version >/dev/null 2>&1
               pkill -f '[q]uickshell -p .*noctalia-shell'
               sleep 1
@@ -75,7 +93,7 @@
         '';
 
         # noctalia's fallback icon name; blank, so a missing icon shows nothing instead of a checkerboard.
-        xdg.dataFile."icons/hicolor/scalable/apps/application-x-executable.svg".source =
+        config.xdg.dataFile."icons/hicolor/scalable/apps/application-x-executable.svg".source =
           ./application-x-executable.svg;
       }
     );
