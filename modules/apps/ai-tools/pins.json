@@ -19,12 +19,5 @@
       "aarch64-linux": "sha256-C4CKIglyh4jS43w06hhG1GC0FSip/H7cdpi5597BL+E=",
       "x86_64-linux": "sha256-KkbZ5Nfr16nP9/lXFnFLGdrV8h3SpJeCJACx+xKJaao="
     }
-  },
-  "opencode": {
-    "version": "1.19.3",
-    "hash": {
-      "aarch64-linux": "sha256-eQCBimqYiB7butq0t1JZQO/zuXUAQMIASB+fVsrO5AU=",
-      "x86_64-linux": "sha256-E6j7KXgwIHG4b51+ANqciJX5zYRpeDecO9xqUzNTbJs="
-    }
   }
 }

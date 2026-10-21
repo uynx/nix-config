@@ -107,11 +107,6 @@
             try_bump grok "$grok" "https://x.ai/cli/grok-$grok-linux-aarch64" \
               "https://x.ai/cli/grok-$grok-linux-x86_64"
 
-            opencode=$(fetch https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r '.tag_name | ltrimstr("v")' || true)
-            try_bump opencode "$opencode" \
-              "https://github.com/anomalyco/opencode/releases/download/v$opencode/opencode-linux-arm64.tar.gz" \
-              "https://github.com/anomalyco/opencode/releases/download/v$opencode/opencode-linux-x64.tar.gz"
-
             echo
             echo 'rolling (takes effect now, no rebuild):'
           fi
@@ -119,6 +114,7 @@
           get_ver() {
             case "$1" in
               agy) agy --version 2>/dev/null | head -1 ;;
+              opencode) opencode --version 2>/dev/null | head -1 ;;
               t3) t3 --version 2>/dev/null | head -1 | sed 's/t3 //' ;;
             esac
           }
@@ -186,11 +182,27 @@
             fetch https://antigravity.google/cli/install.sh | bash
           }
 
+          install_opencode() {
+            arch=$(uname -m)
+            case "$arch" in
+              aarch64|arm64) short="arm64" ;;
+              x86_64|amd64) short="x64" ;;
+              *) return 1 ;;
+            esac
+            latest=$(fetch https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r '.tag_name' || true)
+            [ -n "$latest" ] || return 1
+            tmp=$(mktemp -d)
+            fetch "https://github.com/anomalyco/opencode/releases/download/$latest/opencode-linux-$short.tar.gz" | tar -xz -C "$tmp"
+            install -Dm755 "$tmp/opencode" "${home}/.local/bin/opencode"
+            rm -rf "$tmp"
+          }
+
           if command -v agy >/dev/null 2>&1; then
             roll agy agy update &
           else
             roll agy install_agy &
           fi
+          roll opencode install_opencode &
           roll t3 npm install -g --prefix "${home}/.local" t3 &
           wait
 
