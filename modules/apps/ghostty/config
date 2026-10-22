@@ -22,6 +22,7 @@ scroll-to-bottom = keystroke
 
 window-save-state = never
 working-directory = home
+copy-on-select = false
 clipboard-paste-protection = true
 confirm-close-surface = false
 
