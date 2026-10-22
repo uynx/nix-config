@@ -401,6 +401,10 @@
         ln -sfn "$STEAM_ROOT" "$STEAM_HOME/root"
         ln -sfn "$STEAM_ROOT" "$STEAM_HOME/steam"
         ln -sfn "$STEAM_ROOT/linuxarm64" "$STEAM_HOME/sdkarm64"
+        ln -sfn "$STEAM_ROOT/linux64" "$STEAM_HOME/sdk64"
+        ln -sfn "$STEAM_ROOT/linux32" "$STEAM_HOME/sdk32"
+        ln -sfn "$STEAM_ROOT/ubuntu12_64" "$STEAM_HOME/bin64"
+        ln -sfn "$STEAM_ROOT/ubuntu12_32" "$STEAM_HOME/bin32"
         chmod -R u+rwX "$STEAM_ROOT/steamrtarm64"
 
         set -- env \
