@@ -7,8 +7,6 @@
 
     nixpkgs.config.allowUnfree = true;
     nix = {
-      nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-
       registry = self.lib.selfRegistry self.lib.user.home;
 
       gc = {
@@ -17,6 +15,7 @@
         options = "--delete-older-than 7d";
       };
       settings = {
+        nix-path = [ "nixpkgs=${inputs.nixpkgs}" ];
         auto-optimise-store = true;
         extra-experimental-features = [ "wasm-builtin" ];
         trusted-users = [ self.lib.user.name ];
