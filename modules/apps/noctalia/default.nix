@@ -88,7 +88,9 @@
         };
 
         config.shellHooks.rebPostSwitch = ''
-          if type -q niri; and niri msg version >/dev/null 2>&1
+          # Restarting Noctalia drops Night Light for a moment, so only restart when its package changed.
+          set -l pkg (string match -r '/nix/store/[^/]+-noctalia-shell-[^/]+' < (readlink -f (command -v noctalia-shell)))
+          if type -q niri; and niri msg version >/dev/null 2>&1; and not begin; test -n "$pkg"; and pgrep -f "quickshell -p $pkg/" >/dev/null; end
               pkill -f '[q]uickshell -p .*noctalia-shell'
               # noctalia's own stale-wlsunset kill races the new wlsunset, leaving night light on but untinted.
               pkill -x wlsunset
