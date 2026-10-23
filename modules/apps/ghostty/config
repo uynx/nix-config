@@ -50,3 +50,4 @@ font-codepoint-map = U+25A0-U+25FF="JuliaMono"
 font-codepoint-map = U+2800-U+28FF="JuliaMono"
 
 keybind = ctrl+alt+r=reload_config
+keybind = ctrl+enter=unbind
