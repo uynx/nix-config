@@ -14,6 +14,9 @@
             substituteInPlace $out/share/noctalia-shell/Services/Power/IdleService.qml \
               --replace-fail 'const globalEnabled = idle.enabled;' \
                              'const globalEnabled = idle.enabled && Quickshell.env("NOCTALIA_IDLE") !== "off";'
+            # Forced restarts on resume blank Night Light twice; a plain apply keeps the running wlsunset.
+            substituteInPlace $out/share/noctalia-shell/Services/Location/NightLightService.qml \
+              --replace-fail 'root.apply(true);' 'root.apply();'
           '';
         });
 
