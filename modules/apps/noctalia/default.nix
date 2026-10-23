@@ -40,11 +40,17 @@
               unitConfig = {
                 PartOf = [ "lock.target" ];
                 After = [ "lock.target" ];
+                # Noctalia's own lockOnSuspend is off so this locks with the screen already dark, before sleep.
+                Before = [ "sleep.target" ];
               };
-              wantedBy = [ "lock.target" ];
+              wantedBy = [
+                "lock.target"
+                "sleep.target"
+              ];
               serviceConfig = {
                 Type = "oneshot";
                 RemainAfterExit = true;
+                ExecStartPre = "-${pkgs.niri}/bin/niri msg action power-off-monitors";
                 ExecStart = "${self'.packages.noctalia-shell}/bin/noctalia-shell ipc call sessionMenu lock";
               };
             };

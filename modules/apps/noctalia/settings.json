@@ -434,7 +434,7 @@
             ]
         },
         "language": "",
-        "lockOnSuspend": true,
+        "lockOnSuspend": false,
         "lockScreenAnimations": false,
         "lockScreenBlur": 0.1,
         "lockScreenCountdownDuration": 10000,
