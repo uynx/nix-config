@@ -19,13 +19,4 @@
           ram = true;
         };
       };
-
-        terminal = false;
-      };
-
-        if test $status -eq 75
-            test -n "$id"; and niri msg action focus-window --id $id
-        end
-      '';
-    };
 }
