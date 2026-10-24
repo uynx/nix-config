@@ -4,29 +4,12 @@
     system = "x86_64-linux";
     specialArgs = { inherit inputs; };
     modules = with self.nixosModules; [
-      core
+      standard
       hardwareX86
-      homeManagerBase
 
       # `reb switch` flips ./desktop between niri and kde, then rebuilds and reboots.
       (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
-      shell
-      programming
-      ai
-      secrets
-      privacy
-      cloud
-      web
-      media
-      comms
-      office
-      latex
-
-      virt
       (self.lib.gaming "native")
-      prismlauncher
-
-      campus-wifi
 
       ./_hardware-configuration.nix
 

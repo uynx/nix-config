@@ -4,31 +4,14 @@
     system = "aarch64-linux";
     specialArgs = { inherit inputs; };
     modules = with self.nixosModules; [
-      core
+      standard
       hardwareAsahi
       cpuBatteryCap
-      homeManagerBase
 
       # `reb switch` flips ./desktop between niri and kde, then rebuilds and reboots.
       (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
-      shell
-      programming
-      ai
-      secrets
-      privacy
-      cloud
-      web
-      media
-      comms
-      office
-      latex
       android
       (self.lib.gaming "muvm")
-      prismlauncher
-
-      virt
-
-      campus-wifi
 
       ./_hardware-configuration.nix
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
