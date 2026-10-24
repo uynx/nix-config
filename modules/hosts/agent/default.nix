@@ -52,6 +52,11 @@ in
           };
           services.xserver.videoDrivers = [ "nvidia" ];
 
+          sops.secrets.agent-data-key = { };
+          environment.etc.crypttab.text = ''
+            cryptdata /dev/disk/by-partlabel/disk-data-luks ${config.sops.secrets.agent-data-key.path} nofail
+          '';
+
           services.logind.settings.Login.HandleLidSwitch = "ignore";
 
           services.openssh = {
