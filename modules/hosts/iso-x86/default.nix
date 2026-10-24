@@ -29,14 +29,6 @@
           users.users.root.openssh.authorizedKeys.keys = [
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEUYRYdgXB3O1EvWT1v9pohkK5ylBjpw2aBDViQTia7c"
           ];
-          services.avahi = {
-            enable = true;
-            nssmdns4 = true;
-            publish = {
-              enable = true;
-              addresses = true;
-            };
-          };
 
           environment.systemPackages =
             with pkgs;
