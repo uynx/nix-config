@@ -8,6 +8,7 @@ in
     modules = with self.nixosModules; [
       core
       homeManagerBase
+      plasma
       shell
       programming
       secrets
@@ -28,6 +29,7 @@ in
             aiTools
             aiToolsPinned
             ungoogledChromium
+            rustdesk
           ];
 
           boot = {
@@ -50,7 +52,25 @@ in
               modesetting.enable = true;
             };
           };
-          services.xserver.videoDrivers = [ "nvidia" ];
+          services.xserver = {
+            enable = true;
+            videoDrivers = [ "nvidia" ];
+            # No monitor is ever attached; without this nvidia creates no display at all.
+            deviceSection = ''
+              Option "AllowEmptyInitialConfiguration" "true"
+            '';
+          };
+
+          services.desktopManager.plasma6.enable = true;
+          services.displayManager.sddm = {
+            enable = true;
+            # X11, not Wayland: RustDesk needs no portal here and dodges the niri/KWin RemoteDesktop gap entirely.
+            wayland.enable = false;
+          };
+          services.displayManager.autoLogin = {
+            enable = true;
+            user = self.lib.user.name;
+          };
 
           sops.secrets.agent-data-key = { };
           sops.secrets.agent-uynx-password.neededForUsers = true;
@@ -61,6 +81,9 @@ in
           '';
 
           services.logind.settings.Login.HandleLidSwitch = "ignore";
+
+          # This box runs unattended and must never sleep.
+          systemd.sleep.settings.Sleep.AllowSuspend = false;
 
           services.openssh = {
             enable = true;
