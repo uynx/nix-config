@@ -10,15 +10,7 @@
       homeManagerBase
 
       # `reb switch` flips ./desktop between niri and kde, then rebuilds and reboots.
-      (
-        if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then
-          desktopKde
-        else
-          {
-            imports = [ desktopNiri ];
-            home-manager.users.${self.lib.user.name}.noctalia.idle = false;
-          }
-      )
+      (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
       shell
       programming
       ai
