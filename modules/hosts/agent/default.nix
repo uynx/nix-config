@@ -53,6 +53,9 @@ in
           services.xserver.videoDrivers = [ "nvidia" ];
 
           sops.secrets.agent-data-key = { };
+          sops.secrets.agent-uynx-password.neededForUsers = true;
+          users.users.${self.lib.user.name}.hashedPasswordFile =
+            config.sops.secrets.agent-uynx-password.path;
           environment.etc.crypttab.text = ''
             cryptdata /dev/disk/by-partlabel/disk-data-luks ${config.sops.secrets.agent-data-key.path} nofail
           '';
