@@ -42,6 +42,19 @@
       {
         boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
       }
+      (
+        let
+          key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEUYRYdgXB3O1EvWT1v9pohkK5ylBjpw2aBDViQTia7c";
+        in
+        {
+          services.openssh = {
+            enable = true;
+            settings.PasswordAuthentication = false;
+          };
+          users.users.root.openssh.authorizedKeys.keys = [ key ];
+          users.users.${self.lib.user.name}.openssh.authorizedKeys.keys = [ key ];
+        }
+      )
     ];
   };
 }
