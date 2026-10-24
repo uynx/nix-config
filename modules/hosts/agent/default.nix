@@ -64,8 +64,8 @@ in
           services.desktopManager.plasma6.enable = true;
           services.displayManager.sddm = {
             enable = true;
-            # X11, not Wayland: RustDesk needs no portal here and dodges the niri/KWin RemoteDesktop gap entirely.
-            wayland.enable = false;
+            # KWin implements the Wayland RemoteDesktop portal niri lacks; this is why RustDesk needs Plasma at all.
+            wayland.enable = true;
           };
           services.displayManager.autoLogin = {
             enable = true;
