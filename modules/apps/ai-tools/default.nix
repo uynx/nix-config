@@ -225,9 +225,6 @@
           AGY_CLI_DISABLE_AUTO_UPDATE = "1";
           OPENCODE_DISABLE_AUTOUPDATE = "1";
           PATH = "$PATH:${home}/.local/bin";
-        }
-        // lib.optionalAttrs config.programs.chromium.enable {
-          AGENT_BROWSER_EXECUTABLE_PATH = "${config.programs.chromium.package}/bin/brave-origin";
         };
 
         file =
