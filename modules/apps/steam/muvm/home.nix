@@ -355,16 +355,6 @@
         done <"$FIFO"
       '';
 
-        builtins.toJSON {
-          Config = {
-            SMCChecks = "full";
-            StrictInProcessSplitLocks = true;
-            Multiblock = false;
-          };
-          ThunksDB = { };
-        }
-      );
-
       steam-asahi-remote = pkgs.writeShellScriptBin "steam-asahi-remote" ''
         set -eu
         ${shellHelpers}
