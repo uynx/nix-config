@@ -7,9 +7,17 @@
 {
   flake.nixosModules.obscura = moduleWithSystem (
     { inputs', ... }:
-    { pkgs, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     let
       upstream = inputs'.obscuravpn.packages;
+
+      # sops-nix fails activation on a declared key that secrets.yaml lacks; key names are plaintext.
+      hasAccount = lib.hasInfix "\nobscura-account:" (builtins.readFile ../../../secrets/secrets.yaml);
 
       obscura-gui = pkgs.runCommand "obscura-gui" { nativeBuildInputs = [ pkgs.makeWrapper ]; } ''
         mkdir -p $out/bin
@@ -133,12 +141,20 @@
           serviceConfig = {
             Type = "oneshot";
             RemainAfterExit = true;
+            ExecStartPre = lib.mkIf hasAccount (
+              pkgs.writeShellScript "obscura-login" ''
+                ${obscura}/bin/obscura status 2>&1 | ${pkgs.gnugrep}/bin/grep -q 'Not logged in' || exit 0
+                ${pkgs.coreutils}/bin/timeout 60 ${obscura}/bin/obscura login "$(< ${config.sops.secrets.obscura-account.path})"
+              ''
+            );
             ExecStart = "${pkgs.coreutils}/bin/timeout 90 ${obscura}/bin/obscura connect";
             TimeoutStartSec = 120;
             SuccessExitStatus = "SIGTERM 124";
           };
         };
       };
+
+      sops.secrets = lib.mkIf hasAccount { obscura-account = { }; };
 
       users.groups.obscura = { };
       users.users.${self.lib.user.name}.extraGroups = [ "obscura" ];
