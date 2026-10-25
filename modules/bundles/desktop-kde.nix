@@ -28,8 +28,14 @@
 
       home = [
         self.homeModules.plasma
-        # Leaves org.freedesktop.secrets to gnome-keyring.
-        { programs.plasma.configFile.kwalletrc."org.freedesktop.secrets".apiEnabled = false; }
+        # Off entirely so gnome-keyring is the only secret store and KWallet's first-use wizard never opens.
+        {
+          programs.plasma.configFile.kwalletrc = {
+            "org.freedesktop.secrets".apiEnabled = false;
+            Wallet.Enabled = false;
+            Wallet."First Use" = false;
+          };
+        }
         {
           plasmaPinned = [
             "brave-origin.desktop"
