@@ -59,6 +59,23 @@ in
           systemd.sleep.settings.Sleep.AllowSuspend = false;
           services.logind.settings.Login.HandleLidSwitch = "ignore";
 
+          # Autologin types no password, so an encrypted login keyring would prompt on every boot.
+          home-manager.users.${user} =
+            { config, lib, ... }:
+            {
+              home.activation.plainLoginKeyring = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+                k=${config.home.homeDirectory}/.local/share/keyrings/login.keyring
+                [ -e "$k" ] || run install -Dm600 ${pkgs.writeText "login.keyring" ''
+                  [keyring]
+                  display-name=login
+                  ctime=0
+                  mtime=0
+                  lock-on-idle=false
+                  lock-after=false
+                ''} "$k"
+              '';
+            };
+
           sops.secrets.agent-data-key = { };
           environment.etc.crypttab.text = ''
             cryptdata /dev/disk/by-partlabel/disk-data-luks ${config.sops.secrets.agent-data-key.path} nofail
