@@ -163,7 +163,9 @@
 
   flake.homeModules.obscura = {
     shellHooks.rebPostSwitch = ''
-      sudo systemctl try-restart obscura.service
+      # A restart at the account's device cap leaves the host offline ~5 min, so only restart for a new binary.
+      string match -q (realpath (command -v obscura))" *" (ps -o args= -p (systemctl show -p MainPID --value obscura.service))
+      or sudo systemctl try-restart obscura.service
       obscura connect
     '';
 
