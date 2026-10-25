@@ -17,6 +17,10 @@ let
           doh_servers = true;
           require_dnssec = false;
 
+          forwarding_rules = pkgs.writeText "forwarding-rules.txt" ''
+            lan 192.168.8.1
+          '';
+
           captive_portals.map_file = pkgs.writeText "captive-portals.txt" ''
             captive.apple.com 17.253.125.203, 17.253.125.201, 17.253.109.201, 17.253.113.202
           '';
