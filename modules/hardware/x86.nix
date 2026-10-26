@@ -58,5 +58,12 @@
         memoryPercent = 50;
         priority = 100;
       };
+
+      swapDevices = [
+        {
+          device = "/swapfile";
+          size = 32768;
+        }
+      ];
     };
 }

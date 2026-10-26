@@ -73,6 +73,11 @@ _: {
         device = "/swapfile";
         size = 16384;
       }
+      # A second file, because resizing /swapfile needs swapoff while heavy jobs have it in use.
+      {
+        device = "/swapfile2";
+        size = 16384;
+      }
     ];
   };
 }

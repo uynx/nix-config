@@ -93,6 +93,13 @@ in
             algorithm = "zstd";
             memoryPercent = 50;
           };
+
+          swapDevices = [
+            {
+              device = "/swapfile";
+              size = 32768;
+            }
+          ];
         }
       )
     ];
