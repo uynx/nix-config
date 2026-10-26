@@ -13,6 +13,7 @@ in
       (self.lib.gaming "native")
 
       inputs.disko.nixosModules.disko
+      inputs.lanzaboote.nixosModules.lanzaboote
       ./_disko.nix
       ./_hardware-configuration.nix
 
@@ -23,15 +24,30 @@ in
           nixpkgs.hostPlatform = "x86_64-linux";
 
           boot = {
-            loader = {
-              systemd-boot = {
-                enable = true;
-                configurationLimit = 10;
-              };
-              efi.canTouchEfiVariables = true;
+            loader.efi.canTouchEfiVariables = true;
+            # Keys enroll on the first boot with the firmware in Secure Boot setup mode.
+            lanzaboote = {
+              enable = true;
+              pkiBundle = "/var/lib/sbctl";
+              configurationLimit = 10;
+              autoGenerateKeys.enable = true;
+              autoEnrollKeys.enable = true;
             };
+            # TPM slot is enrolled by hand against PCR 7 once Secure Boot is on; the passphrase stays as fallback.
+            initrd.systemd.enable = true;
+            initrd.luks.devices.cryptroot.crypttabExtraOpts = [ "tpm2-device=auto" ];
             kernelPackages = pkgs.linuxPackages_latest;
+            # MSI's DSDT throws harmless ACPI errors that print over the passphrase prompt.
+            consoleLogLevel = 3;
+            kernel.sysctl = {
+              "kernel.panic" = 10;
+              "kernel.panic_on_oops" = 1;
+            };
           };
+          environment.systemPackages = [ pkgs.sbctl ];
+          systemd.settings.Manager.RuntimeWatchdogSec = "2min";
+          security.sudo.wheelNeedsPassword = false;
+          environment.variables.AGENT_OWNS_MACHINE = "1";
 
           hardware = {
             enableRedistributableFirmware = true;
@@ -68,6 +84,20 @@ in
                 lockOnResume = false;
               };
 
+              systemd.user.services.claude-agent = {
+                Unit.Description = "Claude Code agent in tmux session 'agent'";
+                Service = {
+                  Type = "forking";
+                  Environment = [
+                    "AGENT_OWNS_MACHINE=1"
+                    "PATH=/run/wrappers/bin:/etc/profiles/per-user/${user}/bin:/run/current-system/sw/bin"
+                  ];
+                  ExecStart = "/etc/profiles/per-user/${user}/bin/tmux new-session -d -s agent -c %h/always_on_agent 'claude --continue; exec fish'";
+                  ExecStop = "/etc/profiles/per-user/${user}/bin/tmux kill-session -t agent";
+                };
+                Install.WantedBy = [ "default.target" ];
+              };
+
               home.activation.plainLoginKeyring = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
                 k=${config.home.homeDirectory}/.local/share/keyrings/login.keyring
                 [ -e "$k" ] || run install -Dm600 ${pkgs.writeText "login.keyring" ''
@@ -91,7 +121,10 @@ in
             settings.PasswordAuthentication = false;
           };
           users.users.root.openssh.authorizedKeys.keys = [ key ];
-          users.users.${user}.openssh.authorizedKeys.keys = [ key ];
+          users.users.${user} = {
+            openssh.authorizedKeys.keys = [ key ];
+            linger = true;
+          };
 
           zramSwap = {
             enable = true;
