@@ -16,7 +16,7 @@
       kmix.mute = "Volume Mute";
       kmix.push_to_talk = [ ];
       ksmserver."Halt Without Confirmation" = [ ];
-      ksmserver."Lock Session" = ["Screensaver" "Meta+Ctrl+Q"];
+      ksmserver."Lock Session" = ["Meta+Ctrl+Q" "Screensaver"];
       ksmserver."Log Out" = "Ctrl+Alt+Del";
       ksmserver."Log Out Without Confirmation" = [ ];
       ksmserver.LogOut = [ ];
@@ -106,7 +106,7 @@
       kwin."Walk Through Windows of Current Application Alternative (Reverse)" = [ ];
       kwin."Window Above Other Windows" = [ ];
       kwin."Window Below Other Windows" = [ ];
-      kwin."Window Close" = ["Alt+F4" "Meta+Q"];
+      kwin."Window Close" = ["Meta+Q" "Alt+F4"];
       kwin."Window Custom Quick Tile Bottom" = [ ];
       kwin."Window Custom Quick Tile Left" = [ ];
       kwin."Window Custom Quick Tile Right" = [ ];
@@ -246,7 +246,8 @@
       plasmashell."toggle do not disturb" = [ ];
       "services/brave-personal.desktop"._launch = "Meta+N";
       "services/brave-school.desktop"._launch = "Meta+M";
-      "services/com.mitchellh.ghostty.desktop"._launch = ["Ctrl+Alt+T" "Meta+P"];
+      "services/com.mitchellh.ghostty.desktop"._launch = ["Meta+P" "Ctrl+Alt+T"];
+      "services/dictate.desktop"._launch = "Meta+D";
       "services/org.kde.kscreen.desktop".ShowOSD = "Display";
       "services/org.kde.spectacle.desktop".CurrentMonitorScreenShot = [ ];
       "services/org.kde.spectacle.desktop".OpenWithoutScreenshot = [ ];
@@ -271,6 +272,8 @@
       kdeglobals.WM.inactiveBackground = "32,36,40";
       kdeglobals.WM.inactiveBlend = "161,169,177";
       kdeglobals.WM.inactiveForeground = "161,169,177";
+      kscreenlockerrc.Daemon.Autolock = false;
+      kscreenlockerrc.Daemon.LockOnResume = false;
       kscreenlockerrc.Greeter.WallpaperPlugin = "org.kde.image";
       kscreenlockerrc."Greeter/Wallpaper/org.kde.image/General".Image = "file:///nix/store/g2rcnz0zwhnq9lj5b2y2p7vp6pcw8kk6-wallpaper.png";
       kuriikwsfilterrc.General.EnableWebShortcuts = true;
