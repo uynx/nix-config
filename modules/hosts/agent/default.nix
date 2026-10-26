@@ -63,6 +63,11 @@ in
           home-manager.users.${user} =
             { config, lib, ... }:
             {
+              programs.plasma.kscreenlocker = {
+                autoLock = false;
+                lockOnResume = false;
+              };
+
               home.activation.plainLoginKeyring = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
                 k=${config.home.homeDirectory}/.local/share/keyrings/login.keyring
                 [ -e "$k" ] || run install -Dm600 ${pkgs.writeText "login.keyring" ''
