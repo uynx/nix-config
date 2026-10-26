@@ -64,7 +64,7 @@ Adding or removing a component is one line in `modules/hosts/<host>/default.nix`
 | `prismlauncher` | Prism Launcher (Minecraft) | cask prismlauncher |
 | `android` | Waydroid launcher and image updater; the VM itself is `apps/waydroid/vm.nix` (aarch64 only, gated inside the module) | no |
 
-Three host lines are single modules instead of bundles, because a bundle around one name would only restate it: `virt` (`apps/virt/`), `campus-wifi` (`system/campus-wifi.nix`, the UMass eduroam profile) and `cpuBatteryCap` (`hardware/cpu-battery-cap.nix`).
+Four host lines are single modules instead of bundles, because a bundle around one name would only restate it: `virt` (`apps/virt/`), `campus-wifi` (`system/campus-wifi.nix`, the UMass eduroam profile), `tailscale` (`apps/tailscale/`, joins the tailnet with the sops auth key; in `standard`) and `cpuBatteryCap` (`hardware/cpu-battery-cap.nix`).
 
 On aarch64, apps with no stable ARM build run their official x86_64 release under FEX. They get registered in `x86Apps` (`apps/x86-emu/`), which emits a launcher into the Steam runner's muvm VM or FEX container with a per-app home under `~/.local/share/x86-apps/`, so this needs the `muvm` or `fex` runner on that host.
 

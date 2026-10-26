@@ -42,6 +42,7 @@
 
             meta mark 0x6f627363 accept
             oifname "obscuravpn" accept
+            oifname "tailscale0" accept
 
             ip daddr 255.255.255.255 udp sport 68 udp dport 67 accept
             ip6 daddr ff02::1:2 udp sport 546 udp dport 547 accept

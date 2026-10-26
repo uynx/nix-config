@@ -20,6 +20,7 @@
       virt
       prismlauncher
       campus-wifi
+      tailscale
     ];
   };
 }
