@@ -1,6 +1,11 @@
 {
   flake.nixosModules.security = { lib, pkgs, ... }: {
     networking.firewall.allowPing = false;
+    # Dask scheduler, workers and nannies for always_on_agent training across the home machines; LAN only.
+    networking.firewall.extraCommands = ''
+      iptables -A nixos-fw -p tcp -s 192.168.8.0/24 --dport 8786:8899 -j nixos-fw-accept
+      ip6tables -A nixos-fw -p tcp -s fd45:12cb:c0f::/48 --dport 8786:8899 -j nixos-fw-accept
+    '';
 
     programs.ssh.extraConfig = ''
       Host 192.168.8.1
