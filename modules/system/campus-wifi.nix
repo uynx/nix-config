@@ -45,7 +45,7 @@
           config.sops.secrets.uynx-env.path
         ];
 
-        profiles.eduroam = lib.mkIf (config.networking.hostName != "x86") {
+        profiles.eduroam = {
           connection = {
             id = "eduroam";
             uuid = "d5dc12a7-ddc7-4911-9f19-64c7cfb208e1";
