@@ -1,4 +1,4 @@
-{ self, ... }:
+{ self, lib, ... }:
 {
   flake.nixosModules.desktopKde =
     (self.lib.mkBundle {
@@ -45,6 +45,11 @@
           plasmaWallpaper = ../wallpapers/wallpaper.png;
           plasmaSnapshotDir = "nix-config/kde-snapshots";
           programs.plasma.workspace.lookAndFeel = "org.kde.breezedark.desktop";
+          programs.plasma.powerdevil = lib.genAttrs [ "AC" "battery" "lowBattery" ] (_: {
+            autoSuspend.action = "nothing";
+            turnOffDisplay.idleTimeout = 180;
+            whenLaptopLidClosed = "turnOffScreen";
+          });
           programs.plasma.shortcuts = {
             ksmserver."Lock Session" = [
               "Meta+Ctrl+Q"
