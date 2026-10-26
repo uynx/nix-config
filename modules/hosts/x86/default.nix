@@ -24,7 +24,9 @@
         {
           services.openssh = {
             enable = true;
+            openFirewall = false;
             settings.PasswordAuthentication = false;
+            settings.KbdInteractiveAuthentication = false;
           };
           users.users.root.openssh.authorizedKeys.keys = [ key ];
           users.users.${self.lib.user.name}.openssh.authorizedKeys.keys = [ key ];
