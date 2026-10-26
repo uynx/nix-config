@@ -73,6 +73,8 @@
             AddressRandomizationRange = "nic";
           };
           Scan.DisablePeriodicScan = true;
+          # Periodic scans are off, so a 2.4 GHz pick at connect time is kept for the whole session.
+          Rank.BandModifier2_4GHz = 0.5;
         };
       };
 
