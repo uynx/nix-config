@@ -50,8 +50,9 @@
             udp dport 53 accept
             tcp dport 53 accept
             tcp dport 853 accept
-            ip daddr 194.242.2.9 tcp dport 443 accept
-            ip6 daddr 2a07:e340::9 tcp dport 443 accept
+            # Keep these endpoints aligned with system/dns-stamps.json.
+            ip daddr 149.112.112.112 tcp dport 443 accept
+            ip6 daddr 2620:fe::fe tcp dport 443 accept
 
             ip daddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 224.0.0.0/24, 239.0.0.0/8, 255.255.255.255 } accept
             ip6 daddr { fe80::/10, fc00::/7, ff01::/16, ff02::/16, ff03::/16, ff04::/16, ff05::/16 } accept
@@ -172,13 +173,15 @@
     programs.fish.functions.vpn.body = ''
       switch "$argv[1]"
           case fix
-              sudo systemctl restart obscura.service
-              obscura connect
+              sudo systemctl restart dnscrypt-proxy.service obscura.service
+              and obscura connect
           case off
               sudo systemctl stop obscura.service obscura-lockdown.service
+              and sudo systemctl restart dnscrypt-proxy.service
           case on
               sudo systemctl start obscura-lockdown.service obscura.service
-              obscura connect
+              and sudo systemctl restart dnscrypt-proxy.service
+              and obscura connect
           case '*'
               echo "vpn fix  restart the daemon, kill switch stays on"
               echo "vpn off  daemon and kill switch off — unprotected network"

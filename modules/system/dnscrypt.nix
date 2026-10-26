@@ -16,6 +16,7 @@ let
           static = lib.mapAttrs (_: stamp: { inherit stamp; }) stamps;
           doh_servers = true;
           require_dnssec = false;
+          cert_refresh_delay = 1;
 
           forwarding_rules = pkgs.writeText "forwarding-rules.txt" ''
             lan 192.168.8.1
