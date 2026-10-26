@@ -160,7 +160,7 @@
       sleep = {
         allowSleepByPowerButton = true;
         display = 15;
-        computer = 30;
+        computer = "never";
       };
     };
   };
