@@ -165,11 +165,22 @@
   );
 
   flake.homeModules.obscura = {
+    shellHooks.rebSnapshot = ''
+      set -l obscuraWasOn 0
+      if systemctl is-active --quiet obscura.service
+          if timeout 5 obscura status 2>/dev/null | string match -qr '^VPN is (connected|connecting)'
+              set obscuraWasOn 1
+          end
+      end
+    '';
     shellHooks.rebPostSwitch = ''
-      # A restart at the account's device cap leaves the host offline ~5 min, so only restart for a new binary.
-      string match -q (realpath (command -v obscura))" *" (ps -o args= -p (systemctl show -p MainPID --value obscura.service))
-      or sudo systemctl try-restart obscura.service
-      obscura connect
+      if test "$obscuraWasOn" = 1
+          string match -q (realpath (command -v obscura))" *" (ps -o args= -p (systemctl show -p MainPID --value obscura.service))
+          or sudo systemctl try-restart obscura.service
+          obscura connect
+      else
+          sudo systemctl stop obscura.service obscura-lockdown.service
+      end
     '';
 
     programs.fish.functions.vpn.body = ''
