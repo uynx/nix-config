@@ -736,11 +736,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1793108140,
-        "narHash": "sha256-gQDg4BKSiii6C+CeAVLJJHwJ1A0SeSJhkjlD16YxQ4Q=",
+        "lastModified": 1793122574,
+        "narHash": "sha256-MiewlmN9Bdh/gRHAt19ElFy3muflfZUSQSjEsgBHUag=",
         "owner": "Sovereign-Engineering",
         "repo": "obscuravpn-client",
-        "rev": "d515cf5079b7cbc6557355f4f0f1f11e02d10200",
+        "rev": "a59f58308e967900b165deaf8f13535a13568768",
         "type": "github"
       },
       "original": {
@@ -961,11 +961,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793039441,
-        "narHash": "sha256-jy4OtEVuECXahyruvHqQegXnxmBZEzWQ2JMd9DKVNqw=",
+        "lastModified": 1793125706,
+        "narHash": "sha256-QmYgTfZxdZdO3CkMnYtK8Mxusp4LKNTHpdyjrza/3C8=",
         "owner": "BirdeeHub",
         "repo": "nix-wrapper-modules",
-        "rev": "afb6c5e9c38d4cd244748d9a9f0a6c4d1d7cb0e2",
+        "rev": "41263424578dbbcdda3e80f9725449afcf9b3e70",
         "type": "github"
       },
       "original": {
