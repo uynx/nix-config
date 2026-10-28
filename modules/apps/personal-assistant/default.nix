@@ -11,7 +11,7 @@
       browserPython = pkgs.python3.withPackages (p: [ p.playwright ]);
       browser = pkgs.writeShellScriptBin "assistant-browser" ''
         export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
-        exec sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ${browserPython}/bin/python3 "$HOME/dotfiles/assistant/browser/ab.py" "$@"
+        exec /run/wrappers/bin/sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ${browserPython}/bin/python3 "$HOME/dotfiles/assistant/browser/ab.py" "$@"
       '';
       browserDirect = pkgs.writeShellScriptBin "assistant-browser-direct" ''
         export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
@@ -40,7 +40,7 @@
       home-manager.users.uynx = {
         systemd.user.services = {
           personal-assistant-browser =
-            (browserService "sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ")
+            (browserService "/run/wrappers/bin/sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ")
             // {
               Install.WantedBy = [ "graphical-session.target" ];
             };
