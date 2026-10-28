@@ -8,6 +8,7 @@ This is the configuration for all of my computers, NixOS and macOS alike, in one
 |---|---|---|
 | `asahi` | MacBook Pro, NixOS-Asahi, the primary machine | `asahi` |
 | `x86` | the x86_64 desktop, GTX 1070 | `x86` |
+| `agent` | unattended assistant and trading laptop, GTX 1060 | `agent` |
 | `darwin` | the same MacBook under macOS | `MacBook-Pro` |
 | `arm` | generic 4 KiB-page aarch64 desktop (Danush's Snapdragon layout), niri, `self.lib.gaming "fex"` | `arm` |
 | `waydroid` | Android-in-a-VM guest | `waydroid` |
@@ -26,6 +27,7 @@ This is the configuration for all of my computers, NixOS and macOS alike, in one
 | `modules/system/` | Base NixOS that every host wants, with no desktop and no hardware |
 | `modules/darwin/` | The same for macOS, since nix-darwin has its own module system |
 | `modules/apps/` | One directory per program, holding every tier it needs |
+| `modules/apps/personal-assistant/` | Agent-only SimpleX CLI and Proton Mail Bridge |
 | `modules/bundles/` | The switches a host flips, one line each covering both tiers |
 | `modules/wallpapers/` | The wallpaper image, referenced by the desktop bundles |
 
