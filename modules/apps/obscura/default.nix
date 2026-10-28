@@ -168,8 +168,12 @@
     shellHooks.rebSnapshot = ''
       set -l obscuraWasOn 0
       if systemctl is-active --quiet obscura.service
-          if timeout 5 obscura status 2>/dev/null | string match -qr '^VPN is (connected|connecting)'
+            set obscuraWasOn -1
+            set -l obscuraState (timeout 5 obscura status 2>/dev/null)
+            if printf '%s\n' $obscuraState | string match -qr '^VPN is (connected|connecting)'
               set obscuraWasOn 1
+            else if printf '%s\n' $obscuraState | string match -qr '^VPN is disconnected'
+                set obscuraWasOn 0
           end
       end
     '';
@@ -178,7 +182,7 @@
           string match -q (realpath (command -v obscura))" *" (ps -o args= -p (systemctl show -p MainPID --value obscura.service))
           or sudo systemctl try-restart obscura.service
           obscura connect
-      else
+        else if test "$obscuraWasOn" = 0
           sudo systemctl stop obscura.service obscura-lockdown.service
       end
     '';

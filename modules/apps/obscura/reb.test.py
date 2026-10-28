@@ -16,9 +16,9 @@ class RebuildVpnTest(unittest.TestCase):
             root = Path(folder)
             commands = {
                 'sudo': '#!/bin/sh\nexec "$@"\n',
-                'systemctl': '#!/bin/sh\nif [ "$1" = is-active ]; then [ "$BEFORE" != off ]; else echo 123; fi\n',
+                'systemctl': '#!/bin/sh\nif [ "$1" = is-active ]; then [ "$BEFORE" != off ]; elif [ "$1" = stop ]; then echo stop >> "$TRACE"; else echo 123; fi\n',
                 'ps': '#!/bin/sh\nprintf "%s service\\n" "$FIXTURE/obscura"\n',
-                'obscura': '#!/bin/sh\nif [ "$1" = status ]; then if [ "$BEFORE" = on ]; then echo "VPN is connected to test."; else echo "VPN is disconnected."; fi; else echo connect >> "$TRACE"; fi\n',
+                'obscura': '#!/bin/sh\nif [ "$1" = status ]; then if [ "$BEFORE" = unavailable ]; then exit 1; elif [ "$BEFORE" = on ]; then echo "VPN is connected to test."; else echo "VPN is disconnected."; fi; else echo connect >> "$TRACE"; fi\n',
                 'obscura-connect-denver': '#!/bin/sh\necho connect >> "$TRACE"\n',
             }
             for name, body in commands.items():
@@ -30,6 +30,7 @@ class RebuildVpnTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             actual = (root / 'trace').read_text() if (root / 'trace').exists() else ''
             self.assertEqual('connect' in actual, reconnect)
+            return actual
 
     def test_off_stays_off(self):
         self.check_state('off', False)
@@ -39,6 +40,9 @@ class RebuildVpnTest(unittest.TestCase):
 
     def test_disconnected_daemon_stays_off(self):
         self.check_state('disconnected', False)
+
+    def test_unavailable_status_does_not_change_vpn(self):
+        self.assertNotIn('stop', self.check_state('unavailable', False))
 
 
 if __name__ == '__main__':
