@@ -28,6 +28,7 @@ This is the configuration for all of my computers, NixOS and macOS alike, in one
 | `modules/darwin/` | The same for macOS, since nix-darwin has its own module system |
 | `modules/apps/` | One directory per program, holding every tier it needs |
 | `modules/apps/personal-assistant/` | Agent-only SimpleX CLI and Proton Mail Bridge |
+| `modules/apps/assistant-ssh/` | Key-only SSH access to asahi through the trusted Tailscale interface |
 | `modules/bundles/` | The switches a host flips, one line each covering both tiers |
 | `modules/wallpapers/` | The wallpaper image, referenced by the desktop bundles |
 
