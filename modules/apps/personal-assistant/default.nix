@@ -8,11 +8,17 @@
         "PATH=/run/wrappers/bin:/etc/profiles/per-user/uynx/bin:/run/current-system/sw/bin"
       ];
       bridge = "${pkgs.bun}/bin/bun %h/dotfiles/assistant/bridge.ts";
+      browserPython = pkgs.python3.withPackages (p: [ p.playwright ]);
+      browser = pkgs.writeShellScriptBin "assistant-browser" ''
+        export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
+        exec ${browserPython}/bin/python3 "$HOME/dotfiles/assistant/browser/ab.py" "$@"
+      '';
     in
     {
       environment.systemPackages = [
         simplex
         pkgs.protonmail-bridge
+        browser
       ];
       home-manager.users.uynx = {
         systemd.user.services = {
