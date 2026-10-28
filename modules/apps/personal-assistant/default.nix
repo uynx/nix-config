@@ -11,17 +11,40 @@
       browserPython = pkgs.python3.withPackages (p: [ p.playwright ]);
       browser = pkgs.writeShellScriptBin "assistant-browser" ''
         export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
+        exec sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ${browserPython}/bin/python3 "$HOME/dotfiles/assistant/browser/ab.py" "$@"
+      '';
+      browserDirect = pkgs.writeShellScriptBin "assistant-browser-direct" ''
+        export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
         exec ${browserPython}/bin/python3 "$HOME/dotfiles/assistant/browser/ab.py" "$@"
       '';
+      browserService = prefix: {
+        Unit.Description = "Dedicated assistant Chromium browser";
+        Service = {
+          ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %h/.local/state %h/.local/share/agent-browser/profile";
+          ExecStart = "${prefix}${pkgs.util-linux}/bin/flock -n -E 0 %h/.local/state/agent-browser.lock ${pkgs.ungoogled-chromium}/bin/chromium --user-data-dir=%h/.local/share/agent-browser/profile --remote-debugging-port=9333 --no-first-run --no-default-browser-check --password-store=basic --disable-features=DisableLoadExtensionCommandLineSwitch --load-extension=%h/.local/share/assistant-extensions/fkgkibajhfbepljeaefdnfnegdcjomkh/1.75.0_0,%h/.local/share/assistant-extensions/bkdgflcldnnnapblkhphbgpggdiikppg/2026.10.6_0";
+          Environment = environment;
+          UMask = "0077";
+          Restart = "on-failure";
+          RestartSec = 10;
+        };
+      };
     in
     {
+      imports = [ ./_vpn.nix ];
       environment.systemPackages = [
         simplex
         pkgs.protonmail-bridge
         browser
+        browserDirect
       ];
       home-manager.users.uynx = {
         systemd.user.services = {
+          personal-assistant-browser =
+            (browserService "sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ")
+            // {
+              Install.WantedBy = [ "graphical-session.target" ];
+            };
+          personal-assistant-browser-direct = browserService "";
           personal-assistant-simplex = {
             Unit.Description = "Personal assistant SimpleX daemon";
             Service = {

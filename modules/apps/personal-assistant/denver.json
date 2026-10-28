@@ -1,0 +1,16 @@
+{
+  "ips": [
+    "10.134.203.76/32",
+    "fc00:bbbb:bbbb:bb01:d:0:6:cb4c/128"
+  ],
+  "dns": [
+    "10.64.0.1"
+  ],
+  "publicKey": "Az+PGHQ0xFElmRBv+PKZuRnEzKPrPtUpRD3vpxb4si4=",
+  "endpoint": "121.127.44.63:36277",
+  "allowedIPs": [
+    "0.0.0.0/0",
+    "::0/0"
+  ],
+  "hasPresharedKey": false
+}
