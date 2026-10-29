@@ -5,3 +5,4 @@ result
 .env.local
 *.log
 *.tmp
+__pycache__
