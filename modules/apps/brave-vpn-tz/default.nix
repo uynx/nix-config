@@ -16,7 +16,7 @@
         Install.WantedBy = [ "graphical-session.target" ];
         Service = {
           ExecStart = "${daemon}/bin/brave-vpn-tz";
-          Environment = "PATH=/run/current-system/sw/bin";
+          Environment = "PATH=/etc/profiles/per-user/%u/bin:/run/current-system/sw/bin";
           Restart = "always";
           RestartSec = 5;
         };

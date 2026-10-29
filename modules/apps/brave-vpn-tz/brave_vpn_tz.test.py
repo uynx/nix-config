@@ -45,13 +45,12 @@ class StreamTest(unittest.TestCase):
 
 
 class RelaunchTest(unittest.TestCase):
-    def test_reopens_every_profile_with_last_session(self):
-        args = ['/x/brave-origin/brave', '--user-data-dir=/d',
-                '--profile-directory=Default', '--no-pings',
-                '--restore-last-session']
-        self.assertEqual(tz.relaunch_args(args),
-                         ['/x/brave-origin/brave', '--user-data-dir=/d',
-                          '--no-pings', '--restore-last-session'])
+    def test_reopens_profiles_that_were_open(self):
+        self.assertEqual(tz.profiles(['Profile 1', 'Default', 'Guest']),
+                         ['School', 'Personal'])
+
+    def test_opens_personal_when_none_recorded(self):
+        self.assertEqual(tz.profiles([]), ['Personal'])
 
 
 if __name__ == '__main__':
