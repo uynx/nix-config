@@ -29,6 +29,7 @@ This is the configuration for all of my computers, NixOS and macOS alike, in one
 | `modules/apps/` | One directory per program, holding every tier it needs |
 | `modules/apps/personal-assistant/` | Agent-only SimpleX CLI and Proton Mail Bridge |
 | `modules/apps/assistant-ssh/` | Key-only SSH access to asahi through the trusted Tailscale interface |
+| `modules/apps/brave-vpn-tz/` | Asahi-only user service that keeps Brave's time zone on the Obscura exit's and relaunches Brave when it moves |
 | `modules/bundles/` | The switches a host flips, one line each covering both tiers |
 | `modules/wallpapers/` | The wallpaper image, referenced by the desktop bundles |
 

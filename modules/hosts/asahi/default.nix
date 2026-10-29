@@ -29,6 +29,7 @@
       {
         home-manager.users.${self.lib.user.name}.home.sessionVariables.GSK_RENDERER = "gl";
       }
+      { home-manager.users.${self.lib.user.name}.imports = [ self.homeModules.braveVpnTz ]; }
       {
         home-manager.users.${self.lib.user.name} = {
           # Same as niri: this keyboard has no Print key.

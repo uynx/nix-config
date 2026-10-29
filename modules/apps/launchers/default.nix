@@ -15,6 +15,11 @@
           esac
           shift
 
+          if [ -r "''${XDG_RUNTIME_DIR:-}/brave-tz" ]; then
+            TZ=$(< "$XDG_RUNTIME_DIR/brave-tz")
+            export TZ
+          fi
+
           exec brave-origin \
             --user-data-dir="''${XDG_CONFIG_HOME:-$HOME/.config}/BraveSoftware/Brave-Browser" \
             --profile-directory="$profile" \
