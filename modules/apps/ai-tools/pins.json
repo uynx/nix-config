@@ -1,9 +1,9 @@
 {
   "claude-code": {
-    "version": "2.1.312",
+    "version": "2.1.316",
     "hash": {
-      "aarch64-linux": "sha256-3EryiRdFXgCdJnBLgqQ4NToGFJ6CW2zfeCkIstKGYfU=",
-      "x86_64-linux": "sha256-T0F4zkHYPiM0Hr+67NvPjqa/e66gaQAlq+Se7sOl0B0="
+      "aarch64-linux": "sha256-Vc244WLRkEMmlupUAQ4Pyi4Y0G+npxJ/1WO5/9TyJiQ=",
+      "x86_64-linux": "sha256-/RPHAAD+w/IRbfvLthISELSikyi/DkYhClndWUpn2CQ="
     }
   },
   "codex": {
