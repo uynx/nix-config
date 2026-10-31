@@ -468,12 +468,12 @@
         ]
       },
       "locked": {
-        "lastModified": 1792737899,
-        "narHash": "sha256-P0/GhewcEQmAbzq3QunNWY2jLJaYH9F6c/5dEM/jQ4M=",
-        "rev": "bb0b90dbd54e207100de72b5dcbe3188c98a4b69",
-        "revCount": 2423,
+        "lastModified": 1793418699,
+        "narHash": "sha256-+RpTlcdh9KqZ+ZiLkNSTvibQWm935EcIdBzRPCTFsrQ=",
+        "rev": "ff0e21a414d4547183396da1b44a66f2577b65e9",
+        "revCount": 2427,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/nix-darwin/nix-darwin/0.1.2423%2Brev-bb0b90dbd54e207100de72b5dcbe3188c98a4b69/01a169de-3ebf-76e0-b54c-55ac02787a9e/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/nix-darwin/nix-darwin/0.1.2427%2Brev-ff0e21a414d4547183396da1b44a66f2577b65e9/01a19075-1230-7dc2-9688-98b552251408/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -508,11 +508,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792772387,
-        "narHash": "sha256-MK6/UsOv1Ii71c+2U28GpmKn+Fm4MZG2TmIscuvUERw=",
+        "lastModified": 1793400928,
+        "narHash": "sha256-hFbp1c2erEUmTdT4riiUDGzLY3n4POWbrCK5TuEtBQw=",
         "owner": "nix-community",
         "repo": "nixos-apple-silicon",
-        "rev": "46e80bc641f5aaee6ed7ef90a12314a81492f48f",
+        "rev": "d1c6dceab53552d38ba8a4d8f3b993258d7e62f9",
         "type": "github"
       },
       "original": {
