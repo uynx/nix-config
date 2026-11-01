@@ -1,43 +1,11 @@
 {
   flake.nixosModules.campus-wifi =
-    {
-      config,
-      lib,
-      pkgs,
-      ...
-    }:
+    { config, ... }:
     {
       sops.secrets.eduroam-env = { };
       sops.secrets.uynx-env = { };
 
       systemd.services.NetworkManager-ensure-profiles.after = [ "iwd.service" ];
-
-      systemd.services.prefer-uynx = lib.mkIf (config.networking.hostName == "asahi") {
-        description = "Switch to the travel router when its Wi-Fi is available";
-        after = [
-          "NetworkManager.service"
-          "NetworkManager-ensure-profiles.service"
-        ];
-        requires = [ "NetworkManager.service" ];
-        path = [
-          pkgs.networkmanager
-          pkgs.gnugrep
-        ];
-        serviceConfig = {
-          Type = "oneshot";
-          ExecStart = "${pkgs.dash}/bin/dash ${./prefer-uynx.sh}";
-          TimeoutStartSec = 75;
-        };
-      };
-
-      systemd.timers.prefer-uynx = lib.mkIf (config.networking.hostName == "asahi") {
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnBootSec = "1min";
-          OnUnitInactiveSec = "1min";
-          AccuracySec = "5s";
-        };
-      };
 
       networking.networkmanager.ensureProfiles = {
         environmentFiles = [
