@@ -39,11 +39,7 @@
       ];
       home-manager.users.uynx = {
         systemd.user.services = {
-          personal-assistant-browser =
-            (browserService "/run/wrappers/bin/sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ")
-            // {
-              Install.WantedBy = [ "graphical-session.target" ];
-            };
+          personal-assistant-browser = browserService "/run/wrappers/bin/sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ";
           personal-assistant-browser-direct = browserService "";
           personal-assistant-simplex = {
             Unit.Description = "Personal assistant SimpleX daemon";
