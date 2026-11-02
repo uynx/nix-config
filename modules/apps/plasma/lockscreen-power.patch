@@ -1,15 +1,16 @@
 --- a/contents/lockscreen/LockScreenUi.qml
 +++ b/contents/lockscreen/LockScreenUi.qml
-@@ -296,24 +296,28 @@
- 
+@@ -404,26 +404,31 @@
                  actionItems: [
                      ActionButton {
+                         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 +                        text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "&Hibernate")
 +                        icon.name: "system-suspend-hibernate"
 +                        onClicked: sessionManagement.hibernate()
 +                        enabled: sessionManagement.canHibernate
 +                    },
 +                    ActionButton {
++                        Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
                          text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "Slee&p")
                          icon.name: "system-suspend"
                          onClicked: sessionManagement.suspend()
@@ -17,6 +18,7 @@
 +                        enabled: sessionManagement.canSuspend
                      },
                      ActionButton {
+                         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 -                        text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "&Hibernate")
 -                        icon.name: "system-suspend-hibernate"
 -                        onClicked: sessionManagement.hibernate()
@@ -27,6 +29,7 @@
 +                        enabled: sessionManagement.canReboot
                      },
                      ActionButton {
+                         Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 -                        text: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "Switch &User")
 -                        icon.name: "system-switch-user"
 -                        onClicked: {
