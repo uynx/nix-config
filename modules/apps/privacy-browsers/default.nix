@@ -7,32 +7,17 @@
 
       browser =
         name: dist:
-        pkgs.stdenvNoCC.mkDerivation {
-          pname = name;
+        pkgs.${name}.overrideAttrs (old: {
           inherit (pins.${name}) version;
           src = pkgs.fetchurl {
-            url = "https://dist.torproject.org/${dist}/${pins.${name}.version}/${name}-linux-x86_64-${pins.${name}.version}.tar.xz";
+            url = "https://dist.torproject.org/${dist}/${pins.${name}.version}/${name}-linux-aarch64-${pins.${name}.version}.tar.xz";
             inherit (pins.${name}) hash;
           };
-          dontFixup = true;
-          installPhase = ''
-            cp -r Browser $out
-            touch $out/is-packaged-app
-            substituteInPlace $out/fonts/fonts.conf \
-              --replace-fail '<dir prefix="cwd">fonts</dir>' "<dir>$out/fonts</dir>"
-            if [ -f $out/TorBrowser/Tor/torrc-defaults ]; then
-              substituteInPlace $out/TorBrowser/Tor/torrc-defaults \
-                --replace-fail './TorBrowser' "$out/TorBrowser"
-            fi
-          '';
-        };
-
-      # start-*-browser greps the VM's ARM /proc/cpuinfo for sse2 and quits, so exec the binary itself
-      entry = pkg: exe: name: {
-        inherit name;
-        exec = "env FONTCONFIG_FILE=${pkg}/fonts/fonts.conf ${pkg}/${exe}";
-        icon = "${pkg}/browser/chrome/icons/default/default128.png";
-      };
+          buildPhase = builtins.replaceStrings [ "TorBrowser/Data/Tor" ] [ "TorBrowser/Tor" ] old.buildPhase;
+          meta = old.meta // {
+            platforms = [ "aarch64-linux" ];
+          };
+        });
 
       update-privacy-browsers = self.lib.mkUpdater pkgs {
         name = "update-privacy-browsers";
@@ -43,7 +28,7 @@
           skipped=0
 
           url() {
-            echo "$base/$1/$3/$2-linux-x86_64-$3.tar.xz"
+            echo "$base/$1/$3/$2-linux-aarch64-$3.tar.xz"
           }
 
           newest() {
@@ -69,7 +54,7 @@
             current=$(jq -r --arg n "$name" '.[$n].version' "$file")
             latest=$(newest "$dist" "$name" || true)
             if [ -z "$latest" ]; then
-              skip "$name" "no x86_64 stable build listed"
+              skip "$name" "no aarch64 stable build listed"
               return 0
             fi
 
@@ -94,11 +79,13 @@
       };
     in
     {
-      imports = [ self.homeModules.x86Emu ];
-
       home.packages =
         if pkgs.stdenv.hostPlatform.isAarch64 then
-          [ update-privacy-browsers ]
+          [
+            (browser "tor-browser" "torbrowser")
+            (browser "mullvad-browser" "mullvadbrowser")
+            update-privacy-browsers
+          ]
         else
           with pkgs;
           [
@@ -107,12 +94,5 @@
           ];
 
       shellHooks.update = lib.optional pkgs.stdenv.hostPlatform.isAarch64 "update-privacy-browsers";
-
-      x86Apps = lib.mkIf pkgs.stdenv.hostPlatform.isAarch64 {
-        tor-browser = entry (browser "tor-browser" "torbrowser") "firefox" "Tor Browser";
-        mullvad-browser =
-          entry (browser "mullvad-browser" "mullvadbrowser") "mullvadbrowser"
-            "Mullvad Browser";
-      };
     };
 }
