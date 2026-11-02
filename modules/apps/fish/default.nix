@@ -28,7 +28,7 @@ in
 
         shellAliases = {
           gen = "nix-env --list-generations";
-          claude = "command claude --dangerously-skip-permissions";
+          claude = "python3 ~/dotfiles/scripts/claude-trust.py && command claude --dangerously-skip-permissions";
           agy = "command agy --dangerously-skip-permissions";
           codex = "command codex ${lib.optionalString (!isDarwin) "--no-daemon "}--dangerously-bypass-approvals-and-sandbox";
         }
