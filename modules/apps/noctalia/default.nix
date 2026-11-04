@@ -53,13 +53,23 @@
           set -l exe (path dirname (path resolve (command -v noctalia)))/.noctalia-wrapped
           set -l palette (path resolve ~/.config/noctalia/palettes/Flexoki.json)
           set -l stamp ~/.local/state/noctalia-palette
-          # comm is truncated to ".noctalia-wrapp" and argv is a bare "noctalia", so match the exe.
-          set -l running (path resolve /proc/(pgrep -x .noctalia-wrapp)/exe)
-          if type -q niri; and niri msg version >/dev/null 2>&1; and not begin; contains -- $exe $running; and test "$palette" = "$(cat $stamp 2>/dev/null)"; end
-              pkill -x .noctalia-wrapp
+          if type -q niri; and niri msg version >/dev/null 2>&1
+              # comm is truncated (".noctalia-wrapp", v4's noctalia-qs ".quickshell-wra"), so judge each by its exe.
+              for p in (pgrep -x .noctalia-wrapp) (pgrep -x .quickshell-wra)
+                  set -l e (path resolve /proc/$p/exe)
+                  if string match -q '*noctalia*' -- $e; and test "$e" != "$exe"
+                      kill $p
+                  end
+              end
               sleep 1
-              niri msg action spawn -- env FONTCONFIG_FILE=$HOME/nix-config/modules/apps/noctalia/fonts.conf noctalia
-              echo $palette >$stamp
+              if test "$palette" != "$(cat $stamp 2>/dev/null)"
+                  pkill -x .noctalia-wrapp
+                  sleep 1
+              end
+              if not pgrep -x .noctalia-wrapp >/dev/null
+                  niri msg action spawn -- env FONTCONFIG_FILE=$HOME/nix-config/modules/apps/noctalia/fonts.conf noctalia
+                  echo $palette >$stamp
+              end
           end
         '';
 
