@@ -46,7 +46,11 @@ in
             };
           };
           environment.systemPackages = [ pkgs.sbctl ];
-          systemd.settings.Manager.RuntimeWatchdogSec = "2min";
+          systemd.settings.Manager = {
+            RuntimeWatchdogSec = "2min";
+            # A remote reboot once froze after shutdown with a black screen; the watchdog power-cycles it.
+            RebootWatchdogSec = "2min";
+          };
           security.sudo.wheelNeedsPassword = false;
           environment.variables.AGENT_OWNS_MACHINE = "1";
 
