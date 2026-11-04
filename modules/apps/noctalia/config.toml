@@ -4,6 +4,10 @@
 time_format = "%I:%M %p"
 date_format = "%A, %B %d"
 
+[shell.screen_corners]
+enabled = true
+size = 18
+
 [theme]
 mode = "dark"
 source = "custom"
@@ -26,14 +30,34 @@ margin_edge = 4
 margin_ends = 4
 padding = 10
 radius = 12
+thickness = 32
+capsule_thickness = 0.82
+scale = 0.9
 capsule_opacity = 0.49
 widget_spacing = 8
 
-start  = ["launcher", "clock", "sysmon", "active-window", "media"]
+start  = ["launcher", "clock", "group:system", "active_window"]
 center = ["workspaces"]
-end    = ["tray", "notifications", "battery", "volume", "brightness", "control-center"]
+end    = ["media", "tray", "notifications", "battery", "volume", "brightness", "control-center"]
 
 [widget.workspaces]
 type = "workspaces"
 focused_color = "tertiary"
 occupied_color = "secondary"
+
+[[bar.main.capsule_group]]
+id = "system"
+members = ["cpu", "ram", "disk"]
+opacity = 0.49
+
+[widget.disk]
+type = "sysmon"
+stat = "disk_used_pct"
+path = "/"
+
+[widget.control-center]
+glyph = "adjustments-alt"
+
+[widget.clock]
+type = "clock"
+format = "{:%I:%M %p %a, %b %d}"
