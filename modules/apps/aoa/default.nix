@@ -116,7 +116,7 @@
           systemd.user.timers = if host == "agent" then agentTimers else { };
           # The same units were hand-placed before this module existed; Home Manager refuses to link over a plain file.
           home.activation.aoaAdoptUnits = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
-            for f in $HOME/.config/systemd/user/aoa-*.service $HOME/.config/systemd/user/aoa-*.timer; do
+            for f in $HOME/.config/systemd/user/aoa-*.service $HOME/.config/systemd/user/aoa-*.timer $HOME/.config/systemd/user/*.wants/aoa-*; do
               [ -e "$f" ] && [ ! -L "$f" ] || [ -L "$f" ] && case "$(readlink "$f")" in /nix/store/*) continue ;; esac
               [ -e "$f" ] || [ -L "$f" ] || continue
               run rm -f "$f"
