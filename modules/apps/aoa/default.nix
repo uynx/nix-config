@@ -104,12 +104,19 @@
       x86Services = {
         aoa-collector2 = recorder "collector" "secretspec run --provider sops://secrets.enc.yaml --reason collector -- engine/target/release/collector --poly-tag 103040 \"KXHIGH*\" \"KXLOW*\" 2>> data_collector.log" "1G";
         aoa-live2 = recorder "live2" "secretspec run --provider sops://secrets.enc.yaml --reason live-weather -- python3 -u -m weather.live >> weather/live.log 2>&1" "512M";
-        aoa-enslog2 = recorder "enslog2" "python3 -u -m weather.ens_log >> weather/ens_log.err 2>&1" "512M" // {
-          Service.Environment = [
-            path
-            "AOA_ENS_HOURS=1,7,13,19"
-          ];
-        };
+        aoa-enslog2 =
+          let
+            base = recorder "enslog2" "python3 -u -m weather.ens_log >> weather/ens_log.err 2>&1" "512M";
+          in
+          base
+          // {
+            Service = base.Service // {
+              Environment = [
+                path
+                "AOA_ENS_HOURS=1,7,13,19"
+              ];
+            };
+          };
         aoa-fcruns2 = recorder "fcruns2" "python3 -u -m weather.fc_runs >> weather/fc_runs.err 2>&1" "512M";
         aoa-aprs2 = recorder "aprs2" "python3 -u -m weather.aprs >> weather/aprs.log 2>&1" "256M";
         aoa-wis22 = recorder "wis22" "devenv shell -- python3 -u -m weather.wis2 >> weather/wis2.log 2>&1" "1G";
