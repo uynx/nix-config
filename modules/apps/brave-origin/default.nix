@@ -13,7 +13,9 @@
           current=$(jq -r .version "$file")
           latest=$(fetch "$base/dists/stable/main/binary-arm64/Packages" \
             | rg -A20 '^Package: brave-origin$' \
-            | rg -m1 -o -r '$1' '^Version: ([0-9.]+)' || true)
+            | rg -o -r '$1' '^Version: ([0-9.]+)' \
+            | sort -V \
+            | tail -n1 || true)
 
           if [ -z "$latest" ]; then
             echo "brave-origin: no version in the package index" >&2
