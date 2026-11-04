@@ -58,7 +58,7 @@
           if type -q niri; and niri msg version >/dev/null 2>&1; and not begin; contains -- $exe $running; and test "$palette" = "$(cat $stamp 2>/dev/null)"; end
               pkill -x .noctalia-wrapp
               sleep 1
-              niri msg action spawn -- noctalia
+              niri msg action spawn -- env FONTCONFIG_FILE=$HOME/nix-config/modules/apps/noctalia/fonts.conf noctalia
               echo $palette >$stamp
           end
         '';

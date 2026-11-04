@@ -1,6 +1,7 @@
 # Noctalia v5 configuration
 
 [shell]
+font_family = "Noto Sans"
 time_format = "%I:%M %p"
 date_format = "%A, %B %d"
 
