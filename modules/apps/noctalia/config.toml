@@ -77,6 +77,18 @@ center_text = true
 background = false
 color = "on_surface_variant"
 
+[lockscreen_widgets.widget.lock-media]
+type = "media_player"
+cx = 50.0
+cy = 81.0
+placement_width = 100.0
+placement_height = 100.0
+
+[lockscreen_widgets.widget.lock-media.settings]
+hide_when_no_media = true
+album_art_background = true
+background_opacity = 0.6
+
 [lockscreen_widgets.widget."lockscreen-login-box@eDP-1"]
 type = "login_box"
 output = "eDP-1"
