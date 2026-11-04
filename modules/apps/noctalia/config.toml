@@ -26,8 +26,14 @@ margin_edge = 4
 margin_ends = 4
 padding = 10
 radius = 12
+capsule_opacity = 0.49
 widget_spacing = 8
 
 start  = ["launcher", "clock", "sysmon", "active-window", "media"]
 center = ["workspaces"]
 end    = ["tray", "notifications", "battery", "volume", "brightness", "control-center"]
+
+[widget.workspaces]
+type = "workspaces"
+focused_color = "tertiary"
+occupied_color = "secondary"
