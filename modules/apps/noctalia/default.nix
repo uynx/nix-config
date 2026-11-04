@@ -5,6 +5,21 @@
       _:
       { pkgs, ... }:
       {
+        nixpkgs.overlays = [
+          (_: prev: {
+            noctalia = prev.noctalia.overrideAttrs (
+              old:
+              let
+                patch = ./. + "/lock-keyboard-${old.version}.patch";
+              in
+              {
+                # A noctalia bump without a matching patch drops the lock keyboard instead of failing the build.
+                patches = (old.patches or [ ]) ++ prev.lib.optional (builtins.pathExists patch) patch;
+              }
+            );
+          })
+        ];
+
         systemd = {
           packages = [ pkgs.systemd-lock-handler ];
           user.services = {

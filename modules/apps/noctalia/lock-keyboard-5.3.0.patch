@@ -1,0 +1,278 @@
+diff --git a/src/shell/lockscreen/lock_surface.cpp b/src/shell/lockscreen/lock_surface.cpp
+index 20d3098..888887c 100644
+--- a/src/shell/lockscreen/lock_surface.cpp
++++ b/src/shell/lockscreen/lock_surface.cpp
+@@ -43,6 +43,17 @@
+ 
+ namespace {
+ 
++  constexpr std::array<std::string_view, 4> kOskPlainRows{"`1234567890-=", "qwertyuiop[]\\", "asdfghjkl;'", "zxcvbnm,./"};
++  constexpr std::array<std::string_view, 4> kOskShiftRows{"~!@#$%^&*()_+", "QWERTYUIOP{}|", "ASDFGHJKL:\"", "ZXCVBNM<>?"};
++
++  std::string oskChars(bool shift) {
++    std::string chars;
++    for (const std::string_view row : shift ? kOskShiftRows : kOskPlainRows) {
++      chars += row;
++    }
++    return chars;
++  }
++
+   constexpr Logger kLog("lockscreen");
+ 
+   const ext_session_lock_surface_v1_listener kLockSurfaceListener = {
+@@ -544,6 +555,114 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
+       })
+   );
+ 
++  m_loginContentRow->addChild(
++      ui::button({
++          .out = &m_oskButton,
++          .text = "",
++          .glyph = "keyboard",
++          .glyphSize = 16.0F,
++          .variant = ButtonVariant::Ghost,
++          .onClick =
++              [this]() {
++                m_oskOpen = !m_oskOpen;
++                requestLayout();
++              },
++          .configure = [](Button& button) { button.setZIndex(2); },
++      })
++  );
++
++  m_root.addChild(
++      ui::flex(
++          FlexDirection::Vertical,
++          {
++              .out = &m_oskPanel,
++              .align = FlexAlign::Center,
++              .justify = FlexJustify::Center,
++              .gap = Style::spaceXs,
++              .paddingV = Style::spaceSm,
++              .paddingH = Style::spaceSm,
++              .widthPolicy = FlexSizePolicy::Content,
++              .heightPolicy = FlexSizePolicy::Content,
++              .visible = false,
++              .participatesInLayout = false,
++              .configure = [](Flex& flex) { flex.setZIndex(7); },
++          }
++      )
++  );
++  {
++    const std::string plain = oskChars(false);
++    std::size_t index = 0;
++    for (const std::string_view rowKeys : kOskPlainRows) {
++      Flex* row = nullptr;
++      m_oskPanel->addChild(ui::flex(
++          FlexDirection::Horizontal,
++          {
++              .out = &row,
++              .align = FlexAlign::Center,
++              .justify = FlexJustify::Center,
++              .gap = Style::spaceXs,
++              .widthPolicy = FlexSizePolicy::Content,
++              .heightPolicy = FlexSizePolicy::Content,
++          }
++      ));
++      for (std::size_t k = 0; k < rowKeys.size(); ++k, ++index) {
++        Button* key = nullptr;
++        row->addChild(ui::button({
++            .out = &key,
++            .text = std::string(1, plain[index]),
++            .variant = ButtonVariant::Secondary,
++            .onClick =
++                [this, index]() {
++                  oskType(std::string(1, oskChars(m_oskShift)[index]));
++                  if (m_oskShift) {
++                    oskSetShift(false);
++                  }
++                },
++            .configure = [](Button& button) { button.setZIndex(2); },
++        }));
++        m_oskKeys.push_back(key);
++      }
++    }
++    Flex* row = nullptr;
++    m_oskPanel->addChild(ui::flex(
++        FlexDirection::Horizontal,
++        {
++            .out = &row,
++            .align = FlexAlign::Center,
++            .justify = FlexJustify::Center,
++            .gap = Style::spaceXs,
++            .widthPolicy = FlexSizePolicy::Content,
++            .heightPolicy = FlexSizePolicy::Content,
++        }
++    ));
++    const auto addWide = [&](const char* glyph, std::function<void()> onClick, Button** out) {
++      row->addChild(ui::button({
++          .out = out,
++          .text = "",
++          .glyph = glyph,
++          .variant = ButtonVariant::Secondary,
++          .onClick = std::move(onClick),
++          .configure = [](Button& button) { button.setZIndex(2); },
++      }));
++    };
++    Button* wide = nullptr;
++    addWide("arrow-big-up", [this]() { oskSetShift(!m_oskShift); }, &wide);
++    m_oskWideKeys.push_back(wide);
++    addWide("space", [this]() { oskType(" "); }, &m_oskSpace);
++    addWide("backspace", [this]() { oskBackspace(); }, &wide);
++    m_oskWideKeys.push_back(wide);
++    addWide(
++        "corner-down-left",
++        [this]() {
++          if (m_onLogin) {
++            m_onLogin();
++          }
++        },
++        &wide
++    );
++    m_oskWideKeys.push_back(wide);
++  }
++
+   m_loginPanel->addChild(
+       ui::flex(
+           FlexDirection::Horizontal,
+@@ -579,6 +698,46 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
+   requestUpdate();
+ }
+ 
++void LockSurface::oskType(std::string_view text) {
++  if (m_authenticating || m_passwordField == nullptr) {
++    return;
++  }
++  std::string value = m_passwordField->value();
++  value += text;
++  m_passwordField->setValue(value);
++  if (m_onPasswordChanged) {
++    m_onPasswordChanged(value);
++  }
++}
++
++void LockSurface::oskBackspace() {
++  if (m_authenticating || m_passwordField == nullptr || m_passwordField->value().empty()) {
++    return;
++  }
++  std::string value = m_passwordField->value();
++  while (!value.empty() && (static_cast<unsigned char>(value.back()) & 0xC0U) == 0x80U) {
++    value.pop_back();
++  }
++  if (!value.empty()) {
++    value.pop_back();
++  }
++  m_passwordField->setValue(value);
++  if (m_onPasswordChanged) {
++    m_onPasswordChanged(value);
++  }
++}
++
++void LockSurface::oskSetShift(bool shift) {
++  m_oskShift = shift;
++  const std::string chars = oskChars(shift);
++  for (std::size_t i = 0; i < m_oskKeys.size() && i < chars.size(); ++i) {
++    m_oskKeys[i]->setText(std::string(1, chars[i]));
++  }
++  if (!m_oskWideKeys.empty()) {
++    m_oskWideKeys.front()->setVariant(shift ? ButtonVariant::Primary : ButtonVariant::Secondary);
++  }
++}
++
+ LockSurface::~LockSurface() {
+   invalidateSleepFrame();
+   m_aliveGuard.reset();
+@@ -1235,6 +1394,7 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+     if (m_authPanel != nullptr) {
+       m_authPanel->setVisible(false);
+     }
++    m_oskPanel->setVisible(false);
+     layoutTransitionCover();
+     syncTransitionCover();
+     return;
+@@ -1530,6 +1690,11 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+     m_passwordRevealButton->setSize(controlHeight, controlHeight);
+     m_passwordRevealButton->setGlyphSize(sessionGlyphSize);
+   }
++  m_oskButton->setVisible(loginVisible);
++  m_oskButton->setRadius(Style::scaledRadius(loginStyle.inputRadius));
++  m_oskButton->setSize(controlHeight, controlHeight);
++  m_oskButton->setGlyphSize(sessionGlyphSize);
++  m_oskButton->setVariant(m_oskOpen ? ButtonVariant::Primary : ButtonVariant::Ghost);
+ 
+   m_loginPanel->arrange(renderer, LayoutRect{panelX, panelY, panelWidth, panelHeight});
+ 
+@@ -1572,6 +1737,45 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+       m_authPanel->arrange(renderer, LayoutRect{authX, authY, authW, authH});
+     }
+   }
++  const bool showOsk = m_oskOpen && loginVisible;
++  m_oskPanel->setVisible(showOsk);
++  if (showOsk) {
++    constexpr float kKeysPerRow = 13.0F;
++    const float gap = Style::spaceXs;
++    const float pad = Style::spaceSm;
++    const float keyW =
++        std::clamp((sw - 2.0F * Style::spaceLg - 2.0F * pad - (kKeysPerRow - 1.0F) * gap) / kKeysPerRow, 24.0F, 52.0F);
++    const float keyH = std::min(keyW, Style::controlHeight);
++    for (Button* key : m_oskKeys) {
++      key->setSize(keyW, keyH);
++      key->setFontSize(bodySize);
++      key->setRadius(Style::scaledRadius(loginStyle.inputRadius));
++    }
++    for (Button* key : m_oskWideKeys) {
++      key->setSize(keyW * 1.5F, keyH);
++      key->setGlyphSize(sessionGlyphSize);
++      key->setRadius(Style::scaledRadius(loginStyle.inputRadius));
++    }
++    m_oskSpace->setSize(keyW * 6.0F, keyH);
++    m_oskSpace->setGlyphSize(sessionGlyphSize);
++    m_oskSpace->setRadius(Style::scaledRadius(loginStyle.inputRadius));
++
++    const float oskW = kKeysPerRow * keyW + (kKeysPerRow - 1.0F) * gap + 2.0F * pad;
++    const float oskH = 5.0F * keyH + 4.0F * gap + 2.0F * pad;
++    m_oskPanel->setFill(colorForRole(ColorRole::Surface, 0.85F));
++    m_oskPanel->setRadius(Style::scaledRadius(loginStyle.inputRadius));
++    m_oskPanel->setSoftness(1.0F);
++    m_oskPanel->setMinWidth(oskW);
++    m_oskPanel->setMaxWidth(oskW);
++    m_oskPanel->setMinHeight(oskH);
++    m_oskPanel->setMaxHeight(oskH);
++    const float oskX = std::round((sw - oskW) * 0.5F);
++    float oskY = panelY + panelHeight + Style::spaceSm;
++    if (oskY + oskH > sh - Style::spaceLg) {
++      oskY = std::max(Style::spaceLg, panelY - Style::spaceSm - oskH);
++    }
++    m_oskPanel->arrange(renderer, LayoutRect{oskX, oskY, oskW, oskH});
++  }
+   layoutTransitionCover();
+   syncTransitionCover();
+ }
+diff --git a/src/shell/lockscreen/lock_surface.h b/src/shell/lockscreen/lock_surface.h
+index 5824692..16a6da5 100644
+--- a/src/shell/lockscreen/lock_surface.h
++++ b/src/shell/lockscreen/lock_surface.h
+@@ -190,6 +190,13 @@ private:
+   Button* m_passwordRevealButton = nullptr;
+   Button* m_loginButton = nullptr;
+   Button* m_layoutChip = nullptr;
++  Button* m_oskButton = nullptr;
++  Flex* m_oskPanel = nullptr;
++  std::vector<Button*> m_oskKeys;
++  std::vector<Button*> m_oskWideKeys;
++  Button* m_oskSpace = nullptr;
++  bool m_oskOpen = false;
++  bool m_oskShift = false;
+   Flex* m_sessionRow = nullptr;
+   std::vector<Button*> m_sessionButtons;
+   SharedTextureCache* m_textureCache = nullptr;
+@@ -223,6 +230,9 @@ private:
+   Color m_wallpaperFillColor = rgba(0.0F, 0.0F, 0.0F, 0.0F);
+   bool m_wallpaperDirty = false;
+   InputDispatcher m_inputDispatcher;
++  void oskType(std::string_view text);
++  void oskBackspace();
++  void oskSetShift(bool shift);
+   std::function<void()> m_onLogin;
+   std::function<void()> m_onCycleLayout;
+   std::function<void(const std::string&)> m_onPasswordChanged;
