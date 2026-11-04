@@ -103,7 +103,11 @@
               pid=$(cat "$pidfile" || true)
               if [ -n "''${pid:-}" ] && [ -d "/proc/$pid" ]; then
                 case $(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null || true) in
-                  *dictate_stream*) kill -TERM "$pid"; exit 0 ;;
+                  *dictate_stream*)
+                    notify-send "Dictation" "Stopped. Typing the last words..." -i dictate-mic || true
+                    kill -TERM "$pid"
+                    exit 0
+                    ;;
                 esac
               fi
               rm -f "$pidfile"
