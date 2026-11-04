@@ -20,9 +20,84 @@ enabled = true
 [wallpaper.default]
 path = "/home/uynx/nix-config/modules/wallpapers/wallpaper.png"
 
-# hyprlock is the lock screen (screen-lock unit); noctalia's would answer logind's Lock too and stack a second lock.
+[hooks]
+session_unlocked = "loginctl unlock-session"
+
 [lockscreen]
-enabled = false
+blur_intensity = 0.7
+tint_intensity = 0.45
+transition = ["fade"]
+transition_duration = 600
+
+# placement 100×100 makes cx/cy percent of the screen; noctalia rescales them to each output.
+[lockscreen_widgets]
+enabled = true
+
+[lockscreen_widgets.widget.lock-icon]
+type = "button"
+cx = 50.0
+cy = 27.0
+placement_width = 100.0
+placement_height = 100.0
+box_width = 56.0
+box_height = 56.0
+
+[lockscreen_widgets.widget.lock-icon.settings]
+glyph = "lock"
+background = false
+color = "primary"
+
+[lockscreen_widgets.widget.lock-clock]
+type = "clock"
+cx = 50.0
+cy = 40.0
+placement_width = 100.0
+placement_height = 100.0
+box_width = 440.0
+box_height = 120.0
+
+[lockscreen_widgets.widget.lock-clock.settings]
+format = "{:%I:%M %p}"
+center_text = true
+background = false
+color = "on_surface"
+
+[lockscreen_widgets.widget.lock-date]
+type = "clock"
+cx = 50.0
+cy = 50.0
+placement_width = 100.0
+placement_height = 100.0
+box_width = 360.0
+box_height = 36.0
+
+[lockscreen_widgets.widget.lock-date.settings]
+format = "{:%A, %B %d}"
+center_text = true
+background = false
+color = "on_surface_variant"
+
+[lockscreen_widgets.widget."lockscreen-login-box@eDP-1"]
+type = "login_box"
+output = "eDP-1"
+cx = 50.0
+cy = 64.0
+placement_width = 100.0
+placement_height = 100.0
+
+[lockscreen_widgets.widget."lockscreen-login-box@eDP-1".settings]
+layout = "compact"
+show_unlock_hint = false
+show_session_buttons = false
+show_media = false
+show_weather = false
+show_keyboard_layout = false
+show_login_button = false
+show_password_reveal = false
+center_password_text = true
+background_opacity = 0.0
+input_opacity = 0.55
+input_radius = 22.0
 
 [bar.main]
 position = "top"
