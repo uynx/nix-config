@@ -42,7 +42,7 @@
             "com.mitchellh.ghostty.desktop"
             "org.kde.dolphin.desktop"
           ];
-          plasmaWallpaper = ../wallpapers/wallpaper.png;
+          plasmaWallpaper = "${../wallpapers/wallpaper.png}";
           plasmaSnapshotDir = "nix-config/kde-snapshots";
           programs.plasma.workspace.lookAndFeel = "org.kde.breezedark.desktop";
           programs.plasma.powerdevil = lib.genAttrs [ "AC" "battery" "lowBattery" ] (_: {
