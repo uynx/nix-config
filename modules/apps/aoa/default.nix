@@ -119,6 +119,7 @@
       home-manager.users.${user} =
         { lib, ... }:
         {
+          systemd.user.servicesStartTimeoutMs = 600000;
           systemd.user.services = common // (if host == "agent" then agentServices else { }) // (if host == "x86" then x86Services else { });
           systemd.user.timers = if host == "agent" then agentTimers else { };
           # The same units were hand-placed before this module existed; Home Manager refuses to link over a plain file.
