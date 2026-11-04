@@ -23,6 +23,8 @@
       inputs.nixos-apple-silicon.nixosModules.apple-silicon-support
 
       { networking.hostName = "asahi"; }
+      # SDDM's Weston runs the 3024x1890 panel at scale 1, so the stock 24 px cursor is tiny.
+      { services.displayManager.sddm.settings.Theme.CursorSize = 48; }
       {
         boot.binfmt.emulatedSystems = [ "x86_64-linux" ];
       }

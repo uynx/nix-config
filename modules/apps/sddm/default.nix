@@ -105,7 +105,8 @@
         theme = "sddm-astronaut-theme";
         extraPackages = theme.propagatedBuildInputs ++ [ pkgs.kdePackages.qt5compat ];
         settings.Theme.CursorTheme = "capitaine-cursors";
-        settings.General.GreeterEnvironment = "QML_DISABLE_DISK_CACHE=1";
+        # SDDM drops its qtvirtualkeyboard default on Wayland, so the theme's keyboard button only works with this set.
+        settings.General.GreeterEnvironment = "QML_DISABLE_DISK_CACHE=1,QT_IM_MODULE=qtvirtualkeyboard";
       };
 
       environment.systemPackages = [
