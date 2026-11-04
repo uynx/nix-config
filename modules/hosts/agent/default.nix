@@ -36,7 +36,6 @@ in
               autoEnrollKeys.enable = true;
             };
             # TPM slot is enrolled by hand against PCR 7 once Secure Boot is on; the passphrase stays as fallback.
-            initrd.systemd.enable = true;
             initrd.luks.devices.cryptroot.crypttabExtraOpts = [ "tpm2-device=auto" ];
             kernelPackages = pkgs.linuxPackages_latest;
             # MSI's DSDT throws harmless ACPI errors that print over the passphrase prompt.
