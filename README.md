@@ -27,6 +27,7 @@ This is the configuration for all of my computers, NixOS and macOS alike, in one
 | `modules/system/` | Base NixOS that every host wants, with no desktop and no hardware |
 | `modules/darwin/` | The same for macOS, since nix-darwin has its own module system |
 | `modules/apps/` | One directory per program, holding every tier it needs |
+| `modules/apps/aoa/` | Agent- and x86-only user units of the weather trading project: boot entry, x86's feed recorders, agent's timers and nightly tests |
 | `modules/apps/personal-assistant/` | Agent-only SimpleX CLI and Proton Mail Bridge |
 | `modules/apps/assistant-ssh/` | Key-only SSH access to asahi through the trusted Tailscale interface |
 | `modules/apps/brave-vpn-tz/` | Asahi-only user service that keeps Brave's time zone on the Obscura exit's and relaunches Brave when it moves |

@@ -5,6 +5,7 @@
     specialArgs = { inherit inputs; };
     modules = with self.nixosModules; [
       standard
+      aoa
       hardwareX86
 
       # `reb switch` flips ./desktop between niri and kde, then rebuilds and reboots.
