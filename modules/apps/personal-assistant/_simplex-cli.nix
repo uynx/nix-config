@@ -2,7 +2,7 @@
   stdenv,
   fetchurl,
   dpkg,
-  autoPatchelfHook,
+  patchelf,
   openssl,
   gmp,
   zlib,
@@ -18,18 +18,18 @@ stdenv.mkDerivation {
   };
   nativeBuildInputs = [
     dpkg
-    autoPatchelfHook
-  ];
-  buildInputs = [
-    openssl
-    gmp
-    zlib
-    stdenv.cc.cc.lib
+    patchelf
   ];
   unpackPhase = "dpkg-deb -x $src .";
   dontBuild = true;
+  dontStrip = true;
+  # autoPatchelfHook (patchelf 0.19) and strip both corrupt this binary into a segfault; keep --no-sort.
   installPhase = ''
     install -Dm755 usr/bin/simplex-chat $out/bin/simplex-chat
+    patchelf --no-sort \
+      --set-interpreter ${stdenv.cc.bintools.dynamicLinker} \
+      --set-rpath ${lib.makeLibraryPath [ openssl gmp zlib ]} \
+      $out/bin/simplex-chat
   '';
   doInstallCheck = true;
   installCheckPhase = ''
