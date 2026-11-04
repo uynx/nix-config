@@ -50,11 +50,16 @@
         };
 
         config.shellHooks.rebPostSwitch = ''
-          set -l pkg (string match -r '/nix/store/[^/]+-noctalia-[^/]+' < (readlink -f (command -v noctalia)))
-          if type -q niri; and niri msg version >/dev/null 2>&1; and not begin; test -n "$pkg"; and pgrep -f "$pkg/bin/noctalia" >/dev/null; end
-              pkill -x noctalia
+          set -l exe (path dirname (path resolve (command -v noctalia)))/.noctalia-wrapped
+          set -l palette (path resolve ~/.config/noctalia/palettes/Flexoki.json)
+          set -l stamp ~/.local/state/noctalia-palette
+          # comm is truncated to ".noctalia-wrapp" and argv is a bare "noctalia", so match the exe.
+          set -l running (path resolve /proc/(pgrep -x .noctalia-wrapp)/exe)
+          if type -q niri; and niri msg version >/dev/null 2>&1; and not begin; contains -- $exe $running; and test "$palette" = "$(cat $stamp 2>/dev/null)"; end
+              pkill -x .noctalia-wrapp
               sleep 1
               niri msg action spawn -- noctalia
+              echo $palette >$stamp
           end
         '';
 
