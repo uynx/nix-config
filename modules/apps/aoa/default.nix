@@ -41,7 +41,10 @@
         Install.WantedBy = [ "timers.target" ];
       };
       common.aoa-up = {
-        Unit.Description = "always_on_agent: start this machine's recorders, paper traders and scheduler";
+        Unit = {
+          Description = "always_on_agent: start this machine's recorders, paper traders and scheduler";
+          X-SwitchMethod = "keep-old";
+        };
         Service = {
           Type = "oneshot";
           RemainAfterExit = true;
@@ -58,7 +61,10 @@
         aoa-ifsfresh = oneshot "save each newly public ECMWF run (all three field sets)" "/bin/sh -c 'ops/ifs_fresh.sh >> weather/ifs_fresh.log 2>&1'" { MemoryHigh = "3G"; };
         aoa-tests = oneshot "nightly unit tests, one status line in data/tests.log" "%h/always_on_agent/ops/tests.sh" { MemoryHigh = "4G"; };
         aoa-lanesboot = {
-          Unit.Description = "Start the weather research agents";
+          Unit = {
+            Description = "Start the weather research agents";
+            X-SwitchMethod = "keep-old";
+          };
           Service = {
             Type = "oneshot";
             RemainAfterExit = true;
@@ -72,6 +78,7 @@
         aoa-lanes-resume = {
           Unit = {
             Description = "Restore weather research agents after a reboot";
+            X-SwitchMethod = "keep-old";
             ConditionPathExists = "%h/.local/state/aoa-lanes/started";
           };
           Service = {
