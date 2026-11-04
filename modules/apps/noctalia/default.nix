@@ -41,7 +41,10 @@
         ...
       }:
       {
-        config.home.packages = [ pkgs.noctalia ];
+        config.home.packages = [
+          pkgs.noctalia
+          pkgs.wvkbd
+        ];
 
         config.xdg.configFile = {
           "noctalia/config.toml".source =

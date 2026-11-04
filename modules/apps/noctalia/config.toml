@@ -87,6 +87,7 @@ placement_height = 100.0
 [lockscreen_widgets.widget.lock-media.settings]
 hide_when_no_media = true
 album_art_background = true
+audio_visualizer = true
 background_opacity = 0.6
 
 [lockscreen_widgets.widget."lockscreen-login-box@eDP-1"]
@@ -127,12 +128,17 @@ widget_spacing = 8
 
 start  = ["launcher", "clock", "group:system", "active_window"]
 center = ["workspaces"]
-end    = ["media", "tray", "notifications", "battery", "volume", "brightness", "control-center"]
+end    = ["group:media", "tray", "notifications", "battery", "volume", "brightness", "osk", "control-center"]
 
 [widget.workspaces]
 type = "workspaces"
 focused_color = "tertiary"
 occupied_color = "secondary"
+
+[[bar.main.capsule_group]]
+id = "media"
+members = ["media", "visualizer"]
+opacity = 0.49
 
 [[bar.main.capsule_group]]
 id = "system"
@@ -143,6 +149,19 @@ opacity = 0.49
 type = "sysmon"
 stat = "disk_used_pct"
 path = "/"
+
+[widget.visualizer]
+type = "audio_visualizer"
+width = 40
+bands = 12
+
+[widget.osk]
+type = "custom_button"
+glyph = "keyboard"
+tooltip = "On-screen keyboard"
+
+[widget.osk.actions]
+left = "pkill -x wvkbd-mobintl || wvkbd-mobintl -L 250"
 
 [widget.control-center]
 glyph = "adjustments-alt"
