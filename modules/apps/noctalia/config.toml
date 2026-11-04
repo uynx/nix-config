@@ -154,6 +154,8 @@ path = "/"
 type = "audio_visualizer"
 width = 40
 bands = 12
+mirrored = false
+centered = false
 
 [widget.osk]
 type = "custom_button"
