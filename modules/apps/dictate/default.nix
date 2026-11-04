@@ -93,63 +93,22 @@
             ydotool
             libnotify
             pipewire
-            gnused
+            python3
+            util-linux
             coreutils
           ];
           text = ''
-            recordPid=/tmp/whisper-dictate.pid
-            audio=/tmp/whisper-dictate.wav
-            url=http://127.0.0.1:${port}/v1/audio/transcriptions
-
-            recording=0
-            if [ -f "$recordPid" ]; then
-              pid=$(cat "$recordPid" || true)
+            pidfile=/tmp/whisper-dictate.pid
+            if [ -f "$pidfile" ]; then
+              pid=$(cat "$pidfile" || true)
               if [ -n "''${pid:-}" ] && [ -d "/proc/$pid" ]; then
                 case $(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null || true) in
-                  *pw-record*) recording=1 ;;
+                  *dictate_stream*) kill -TERM "$pid"; exit 0 ;;
                 esac
               fi
-              [ "$recording" -eq 1 ] || rm -f "$recordPid" "$audio"
+              rm -f "$pidfile"
             fi
-
-            if [ "$recording" -eq 1 ]; then
-              pid=$(cat "$recordPid")
-              rm -f "$recordPid"
-              kill "$pid" 2>/dev/null || true
-              sleep 0.2
-
-              [ -f "$audio" ] || exit 0
-              notify-send "Dictation" "Transcribing..." -i dictate-mic || true
-
-              if ! text=$(curl -sf --retry 10 --retry-connrefused --retry-delay 2 --max-time 60 \
-                -F file=@"$audio" -F response_format=text "$url" \
-                | tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'); then
-                rm -f "$audio"
-                notify-send "Dictation" "The phonon service is not answering" -i dictate-mic || true
-                exit 0
-              fi
-              rm -f "$audio"
-
-              if [ -n "$text" ]; then
-                printf '%s' "$text" | wl-copy
-                # KWin rejects wtype; ydotool types through the ydotoold daemon instead.
-                wtype "$text" 2>/dev/null \
-                  || YDOTOOL_SOCKET=''${YDOTOOL_SOCKET:-/run/ydotoold/socket} ydotool type -- "$text" 2>/dev/null \
-                  || true
-              else
-                notify-send "Dictation" "No speech detected" -i dictate-mic || true
-              fi
-            else
-              rm -f "$audio"
-              nodes=$(pw-cli ls Node 2>/dev/null || true)
-              target=()
-              case $nodes in
-                *'node.name = "effect_output.j314-mic"'*) target=(--target effect_output.j314-mic) ;;
-              esac
-              pw-record "''${target[@]}" --format=s16 --rate=16000 --channels=1 "$audio" >/dev/null 2>&1 &
-              echo $! > "$recordPid"
-              notify-send "Dictation" "Recording... press Super+D again to finish." -i dictate-mic || true
-            fi
+            setsid flock -n /tmp/whisper-dictate.lock python3 ${./dictate_stream.py} </dev/null >/dev/null 2>&1 &
           '';
         })
         # kglobalaccel binds shortcuts only to desktop files it finds under share/kglobalaccel.
