@@ -1,0 +1,33 @@
+# Noctalia v5 configuration
+
+[shell]
+time_format = "%I:%M %p"
+date_format = "%A, %B %d"
+
+[theme]
+mode = "dark"
+source = "custom"
+custom_palette = "Flexoki"
+
+[wallpaper]
+enabled = true
+
+[wallpaper.default]
+path = "/home/uynx/nix-config/modules/wallpapers/wallpaper.png"
+
+[hooks]
+session_unlocked = "loginctl unlock-session"
+
+[bar.main]
+position = "top"
+background_opacity = 0.0
+capsule = true
+margin_edge = 4
+margin_ends = 4
+padding = 10
+radius = 12
+widget_spacing = 8
+
+start  = ["launcher", "clock", "sysmon", "active-window", "media"]
+center = ["workspaces"]
+end    = ["tray", "notifications", "battery", "volume", "brightness", "control-center"]

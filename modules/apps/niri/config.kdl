@@ -78,7 +78,7 @@ layout {
 xwayland-satellite {
     path "@xwaylandSatellite@"
 }
-spawn-at-startup "noctalia-shell"
+spawn-at-startup "noctalia"
 spawn-at-startup "wayscriber" "--daemon" "--no-tray"
 
 switch-events {
@@ -155,7 +155,7 @@ binds {
     Mod+N { spawn "brave-activation" "Personal"; }
     Mod+M { spawn "brave-activation" "School"; }
     Mod+D { spawn "dictate"; }
-    Mod+Space { spawn "sh" "-c" "noctalia-shell ipc call launcher toggle"; }
+    Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
 
     // Window management
     // Closing an x86 app's last window ends the app; Mod+Q also stops the Steam container once no VM window is left.

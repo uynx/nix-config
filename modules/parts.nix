@@ -30,7 +30,6 @@
       wrappers.packages = lib.genAttrs [
         "ghostty"
         "niri"
-        "noctalia-shell"
       ] (_: pkgs.stdenv.hostPlatform.isDarwin);
     };
 }

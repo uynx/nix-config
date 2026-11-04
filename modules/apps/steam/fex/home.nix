@@ -596,7 +596,7 @@
 
       steam-menu = pkgs.writers.writeDashBin "steam-menu" ''
         ${steam-game-entries}/bin/steam-game-entries
-        exec ${pkgs.noctalia-shell}/bin/noctalia-shell ipc call launcher toggle
+        exec ${pkgs.noctalia}/bin/noctalia msg panel-toggle launcher
       '';
 
     in
