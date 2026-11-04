@@ -1,0 +1,30 @@
+[[bar.main.capsule_group]]
+id = "system"
+members = ["cpu", "cpu-temp", "ram", "gpu", "gpu-temp", "vram", "disk", "net-down", "net-up"]
+opacity = 0.49
+
+[widget.cpu-temp]
+type = "sysmon"
+stat = "cpu_temp"
+
+[widget.gpu]
+type = "sysmon"
+stat = "gpu_usage"
+
+[widget.gpu-temp]
+type = "sysmon"
+stat = "gpu_temp"
+
+[widget.vram]
+type = "sysmon"
+stat = "gpu_vram_used"
+
+[widget.net-down]
+type = "sysmon"
+stat = "net_rx"
+network_speed_compact = true
+
+[widget.net-up]
+type = "sysmon"
+stat = "net_tx"
+network_speed_compact = true

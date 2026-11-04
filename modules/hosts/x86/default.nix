@@ -16,6 +16,15 @@
 
       { networking.hostName = "x86"; }
       {
+        home-manager.users.${self.lib.user.name} =
+          { config, ... }:
+          {
+            # Noctalia merges its folder's *.toml alphabetically, so this must sort after config.toml.
+            xdg.configFile."noctalia/host.toml".source =
+              config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/nix-config/modules/apps/noctalia/x86.toml";
+          };
+      }
+      {
         boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
       }
       (
