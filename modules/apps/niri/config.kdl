@@ -156,6 +156,7 @@ binds {
     Mod+M { spawn "brave-activation" "School"; }
     Mod+D { spawn "dictate"; }
     Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+Alt+L { spawn "loginctl" "lock-session"; }
 
     // Window management
     // Closing an x86 app's last window ends the app; Mod+Q also stops the Steam container once no VM window is left.

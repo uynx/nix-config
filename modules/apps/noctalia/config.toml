@@ -20,8 +20,9 @@ enabled = true
 [wallpaper.default]
 path = "/home/uynx/nix-config/modules/wallpapers/wallpaper.png"
 
-[hooks]
-session_unlocked = "loginctl unlock-session"
+# hyprlock is the lock screen (screen-lock unit); noctalia's would answer logind's Lock too and stack a second lock.
+[lockscreen]
+enabled = false
 
 [bar.main]
 position = "top"
