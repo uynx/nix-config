@@ -163,7 +163,7 @@ glyph = "keyboard"
 tooltip = "On-screen keyboard"
 
 [widget.osk.actions]
-left = "exec pkill -x wvkbd-mobintl || wvkbd-mobintl -L 250"
+left = "exec pkill -x wvkbd-mobintl || wvkbd-mobintl -l fullwide --landscape-layers fullwide -L 250"
 
 [widget.control-center]
 glyph = "adjustments-alt"

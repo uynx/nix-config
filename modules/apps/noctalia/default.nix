@@ -17,6 +17,16 @@
                 patches = (old.patches or [ ]) ++ prev.lib.optional (builtins.pathExists patch) patch;
               }
             );
+            wvkbd = prev.wvkbd.overrideAttrs (
+              old:
+              let
+                patch = ./. + "/wvkbd-layout-${old.version}.patch";
+              in
+              {
+                # Replaces the "fullwide" layout with a plain US keyboard; the bar button launches only that layout.
+                patches = (old.patches or [ ]) ++ prev.lib.optional (builtins.pathExists patch) patch;
+              }
+            );
           })
         ];
 
