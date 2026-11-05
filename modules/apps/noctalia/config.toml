@@ -21,6 +21,19 @@ path = "/home/uynx/nix-config/modules/wallpapers/wallpaper.png"
 [hooks]
 session_unlocked = "loginctl unlock-session"
 
+[idle]
+pre_action_fade_seconds = 5
+
+[idle.behavior.screen-off]
+timeout = 180
+action = "screen_off"
+enabled = true
+
+[idle.behavior.lock]
+timeout = 240
+action = "lock"
+enabled = true
+
 [lockscreen]
 blur_intensity = 0.7
 tint_intensity = 0.45
