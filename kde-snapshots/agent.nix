@@ -285,6 +285,7 @@
     };
     configFile = {
       baloofilerc.General.dbVersion = 2;
+      baloofilerc.General."Indexing-Enabled" = false;
       dolphinrc.General.ViewPropsTimestamp = "2026,10,25,15,15,30.46";
       dolphinrc."KFileDialog Settings"."Places Icons Auto-resize" = false;
       dolphinrc."KFileDialog Settings"."Places Icons Static Size" = 22;
