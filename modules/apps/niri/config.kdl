@@ -21,15 +21,11 @@ input {
     }
     touchpad {
         tap
+        dwt
         natural-scroll
         accel-speed -0.2
         scroll-factor 0.7
 
-        // No dwt: it freezes the pad while a key is held, which breaks gaming. Palm rejection is the libinput quirk in hardware/asahi.nix.
-
-        // Decide a click by how many fingers are down rather than by which half
-        // of the pad was pressed. On a trackpad this size, the bottom-corner
-        // model reads a resting palm as a held right-click.
         click-method "clickfinger"
     }
     mouse {
