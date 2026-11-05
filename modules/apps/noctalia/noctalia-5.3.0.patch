@@ -43,6 +43,19 @@ index b86744f..86abc4e 100644
  
    [[nodiscard]] ShortcutServices shortcutServices() const {
      return {
+diff --git a/src/shell/control_center/tabs/media_tab.cpp b/src/shell/control_center/tabs/media_tab.cpp
+index 7709a78..3a18f9f 100644
+--- a/src/shell/control_center/tabs/media_tab.cpp
++++ b/src/shell/control_center/tabs/media_tab.cpp
+@@ -461,7 +461,7 @@ std::unique_ptr<Flex> MediaTab::create() {
+   auto visualizerSpectrum = std::make_unique<AudioVisualizer>();
+   visualizerSpectrum->setGradient(colorForRole(ColorRole::Secondary), colorForRole(ColorRole::Tertiary));
+   visualizerSpectrum->setOrientation(AudioSpectrumOrientation::Vertical);
+-  visualizerSpectrum->setMirrored(true);
++  visualizerSpectrum->setMirrored(false);
+   visualizerSpectrum->setCentered(true);
+   visualizerSpectrum->setValues(std::vector<float>(kVisualizerBandCount, 0.0F));
+   visualizerSpectrum->tick(0.0F);
 diff --git a/src/shell/control_center/tabs/monitor_tab.cpp b/src/shell/control_center/tabs/monitor_tab.cpp
 index cb0c4b1..201d576 100644
 --- a/src/shell/control_center/tabs/monitor_tab.cpp
