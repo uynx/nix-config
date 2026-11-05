@@ -44,7 +44,7 @@ index b86744f..86abc4e 100644
    [[nodiscard]] ShortcutServices shortcutServices() const {
      return {
 diff --git a/src/shell/control_center/tabs/monitor_tab.cpp b/src/shell/control_center/tabs/monitor_tab.cpp
-index cb0c4b1..41f2baf 100644
+index cb0c4b1..201d576 100644
 --- a/src/shell/control_center/tabs/monitor_tab.cpp
 +++ b/src/shell/control_center/tabs/monitor_tab.cpp
 @@ -5,6 +5,7 @@
@@ -66,93 +66,27 @@ index cb0c4b1..41f2baf 100644
  
  std::unique_ptr<Flex> MonitorTab::create() {
    const float scale = contentScale();
-@@ -111,6 +112,76 @@ std::unique_ptr<Flex> MonitorTab::create() {
-   );
-   tab->addChild(std::move(emptyState));
- 
-+  if (m_keyboardBacklight != nullptr && m_keyboardBacklight->available()) {
-+    auto card = ui::column({
-+        .configure = [scale, opacity = panelCardOpacity()](Flex& section) {
-+          applySectionCardStyle(section, scale, opacity);
-+          section.setGap(Style::spaceMd * scale);
-+        },
-+    });
-+    card->addChild(ui::row(
-+        {.align = FlexAlign::Center, .gap = Style::spaceSm * scale},
-+        ui::glyph({
-+            .glyph = "keyboard",
-+            .glyphSize = Style::fontSizeTitle * scale,
-+            .color = colorSpecFromRole(ColorRole::OnSurface),
-+        }),
-+        ui::label({
-+            .text = "Keyboard",
-+            .fontSize = Style::fontSizeBody * scale,
-+            .fontWeight = FontWeight::Bold,
-+            .color = colorSpecFromRole(ColorRole::OnSurface),
-+            .flexGrow = 1.0F,
-+        })
-+    ));
-+    const int max = std::max(1, m_keyboardBacklight->maxBrightness());
-+    const double current = static_cast<double>(m_keyboardBacklight->brightness()) / max;
-+    auto sliderRow = ui::row(
-+        {.align = FlexAlign::Center, .gap = Style::spaceSm * scale},
-+        ui::glyph({
-+            .glyph = "brightness-low",
-+            .glyphSize = Style::fontSizeTitle * scale,
-+            .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
-+        })
-+    );
-+    sliderRow->addChild(ui::slider({
-+        .out = &m_kbdSlider,
-+        .minValue = 0.0F,
-+        .maxValue = 1.0F,
-+        .step = 0.01F,
-+        .value = static_cast<float>(current),
-+        .trackHeight = Style::sliderTrackHeight * scale,
-+        .thumbSize = Style::sliderThumbSize * scale,
-+        .controlHeight = Style::controlHeight * scale,
-+        .flexGrow = 1.0F,
-+        .onValueChanged =
-+            [this](double value) {
-+              if (m_syncingSlider || m_keyboardBacklight == nullptr) {
-+                return;
-+              }
-+              const int percent = static_cast<int>(std::lround(value * 100.0));
-+              (void)m_keyboardBacklight->setPercent(percent);
-+              if (m_kbdValue != nullptr) {
-+                m_kbdValue->setText(std::to_string(percent) + "%");
-+              }
-+            },
-+    }));
-+    sliderRow->addChild(ui::glyph({
-+        .glyph = "brightness-high",
-+        .glyphSize = Style::fontSizeTitle * scale,
-+        .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
-+    }));
-+    sliderRow->addChild(ui::label({
-+        .out = &m_kbdValue,
-+        .text = std::to_string(static_cast<int>(std::lround(current * 100.0))) + "%",
-+        .fontSize = Style::fontSizeBody * scale,
-+        .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
-+        .minWidth = Style::controlHeightLg * scale,
-+    }));
-+    card->addChild(std::move(sliderRow));
-+    tab->addChild(std::move(card));
-+  }
-+
-   return tab;
- }
- 
-@@ -158,6 +229,8 @@ void MonitorTab::onClose() {
+@@ -158,6 +159,9 @@ void MonitorTab::onClose() {
    m_cardsScroll = nullptr;
    m_cardsLayout = nullptr;
    m_rescanButton = nullptr;
++  m_kbdCard = nullptr;
 +  m_kbdSlider = nullptr;
 +  m_kbdValue = nullptr;
    m_cards.clear();
    m_lastDisplayListKey.clear();
  }
-@@ -209,6 +282,19 @@ void MonitorTab::doUpdate(Renderer& renderer) {
+@@ -200,6 +204,9 @@ void MonitorTab::doLayout(Renderer& renderer, float contentWidth, float bodyHeig
+       card.detailsLabel->setMaxWidth(cardInnerWidth);
+     }
+   }
++  if (m_kbdCard != nullptr) {
++    m_kbdCard->setMinWidth(cardWidth);
++  }
+ 
+   m_rootLayout->layout(renderer);
+ }
+@@ -209,6 +216,19 @@ void MonitorTab::doUpdate(Renderer& renderer) {
  
    syncHeaderActions();
  
@@ -172,8 +106,104 @@ index cb0c4b1..41f2baf 100644
    if (m_brightness == nullptr) {
      return;
    }
+@@ -288,6 +308,12 @@ void MonitorTab::rebuildCards(Renderer& /*renderer*/) {
+     }
+   }
+   m_cards.clear();
++  if (m_kbdCard != nullptr) {
++    m_cardsLayout->removeChild(m_kbdCard);
++    m_kbdCard = nullptr;
++    m_kbdSlider = nullptr;
++    m_kbdValue = nullptr;
++  }
+ 
+   // Show/hide empty state
+   const bool empty = displays.empty();
+@@ -431,6 +457,82 @@ void MonitorTab::rebuildCards(Renderer& /*renderer*/) {
+         }
+     );
+   }
++  addKeyboardCard();
++}
++
++void MonitorTab::addKeyboardCard() {
++  if (m_keyboardBacklight == nullptr || !m_keyboardBacklight->available() || m_cardsLayout == nullptr) {
++  return;
++  }
++  const float scale = contentScale();
++  auto card = ui::column({
++      .out = &m_kbdCard,
++      .configure = [scale, opacity = panelCardOpacity()](Flex& section) {
++        applySectionCardStyle(section, scale, opacity);
++        section.setGap(Style::spaceMd * scale);
++      },
++  });
++  card->addChild(ui::row(
++      {.align = FlexAlign::Center, .gap = Style::spaceSm * scale},
++      ui::glyph({
++          .glyph = "keyboard",
++          .glyphSize = Style::fontSizeTitle * scale,
++          .color = colorSpecFromRole(ColorRole::OnSurface),
++      }),
++      ui::label({
++          .text = "Keyboard",
++          .fontSize = Style::fontSizeBody * scale,
++          .fontWeight = FontWeight::Bold,
++          .color = colorSpecFromRole(ColorRole::OnSurface),
++          .flexGrow = 1.0F,
++      })
++  ));
++  const int max = std::max(1, m_keyboardBacklight->maxBrightness());
++  const double current = static_cast<double>(m_keyboardBacklight->brightness()) / max;
++  auto sliderRow = ui::row(
++      {.align = FlexAlign::Center, .gap = Style::spaceSm * scale},
++      ui::glyph({
++          .glyph = "brightness-low",
++          .glyphSize = Style::fontSizeTitle * scale,
++          .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
++      })
++  );
++  sliderRow->addChild(ui::slider({
++      .out = &m_kbdSlider,
++      .minValue = 0.0F,
++      .maxValue = 1.0F,
++      .step = 0.01F,
++      .value = static_cast<float>(current),
++      .trackHeight = Style::sliderTrackHeight * scale,
++      .thumbSize = Style::sliderThumbSize * scale,
++      .controlHeight = Style::controlHeight * scale,
++      .flexGrow = 1.0F,
++      .onValueChanged =
++          [this](double value) {
++            if (m_syncingSlider || m_keyboardBacklight == nullptr) {
++              return;
++            }
++            const int percent = static_cast<int>(std::lround(value * 100.0));
++            (void)m_keyboardBacklight->setPercent(percent);
++            if (m_kbdValue != nullptr) {
++              m_kbdValue->setText(std::to_string(percent) + "%");
++            }
++          },
++  }));
++  sliderRow->addChild(ui::glyph({
++      .glyph = "brightness-high",
++      .glyphSize = Style::fontSizeTitle * scale,
++      .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
++  }));
++  sliderRow->addChild(ui::label({
++      .out = &m_kbdValue,
++      .text = std::to_string(static_cast<int>(std::lround(current * 100.0))) + "%",
++      .fontSize = Style::fontSizeBody * scale,
++      .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
++      .minWidth = Style::controlHeightLg * scale,
++  }));
++  card->addChild(std::move(sliderRow));
++  m_cardsLayout->addChild(std::move(card));
+ }
+ 
+ void MonitorTab::queueBrightness(const std::string& displayId, float value) {
 diff --git a/src/shell/control_center/tabs/monitor_tab.h b/src/shell/control_center/tabs/monitor_tab.h
-index c9f76e8..cc3f74c 100644
+index c9f76e8..4812466 100644
 --- a/src/shell/control_center/tabs/monitor_tab.h
 +++ b/src/shell/control_center/tabs/monitor_tab.h
 @@ -12,6 +12,7 @@ class Button;
@@ -193,11 +223,16 @@ index c9f76e8..cc3f74c 100644
  
    std::unique_ptr<Flex> create() override;
    std::unique_ptr<Flex> createHeaderActions() override;
-@@ -37,6 +38,9 @@ private:
+@@ -34,9 +35,14 @@ private:
+   void rebuildCards(Renderer& renderer);
+   void queueBrightness(const std::string& displayId, float value);
+   void flushPendingBrightness(bool force = false);
++  void addKeyboardCard();
  
    BrightnessService* m_brightness = nullptr;
    ConfigService* m_configService = nullptr;
 +  KeyboardBacklightService* m_keyboardBacklight = nullptr;
++  Flex* m_kbdCard = nullptr;
 +  Slider* m_kbdSlider = nullptr;
 +  Label* m_kbdValue = nullptr;
  
