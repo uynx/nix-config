@@ -17,6 +17,17 @@
             "iwd.service"
           ];
 
+          wifi-rescan = {
+            description = "Scan for Wi-Fi when there is no default route";
+            path = [
+              pkgs.iproute2
+              pkgs.iwd
+              pkgs.ripgrep
+            ];
+            serviceConfig.Type = "oneshot";
+            script = "ip route show default | rg -q . || iwctl station wlan0 scan";
+          };
+
           iwd-randomize-known-networks = {
             description = "Force per-connection MAC randomization on every known network";
             wantedBy = [ "multi-user.target" ];
@@ -35,6 +46,15 @@
                 fi
               done
             '';
+          };
+        };
+
+        # DisablePeriodicScan leaves iwd idle in autoconnect_full after a drop (agent, 2026-11-05: 5.5 h offline); a scan restarts the search.
+        timers.wifi-rescan = {
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnBootSec = "2min";
+            OnUnitActiveSec = "1min";
           };
         };
 
