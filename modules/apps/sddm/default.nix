@@ -18,6 +18,16 @@
         red
         ;
       field = self.lib.flexoki.selection;
+      keyboardLayouts = pkgs.linkFarm "sddm-keyboard-layouts" [
+        {
+          name = "en_US/main.qml";
+          path = ./keyboard.qml;
+        }
+        {
+          name = "fallback/main.qml";
+          path = ./keyboard.qml;
+        }
+      ];
       amber = self.lib.flexoki.yellow;
 
       theme =
@@ -108,7 +118,7 @@
         extraPackages = theme.propagatedBuildInputs ++ [ pkgs.kdePackages.qt5compat ];
         settings.Theme.CursorTheme = "capitaine-cursors";
         # SDDM drops its qtvirtualkeyboard default on Wayland, so the theme's keyboard button only works with this set.
-        settings.General.GreeterEnvironment = "QML_DISABLE_DISK_CACHE=1,QT_IM_MODULE=qtvirtualkeyboard";
+        settings.General.GreeterEnvironment = "QML_DISABLE_DISK_CACHE=1,QT_IM_MODULE=qtvirtualkeyboard,QT_VIRTUALKEYBOARD_LAYOUT_PATH=${keyboardLayouts}";
       };
 
       environment.systemPackages = [
