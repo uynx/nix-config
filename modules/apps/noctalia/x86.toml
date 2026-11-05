@@ -1,3 +1,7 @@
+[bar.main]
+start = ["launcher", "clock", "group:system"]
+end   = ["active_window", "group:media", "tray", "notifications", "battery", "volume", "brightness", "osk", "control-center"]
+
 # A capsule_group list here replaces config.toml's, so the media group is repeated.
 [[bar.main.capsule_group]]
 id = "media"
