@@ -136,9 +136,9 @@ scale = 0.9
 capsule_opacity = 0.49
 widget_spacing = 8
 
-start  = ["launcher", "clock", "group:system"]
+start  = ["launcher", "clock", "group:system", "active_window"]
 center = ["workspaces"]
-end    = ["active_window", "group:media", "tray", "notifications", "battery", "volume", "brightness", "osk", "control-center"]
+end    = ["group:media", "tray", "notifications", "battery", "volume", "brightness", "osk", "control-center"]
 
 [widget.workspaces]
 type = "workspaces"
