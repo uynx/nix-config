@@ -26,6 +26,8 @@
           UMask = "0077";
           Restart = "on-failure";
           RestartSec = 10;
+          MemoryHigh = "3G";
+          MemorySwapMax = "2G";
         };
       };
     in
