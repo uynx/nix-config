@@ -27,6 +27,11 @@
       {
         boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
       }
+      {
+        services.udev.extraRules = ''
+          SUBSYSTEM=="leds", KERNEL=="phy0-led", ATTR{trigger}="none", ATTR{brightness}="0"
+        '';
+      }
       (
         let
           key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEUYRYdgXB3O1EvWT1v9pohkK5ylBjpw2aBDViQTia7c";
