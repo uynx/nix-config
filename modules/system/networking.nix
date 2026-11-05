@@ -7,7 +7,11 @@
         services = {
           NetworkManager-wait-online.enable = false;
           NetworkManager.stopIfChanged = false;
-          iwd.stopIfChanged = false;
+          iwd = {
+            stopIfChanged = false;
+            wants = [ "sys-subsystem-net-devices-wlan0.device" ];
+            after = [ "sys-subsystem-net-devices-wlan0.device" ];
+          };
           "home-manager-${self.lib.user.name}".after = [
             "NetworkManager.service"
             "iwd.service"
