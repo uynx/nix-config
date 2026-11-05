@@ -1,13 +1,15 @@
 diff --git a/src/shell/lockscreen/lock_surface.cpp b/src/shell/lockscreen/lock_surface.cpp
-index 7c03bb4..47e1b67 100644
+index 7c03bb4..8858027 100644
 --- a/src/shell/lockscreen/lock_surface.cpp
 +++ b/src/shell/lockscreen/lock_surface.cpp
-@@ -42,6 +42,22 @@
+@@ -42,6 +42,34 @@
  
  namespace {
  
 +  constexpr std::array<std::string_view, 4> kOskPlainRows{"`1234567890-=", "qwertyuiop[]\\", "asdfghjkl;'", "zxcvbnm,./"};
 +  constexpr std::array<std::string_view, 4> kOskShiftRows{"~!@#$%^&*()_+", "QWERTYUIOP{}|", "ASDFGHJKL:\"", "ZXCVBNM<>?"};
++
++  constexpr std::array<std::string_view, 4> kOskSymbolRows{"1234567890-=+", "!@#$%^&*()_[]", "{}<>:;'\"\\|~", "`,./?"};
 +
 +  std::string oskChars(bool shift) {
 +    std::string chars;
@@ -17,7 +19,17 @@ index 7c03bb4..47e1b67 100644
 +    return chars;
 +  }
 +
-+  char oskKeyChar(std::size_t index, bool shift, bool caps) {
++  // '\0' marks a slot the symbol layer leaves empty.
++  char oskKeyChar(std::size_t index, bool shift, bool caps, bool symbols) {
++    if (symbols) {
++      for (std::size_t r = 0; r < kOskPlainRows.size(); ++r) {
++        if (index < kOskPlainRows[r].size()) {
++          return index < kOskSymbolRows[r].size() ? kOskSymbolRows[r][index] : '\0';
++        }
++        index -= kOskPlainRows[r].size();
++      }
++      return '\0';
++    }
 +    const char c = oskChars(shift)[index];
 +    return caps && c >= 'a' && c <= 'z' ? static_cast<char>(c - 'a' + 'A') : c;
 +  }
@@ -25,7 +37,7 @@ index 7c03bb4..47e1b67 100644
    const ext_session_lock_surface_v1_listener kLockSurfaceListener = {
        .configure = &LockSurface::handleConfigure,
    };
-@@ -519,6 +535,114 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
+@@ -519,6 +547,132 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
        })
    );
  
@@ -87,7 +99,11 @@ index 7c03bb4..47e1b67 100644
 +            .variant = ButtonVariant::Secondary,
 +            .onClick =
 +                [this, index]() {
-+                  oskType(std::string(1, oskKeyChar(index, m_oskShift, m_oskCaps)));
++                  const char c = oskKeyChar(index, m_oskShift, m_oskCaps, m_oskSymbols);
++                  if (c == '\0') {
++                    return;
++                  }
++                  oskType(std::string(1, c));
 +                  if (m_oskShift) {
 +                    oskSetShift(false);
 +                  }
@@ -122,6 +138,20 @@ index 7c03bb4..47e1b67 100644
 +    Button* wide = nullptr;
 +    addWide("arrow-big-up", [this]() { oskShiftTapped(); }, &wide);
 +    m_oskWideKeys.push_back(wide);
++    row->addChild(ui::button({
++        .out = &m_oskLayerKey,
++        .text = "&123",
++        .variant = ButtonVariant::Secondary,
++        .onClick =
++            [this]() {
++              m_oskSymbols = !m_oskSymbols;
++              m_oskCaps = false;
++              m_oskLayerKey->setText(m_oskSymbols ? "ABC" : "&123");
++              oskSetShift(false);
++              requestLayout();
++            },
++        .configure = [](Button& button) { button.setZIndex(2); },
++    }));
 +    addWide("space", [this]() { oskType(" "); }, &m_oskSpace);
 +    addWide("backspace", [this]() { oskBackspace(); }, &wide);
 +    m_oskWideKeys.push_back(wide);
@@ -140,7 +170,7 @@ index 7c03bb4..47e1b67 100644
    m_loginPanel->addChild(
        ui::flex(
            FlexDirection::Horizontal,
-@@ -554,6 +678,61 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
+@@ -554,6 +708,65 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
    requestUpdate();
  }
  
@@ -176,7 +206,11 @@ index 7c03bb4..47e1b67 100644
 +void LockSurface::oskSetShift(bool shift) {
 +  m_oskShift = shift;
 +  for (std::size_t i = 0; i < m_oskKeys.size(); ++i) {
-+    m_oskKeys[i]->setText(std::string(1, oskKeyChar(i, m_oskShift, m_oskCaps)));
++    const char c = oskKeyChar(i, m_oskShift, m_oskCaps, m_oskSymbols);
++    m_oskKeys[i]->setVisible(c != '\0');
++    if (c != '\0') {
++      m_oskKeys[i]->setText(std::string(1, c));
++    }
 +  }
 +  if (!m_oskWideKeys.empty()) {
 +    m_oskWideKeys.front()->setVariant(m_oskShift || m_oskCaps ? ButtonVariant::Primary : ButtonVariant::Secondary);
@@ -202,7 +236,7 @@ index 7c03bb4..47e1b67 100644
  LockSurface::~LockSurface() {
    m_aliveGuard.reset();
    releaseCaptureTextures();
-@@ -1161,6 +1340,7 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+@@ -1161,6 +1374,7 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
      if (m_authPanel != nullptr) {
        m_authPanel->setVisible(false);
      }
@@ -210,7 +244,7 @@ index 7c03bb4..47e1b67 100644
      layoutTransitionCover();
      syncTransitionCover();
      return;
-@@ -1442,6 +1622,11 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+@@ -1442,6 +1656,11 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
      m_loginButton->setSize(controlHeight, controlHeight);
      m_loginButton->setGlyphSize(sessionGlyphSize);
    }
@@ -222,7 +256,7 @@ index 7c03bb4..47e1b67 100644
  
    m_loginPanel->arrange(renderer, LayoutRect{panelX, panelY, panelWidth, panelHeight});
  
-@@ -1484,6 +1669,45 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+@@ -1484,6 +1703,48 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
        m_authPanel->arrange(renderer, LayoutRect{authX, authY, authW, authH});
      }
    }
@@ -245,7 +279,10 @@ index 7c03bb4..47e1b67 100644
 +      key->setGlyphSize(sessionGlyphSize);
 +      key->setRadius(Style::scaledRadius(loginStyle.inputRadius));
 +    }
-+    m_oskSpace->setSize(keyW * 6.0F, keyH);
++    m_oskLayerKey->setSize(keyW * 1.5F, keyH);
++    m_oskLayerKey->setFontSize(bodySize);
++    m_oskLayerKey->setRadius(Style::scaledRadius(loginStyle.inputRadius));
++    m_oskSpace->setSize(keyW * 4.5F, keyH);
 +    m_oskSpace->setGlyphSize(sessionGlyphSize);
 +    m_oskSpace->setRadius(Style::scaledRadius(loginStyle.inputRadius));
 +
@@ -269,7 +306,7 @@ index 7c03bb4..47e1b67 100644
    syncTransitionCover();
  }
 diff --git a/src/shell/lockscreen/lock_surface.h b/src/shell/lockscreen/lock_surface.h
-index 949c283..310ef53 100644
+index 949c283..a137b0d 100644
 --- a/src/shell/lockscreen/lock_surface.h
 +++ b/src/shell/lockscreen/lock_surface.h
 @@ -13,6 +13,7 @@
@@ -280,7 +317,7 @@ index 949c283..310ef53 100644
  #include <cstdint>
  #include <functional>
  #include <memory>
-@@ -184,6 +185,15 @@ private:
+@@ -184,6 +185,17 @@ private:
    Input* m_passwordField = nullptr;
    Button* m_loginButton = nullptr;
    Button* m_layoutChip = nullptr;
@@ -292,11 +329,13 @@ index 949c283..310ef53 100644
 +  bool m_oskOpen = false;
 +  bool m_oskShift = false;
 +  bool m_oskCaps = false;
++  bool m_oskSymbols = false;
++  Button* m_oskLayerKey = nullptr;
 +  std::chrono::steady_clock::time_point m_oskShiftTap{};
    Flex* m_sessionRow = nullptr;
    std::vector<Button*> m_sessionButtons;
    SharedTextureCache* m_textureCache = nullptr;
-@@ -214,6 +224,10 @@ private:
+@@ -214,6 +226,10 @@ private:
    Color m_wallpaperFillColor = rgba(0.0F, 0.0F, 0.0F, 0.0F);
    bool m_wallpaperDirty = false;
    InputDispatcher m_inputDispatcher;

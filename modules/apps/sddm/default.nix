@@ -74,6 +74,8 @@
             HoverVirtualKeyboardButtonTextColor = amber;
 
             HideSystemButtons = "false";
+            KeyboardSize = "1";
+            VirtualKeyboardPosition = "center";
           };
         }).overrideAttrs
           (_: {
