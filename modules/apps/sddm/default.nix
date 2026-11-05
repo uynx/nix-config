@@ -84,7 +84,7 @@
             HoverVirtualKeyboardButtonTextColor = amber;
 
             HideSystemButtons = "false";
-            KeyboardSize = "1";
+            KeyboardSize = if pkgs.stdenv.hostPlatform.isx86_64 then "0.55" else "1";
             VirtualKeyboardPosition = "center";
           };
         }).overrideAttrs
