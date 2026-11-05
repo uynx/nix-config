@@ -84,7 +84,7 @@
             HoverVirtualKeyboardButtonTextColor = amber;
 
             HideSystemButtons = "false";
-            KeyboardSize = if pkgs.stdenv.hostPlatform.isx86_64 then "0.55" else "1";
+            KeyboardSize = "1";
             VirtualKeyboardPosition = "center";
           };
         }).overrideAttrs
@@ -100,7 +100,8 @@
                 --replace-fail 'FontSize="12"' 'FontSize=""'
               substituteInPlace "$main" \
                 --replace-fail 'Screen.ScreenWidth' 'Screen.width' \
-                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 85)'
+                --replace-fail 'parseInt(height / 80)' 'parseInt(height / 85)' \
+                --replace-fail ': parent.width * config.KeyboardSize' ': Math.min(parent.width * config.KeyboardSize, parent.height * 1.05)'
 
               substituteInPlace "$clock" \
                 --replace-fail ${lib.escapeShellArg importOld} ${lib.escapeShellArg importNew} \
