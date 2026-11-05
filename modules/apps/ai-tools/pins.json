@@ -14,10 +14,10 @@
     }
   },
   "grok": {
-    "version": "1.0.70",
+    "version": "1.0.77",
     "hash": {
-      "aarch64-linux": "sha256-OqNog1dLJjCI5a3f/iQfVUMOjaruGgxJNLAhgAB6l2E=",
-      "x86_64-linux": "sha256-ItKBxZZMVEQUcygJa6KiIfPwh0xoWOJ8glZWqA9uWOk="
+      "aarch64-linux": "sha256-sw7uFKZWEk7zydqFd7Xng+8s/6vrK2ecXEljPnfu1XQ=",
+      "x86_64-linux": "sha256-twKVCqWCfYVeSTJ4q2IVpOD1vOtbumxiQ6n1XN0UOwo="
     }
   }
 }

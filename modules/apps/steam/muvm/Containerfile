@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-minimal@sha256:f2da437e4ef1731cb75cc3acc8448770e052a5d27009c2edf5b4c8ceb4bafa96
+FROM quay.io/fedora/fedora-minimal@sha256:754075708eff4aebac74bc0a97aa4c75c46139ecc03bb2c55754eb63ec760e17
 
 RUN --mount=type=cache,target=/var/cache/libdnf5 \
     dnf install -y --setopt=keepcache=True --setopt=max_parallel_downloads=20 "dnf5-command(copr)" && \
@@ -7,7 +7,7 @@ RUN --mount=type=cache,target=/var/cache/libdnf5 \
     dnf install -y --setopt=keepcache=True --setopt=max_parallel_downloads=20 \
       asahi-platform-metapackage-fex-0-29.fc44.aarch64 \
       muvm-0.7.0-1.fc44.aarch64 \
-      libkrun-1.19.6-1.fc44.aarch64 \
+      libkrun-1.19.7-1.fc44.aarch64 \
       libkrunfw-5.6.2-1.fc44.aarch64 \
       fex-emu-2604-1.fc44.aarch64 \
       'fex-emu-rootfs-fedora-44^20260410.n.0-1.fc44.noarch' \
