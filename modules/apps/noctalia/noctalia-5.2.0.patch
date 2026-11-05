@@ -1,8 +1,213 @@
+diff --git a/src/app/application_ui.cpp b/src/app/application_ui.cpp
+index 02edd5f..7027d9f 100644
+--- a/src/app/application_ui.cpp
++++ b/src/app/application_ui.cpp
+@@ -622,6 +622,7 @@ void Application::initPanelManagerAndPanels() {
+       .accounts = m_accountsService.get(),
+       .thumbnails = &m_thumbnailService,
+       .asyncTextures = &m_asyncTextureCache,
++      .keyboardBacklight = m_keyboardBacklightService.get(),
+   });
+   ControlCenterPanel* controlCenterPanelPtr = controlCenterPanel.get();
+   m_panelManager.registerPanel("control-center", std::move(controlCenterPanel));
+diff --git a/src/shell/control_center/control_center_panel.cpp b/src/shell/control_center/control_center_panel.cpp
+index 0c9f1af..a78135b 100644
+--- a/src/shell/control_center/control_center_panel.cpp
++++ b/src/shell/control_center/control_center_panel.cpp
+@@ -66,7 +66,7 @@ ControlCenterPanel::ControlCenterPanel(const ControlCenterServices& services) {
+   m_tabs[tabIndex(TabId::Network)] =
+       std::make_unique<NetworkTab>(services.network, services.networkSecrets, services.externalIp, services.modem);
+   m_tabs[tabIndex(TabId::Bluetooth)] = std::make_unique<BluetoothTab>(services.bluetooth, services.bluetoothAgent);
+-  m_tabs[tabIndex(TabId::Monitor)] = std::make_unique<MonitorTab>(services.brightness, services.config);
++  m_tabs[tabIndex(TabId::Monitor)] = std::make_unique<MonitorTab>(services.brightness, services.config, services.keyboardBacklight);
+   m_tabs[tabIndex(TabId::System)] = std::make_unique<SystemTab>(services.sysmon);
+   m_tabs[tabIndex(TabId::ScreenTime)] = std::make_unique<ScreenTimeTab>(services.screenTime);
+   m_tabs[tabIndex(TabId::Power)] = std::make_unique<PowerTab>(services.upower, services.powerProfiles);
+diff --git a/src/shell/control_center/control_center_services.h b/src/shell/control_center/control_center_services.h
+index b86744f..86abc4e 100644
+--- a/src/shell/control_center/control_center_services.h
++++ b/src/shell/control_center/control_center_services.h
+@@ -19,6 +19,7 @@ class HttpClient;
+ class IdleInhibitor;
+ class INetworkService;
+ class IpcService;
++class KeyboardBacklightService;
+ class ModemManagerService;
+ class MprisService;
+ class NetworkSecretAgent;
+@@ -75,6 +76,7 @@ struct ControlCenterServices {
+   AccountsService* accounts = nullptr;
+   ThumbnailService* thumbnails = nullptr;
+   AsyncTextureCache* asyncTextures = nullptr;
++  KeyboardBacklightService* keyboardBacklight = nullptr;
+ 
+   [[nodiscard]] ShortcutServices shortcutServices() const {
+     return {
+diff --git a/src/shell/control_center/tabs/monitor_tab.cpp b/src/shell/control_center/tabs/monitor_tab.cpp
+index cb0c4b1..41f2baf 100644
+--- a/src/shell/control_center/tabs/monitor_tab.cpp
++++ b/src/shell/control_center/tabs/monitor_tab.cpp
+@@ -5,6 +5,7 @@
+ #include "render/core/renderer.h"
+ #include "shell/panel/panel_button_style.h"
+ #include "system/brightness_service.h"
++#include "system/keyboard_backlight_service.h"
+ #include "ui/builders.h"
+ #include "ui/controls/scroll_view.h"
+ #include "ui/palette.h"
+@@ -66,8 +67,8 @@ namespace {
+ 
+ } // namespace
+ 
+-MonitorTab::MonitorTab(BrightnessService* brightness, ConfigService* config)
+-    : m_brightness(brightness), m_configService(config) {}
++MonitorTab::MonitorTab(BrightnessService* brightness, ConfigService* config, KeyboardBacklightService* keyboardBacklight)
++    : m_brightness(brightness), m_configService(config), m_keyboardBacklight(keyboardBacklight) {}
+ 
+ std::unique_ptr<Flex> MonitorTab::create() {
+   const float scale = contentScale();
+@@ -111,6 +112,76 @@ std::unique_ptr<Flex> MonitorTab::create() {
+   );
+   tab->addChild(std::move(emptyState));
+ 
++  if (m_keyboardBacklight != nullptr && m_keyboardBacklight->available()) {
++    auto card = ui::column({
++        .configure = [scale, opacity = panelCardOpacity()](Flex& section) {
++          applySectionCardStyle(section, scale, opacity);
++          section.setGap(Style::spaceMd * scale);
++        },
++    });
++    card->addChild(ui::row(
++        {.align = FlexAlign::Center, .gap = Style::spaceSm * scale},
++        ui::glyph({
++            .glyph = "keyboard",
++            .glyphSize = Style::fontSizeTitle * scale,
++            .color = colorSpecFromRole(ColorRole::OnSurface),
++        }),
++        ui::label({
++            .text = "Keyboard",
++            .fontSize = Style::fontSizeBody * scale,
++            .fontWeight = FontWeight::Bold,
++            .color = colorSpecFromRole(ColorRole::OnSurface),
++            .flexGrow = 1.0F,
++        })
++    ));
++    const int max = std::max(1, m_keyboardBacklight->maxBrightness());
++    const double current = static_cast<double>(m_keyboardBacklight->brightness()) / max;
++    auto sliderRow = ui::row(
++        {.align = FlexAlign::Center, .gap = Style::spaceSm * scale},
++        ui::glyph({
++            .glyph = "brightness-low",
++            .glyphSize = Style::fontSizeTitle * scale,
++            .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
++        })
++    );
++    sliderRow->addChild(ui::slider({
++        .out = &m_kbdSlider,
++        .minValue = 0.0F,
++        .maxValue = 1.0F,
++        .step = 0.01F,
++        .value = static_cast<float>(current),
++        .trackHeight = Style::sliderTrackHeight * scale,
++        .thumbSize = Style::sliderThumbSize * scale,
++        .controlHeight = Style::controlHeight * scale,
++        .flexGrow = 1.0F,
++        .onValueChanged =
++            [this](double value) {
++              if (m_syncingSlider || m_keyboardBacklight == nullptr) {
++                return;
++              }
++              const int percent = static_cast<int>(std::lround(value * 100.0));
++              (void)m_keyboardBacklight->setPercent(percent);
++              if (m_kbdValue != nullptr) {
++                m_kbdValue->setText(std::to_string(percent) + "%");
++              }
++            },
++    }));
++    sliderRow->addChild(ui::glyph({
++        .glyph = "brightness-high",
++        .glyphSize = Style::fontSizeTitle * scale,
++        .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
++    }));
++    sliderRow->addChild(ui::label({
++        .out = &m_kbdValue,
++        .text = std::to_string(static_cast<int>(std::lround(current * 100.0))) + "%",
++        .fontSize = Style::fontSizeBody * scale,
++        .color = colorSpecFromRole(ColorRole::OnSurfaceVariant),
++        .minWidth = Style::controlHeightLg * scale,
++    }));
++    card->addChild(std::move(sliderRow));
++    tab->addChild(std::move(card));
++  }
++
+   return tab;
+ }
+ 
+@@ -158,6 +229,8 @@ void MonitorTab::onClose() {
+   m_cardsScroll = nullptr;
+   m_cardsLayout = nullptr;
+   m_rescanButton = nullptr;
++  m_kbdSlider = nullptr;
++  m_kbdValue = nullptr;
+   m_cards.clear();
+   m_lastDisplayListKey.clear();
+ }
+@@ -209,6 +282,19 @@ void MonitorTab::doUpdate(Renderer& renderer) {
+ 
+   syncHeaderActions();
+ 
++  if (m_kbdSlider != nullptr && m_keyboardBacklight != nullptr && m_keyboardBacklight->maxBrightness() > 0
++      && !m_kbdSlider->dragging()) {
++    const double level = static_cast<double>(m_keyboardBacklight->brightness()) / m_keyboardBacklight->maxBrightness();
++    if (std::abs(level - m_kbdSlider->value()) >= 0.01) {
++      m_syncingSlider = true;
++      m_kbdSlider->setValue(static_cast<float>(level));
++      m_syncingSlider = false;
++      if (m_kbdValue != nullptr) {
++        m_kbdValue->setText(std::to_string(static_cast<int>(std::lround(level * 100.0))) + "%");
++      }
++    }
++  }
++
+   if (m_brightness == nullptr) {
+     return;
+   }
+diff --git a/src/shell/control_center/tabs/monitor_tab.h b/src/shell/control_center/tabs/monitor_tab.h
+index c9f76e8..cc3f74c 100644
+--- a/src/shell/control_center/tabs/monitor_tab.h
++++ b/src/shell/control_center/tabs/monitor_tab.h
+@@ -12,6 +12,7 @@ class Button;
+ class ConfigService;
+ class Flex;
+ class Glyph;
++class KeyboardBacklightService;
+ class Label;
+ class Renderer;
+ class ScrollView;
+@@ -19,7 +20,7 @@ class Slider;
+ 
+ class MonitorTab : public Tab {
+ public:
+-  MonitorTab(BrightnessService* brightness, ConfigService* config);
++  MonitorTab(BrightnessService* brightness, ConfigService* config, KeyboardBacklightService* keyboardBacklight);
+ 
+   std::unique_ptr<Flex> create() override;
+   std::unique_ptr<Flex> createHeaderActions() override;
+@@ -37,6 +38,9 @@ private:
+ 
+   BrightnessService* m_brightness = nullptr;
+   ConfigService* m_configService = nullptr;
++  KeyboardBacklightService* m_keyboardBacklight = nullptr;
++  Slider* m_kbdSlider = nullptr;
++  Label* m_kbdValue = nullptr;
+ 
+   struct DisplayCard {
+     std::string displayId;
 diff --git a/src/shell/lockscreen/lock_surface.cpp b/src/shell/lockscreen/lock_surface.cpp
-index 20d3098..4896062 100644
+index 7c03bb4..8858027 100644
 --- a/src/shell/lockscreen/lock_surface.cpp
 +++ b/src/shell/lockscreen/lock_surface.cpp
-@@ -43,6 +43,34 @@
+@@ -42,6 +42,34 @@
  
  namespace {
  
@@ -34,10 +239,10 @@ index 20d3098..4896062 100644
 +    return caps && c >= 'a' && c <= 'z' ? static_cast<char>(c - 'a' + 'A') : c;
 +  }
 +
-   constexpr Logger kLog("lockscreen");
- 
    const ext_session_lock_surface_v1_listener kLockSurfaceListener = {
-@@ -544,6 +572,132 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
+       .configure = &LockSurface::handleConfigure,
+   };
+@@ -519,6 +547,132 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
        })
    );
  
@@ -170,7 +375,7 @@ index 20d3098..4896062 100644
    m_loginPanel->addChild(
        ui::flex(
            FlexDirection::Horizontal,
-@@ -579,6 +733,65 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
+@@ -554,6 +708,65 @@ LockSurface::LockSurface(WaylandConnection& connection, ConfigService* config) :
    requestUpdate();
  }
  
@@ -234,9 +439,9 @@ index 20d3098..4896062 100644
 +}
 +
  LockSurface::~LockSurface() {
-   invalidateSleepFrame();
    m_aliveGuard.reset();
-@@ -1235,6 +1448,7 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+   releaseCaptureTextures();
+@@ -1161,6 +1374,7 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
      if (m_authPanel != nullptr) {
        m_authPanel->setVisible(false);
      }
@@ -244,9 +449,9 @@ index 20d3098..4896062 100644
      layoutTransitionCover();
      syncTransitionCover();
      return;
-@@ -1530,6 +1744,11 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
-     m_passwordRevealButton->setSize(controlHeight, controlHeight);
-     m_passwordRevealButton->setGlyphSize(sessionGlyphSize);
+@@ -1442,6 +1656,11 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+     m_loginButton->setSize(controlHeight, controlHeight);
+     m_loginButton->setGlyphSize(sessionGlyphSize);
    }
 +  m_oskButton->setVisible(loginVisible);
 +  m_oskButton->setRadius(Style::scaledRadius(loginStyle.inputRadius));
@@ -256,7 +461,7 @@ index 20d3098..4896062 100644
  
    m_loginPanel->arrange(renderer, LayoutRect{panelX, panelY, panelWidth, panelHeight});
  
-@@ -1572,6 +1791,48 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
+@@ -1484,6 +1703,48 @@ void LockSurface::layoutScene(std::uint32_t width, std::uint32_t height) {
        m_authPanel->arrange(renderer, LayoutRect{authX, authY, authW, authH});
      }
    }
@@ -306,10 +511,10 @@ index 20d3098..4896062 100644
    syncTransitionCover();
  }
 diff --git a/src/shell/lockscreen/lock_surface.h b/src/shell/lockscreen/lock_surface.h
-index 5824692..80411f0 100644
+index 949c283..a137b0d 100644
 --- a/src/shell/lockscreen/lock_surface.h
 +++ b/src/shell/lockscreen/lock_surface.h
-@@ -14,6 +14,7 @@
+@@ -13,6 +13,7 @@
  #include "wayland/surface.h"
  
  #include <array>
@@ -317,8 +522,8 @@ index 5824692..80411f0 100644
  #include <cstdint>
  #include <functional>
  #include <memory>
-@@ -190,6 +191,17 @@ private:
-   Button* m_passwordRevealButton = nullptr;
+@@ -184,6 +185,17 @@ private:
+   Input* m_passwordField = nullptr;
    Button* m_loginButton = nullptr;
    Button* m_layoutChip = nullptr;
 +  Button* m_oskButton = nullptr;
@@ -335,7 +540,7 @@ index 5824692..80411f0 100644
    Flex* m_sessionRow = nullptr;
    std::vector<Button*> m_sessionButtons;
    SharedTextureCache* m_textureCache = nullptr;
-@@ -223,6 +235,10 @@ private:
+@@ -214,6 +226,10 @@ private:
    Color m_wallpaperFillColor = rgba(0.0F, 0.0F, 0.0F, 0.0F);
    bool m_wallpaperDirty = false;
    InputDispatcher m_inputDispatcher;
@@ -346,3 +551,23 @@ index 5824692..80411f0 100644
    std::function<void()> m_onLogin;
    std::function<void()> m_onCycleLayout;
    std::function<void(const std::string&)> m_onPasswordChanged;
+diff --git a/src/system/keyboard_backlight_service.h b/src/system/keyboard_backlight_service.h
+index 0d10b93..3198d34 100644
+--- a/src/system/keyboard_backlight_service.h
++++ b/src/system/keyboard_backlight_service.h
+@@ -27,6 +27,7 @@ public:
+ 
+   void registerIpc(IpcService& ipc);
+   void setChangeCallback(ChangeCallback callback);
++  [[nodiscard]] bool setPercent(int percent);
+ 
+ private:
+   struct Device;
+@@ -34,7 +35,6 @@ private:
+   void rescanDevices();
+   void publishBrightness(const Device& device);
+   [[nodiscard]] bool setBrightness(Device& device, int value);
+-  [[nodiscard]] bool setPercent(int percent);
+   [[nodiscard]] bool adjustBrightness(int delta);
+   [[nodiscard]] bool toggleBrightness();
+ 

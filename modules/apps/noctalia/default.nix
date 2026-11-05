@@ -10,10 +10,10 @@
             noctalia = prev.noctalia.overrideAttrs (
               old:
               let
-                patch = ./. + "/lock-keyboard-${old.version}.patch";
+                patch = ./. + "/noctalia-${old.version}.patch";
               in
               {
-                # A noctalia bump without a matching patch drops the lock keyboard instead of failing the build.
+                # A noctalia bump without a matching patch drops the lock keyboard and keyboard brightness slider instead of failing the build.
                 patches = (old.patches or [ ]) ++ prev.lib.optional (builtins.pathExists patch) patch;
               }
             );
