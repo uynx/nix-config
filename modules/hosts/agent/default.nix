@@ -37,7 +37,7 @@ in
             };
             # TPM slot is enrolled by hand against PCR 7 once Secure Boot is on; the passphrase stays as fallback.
             initrd.luks.devices.cryptroot.crypttabExtraOpts = [ "tpm2-device=auto" ];
-            kernelPackages = pkgs.linuxKernel.packages.linux_7_2;
+            kernelPackages = pkgs.linuxPackages_latest;
             # MSI's DSDT throws harmless ACPI errors that print over the passphrase prompt.
             consoleLogLevel = 3;
             kernel.sysctl = {
