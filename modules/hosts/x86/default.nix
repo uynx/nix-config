@@ -27,6 +27,12 @@
       {
         boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
       }
+      (
+        { lib, ... }:
+        {
+          services.displayManager.sddm.settings.General.GreeterEnvironment = lib.mkForce "QML_DISABLE_DISK_CACHE=1";
+        }
+      )
       {
         services.udev.extraRules = ''
           SUBSYSTEM=="leds", KERNEL=="phy0-led", ATTR{trigger}="none", ATTR{brightness}="0"
