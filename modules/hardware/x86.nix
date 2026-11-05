@@ -10,7 +10,7 @@
           };
           efi.canTouchEfiVariables = true;
         };
-        kernelPackages = pkgs.linuxPackages_latest;
+        kernelPackages = pkgs.linuxKernel.packages.linux_7_2; # 7.3 left x86 with no Wi-Fi and a crawling desktop (2026-11-04)
 
         kernelParams = [
           # nct6775 owns I/O ports ACPI also claims; without lax it refuses to bind and VRM/fan sensors vanish.
