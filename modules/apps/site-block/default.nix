@@ -1,5 +1,10 @@
 { self, ... }:
 let
+  settingsPages = [
+    "brave://settings/shields"
+    "chrome://settings/shields"
+  ];
+
   social = [
     "youtube.com"
     "youtu.be"
@@ -39,10 +44,14 @@ let
     {
       inherit porn;
       policy = pkgs.runCommand "site-block-policy.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
-        jq -n --rawfile porn ${porn} --argjson social '${builtins.toJSON social}' '{
+        jq -n --rawfile porn ${porn} --argjson social '${builtins.toJSON (social ++ settingsPages)}' '{
           URLBlocklist: (($porn | split("\n") | map(select(. != ""))) + $social),
           IncognitoModeAvailability: 1,
-          TorDisabled: true
+          TorDisabled: true,
+          DnsOverHttpsMode: "off",
+          BuiltInDnsClientEnabled: false,
+          BraveShieldsEnabledForUrls: ["*"],
+          BraveShieldsDisabledForUrls: []
         }' > $out
       '';
     };

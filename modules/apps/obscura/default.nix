@@ -1,6 +1,5 @@
 {
   self,
-  inputs,
   moduleWithSystem,
   ...
 }:
@@ -18,13 +17,6 @@
 
       # sops-nix fails activation on a declared key that secrets.yaml lacks; key names are plaintext.
       hasAccount = lib.hasInfix "\nobscura-account:" (builtins.readFile ../../../secrets/secrets.yaml);
-
-      obscura-gui = pkgs.runCommand "obscura-gui" { nativeBuildInputs = [ pkgs.makeWrapper ]; } ''
-        mkdir -p $out/bin
-        makeWrapper ${upstream.rust-gui-bin}/bin/obscura-gui $out/bin/obscura-gui \
-          --set GDK_PIXBUF_MODULE_FILE \
-            "${pkgs.librsvg}/${builtins.dirOf pkgs.gdk-pixbuf.moduleDir}/loaders.cache"
-      '';
 
       obscura = upstream.rust-cli-bin.overrideAttrs (_: {
         OBSCURA_VERSION = builtins.readFile upstream.version;
@@ -62,22 +54,9 @@
         }
       '';
 
-      obscura-gui-desktop = pkgs.runCommand "obscura-gui-desktop" { } ''
-        install -Dm444 ${inputs.obscuravpn}/linux/common/net.obscura.vpn.gui.desktop \
-          $out/share/applications/net.obscura.vpn.gui.desktop
-
-        for px in 64 128 256; do
-          install -Dm444 ${inputs.obscuravpn}/linux/common/icons/''${px}x''${px}/net.obscura.vpn.gui.png \
-            $out/share/icons/hicolor/''${px}x''${px}/apps/net.obscura.vpn.gui.png
-        done
-      '';
     in
     {
-      environment.systemPackages = [
-        obscura
-        obscura-gui
-        obscura-gui-desktop
-      ];
+      environment.systemPackages = [ obscura ];
 
       systemd.services = {
         obscura-lockdown = {
