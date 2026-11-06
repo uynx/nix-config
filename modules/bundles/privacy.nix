@@ -2,14 +2,8 @@
 let
   bundle = self.lib.mkBundle {
     nixos = [ self.nixosModules.obscura ];
-    homeLinux = with self.homeModules; [
-      privacyBrowsers
-      obscura
-    ];
-    darwin = with self.darwinModules; [
-      privacyBrowsers
-      obscura
-    ];
+    homeLinux = [ self.homeModules.obscura ];
+    darwin = [ self.darwinModules.obscura ];
   };
 in
 {
