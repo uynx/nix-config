@@ -12,6 +12,7 @@
       ai
       privacy
       web
+      siteBlock
       media
       comms
       office

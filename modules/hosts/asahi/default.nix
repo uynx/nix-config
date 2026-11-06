@@ -5,6 +5,7 @@
     specialArgs = { inherit inputs; };
     modules = with self.nixosModules; [
       standard
+      siteBlock
       assistantSsh
       hardwareAsahi
       cpuBatteryCap
