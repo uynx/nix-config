@@ -1,6 +1,6 @@
 { self, ... }:
 {
-  # Persistent units of the weather trading project (repo ~/always_on_agent) on agent and x86. Experiment arms stay
+  # Persistent units of the weather trading project (repo ~/always_on_agent) on agent and x86 (asahi takes only aoa-up, its scheduler loop). Experiment arms stay
   # transient (ops/run.sh); these are the boot entry, the recorders x86 keeps as unit files, the timers and the nightly tests.
   flake.nixosModules.aoa =
     { config, pkgs, ... }:
