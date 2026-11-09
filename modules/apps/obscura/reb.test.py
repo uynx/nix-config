@@ -32,6 +32,31 @@ class RebuildVpnTest(unittest.TestCase):
             self.assertEqual('connect' in actual, reconnect)
             return actual
 
+    def vpn(self, arg):
+        source = Path(__file__).with_name('default.nix').read_text()
+        body = re.search(r"vpn\.body = ''(.*?)'';", source, re.S).group(1)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            for name in ('sudo', 'obscura'):
+                (root / name).write_text('#!/bin/sh\necho "' + name + ' $*" >> "$TRACE"\n')
+                (root / name).chmod(0o755)
+            env = dict(os.environ, TRACE=str(root / 'trace'), PATH=folder + ':' + os.environ['PATH'])
+            subprocess.run(['fish', '-c', 'function vpn\n' + body + '\nend\nvpn ' + arg], env=env, check=True)
+            return (root / 'trace').read_text().splitlines()
+
+    def test_vpn_off_flags_before_stopping(self):
+        trace = self.vpn('off')
+        self.assertEqual(trace[0], 'sudo touch /run/obscura-off')
+        self.assertTrue(any(l.startswith('sudo systemctl stop obscura') for l in trace[1:]))
+
+    def test_vpn_on_and_fix_clear_the_flag_first(self):
+        for arg in ('on', 'fix'):
+            self.assertEqual(self.vpn(arg)[0], 'sudo rm -f /run/obscura-off')
+
+    def test_units_skip_while_flagged(self):
+        source = Path(__file__).with_name('default.nix').read_text()
+        self.assertEqual(source.count('ConditionPathExists = "!/run/obscura-off"'), 3)
+
     def test_off_stays_off(self):
         self.check_state('off', False)
 

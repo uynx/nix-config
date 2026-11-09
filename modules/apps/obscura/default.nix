@@ -71,6 +71,8 @@
           unitConfig = {
             DefaultDependencies = false;
             ConditionCapability = "CAP_NET_ADMIN";
+            # vpn off writes this flag, so a switch restarting multi-user.target leaves the VPN off; /run clears at boot.
+            ConditionPathExists = "!/run/obscura-off";
           };
           serviceConfig = {
             Type = "oneshot";
@@ -90,6 +92,7 @@
           ];
 
           startLimitIntervalSec = 0;
+          unitConfig.ConditionPathExists = "!/run/obscura-off";
 
           restartIfChanged = false;
 
@@ -117,6 +120,7 @@
           wantedBy = [ "multi-user.target" ];
           requires = [ "obscura.service" ];
           after = [ "obscura.service" ];
+          unitConfig.ConditionPathExists = "!/run/obscura-off";
 
           restartIfChanged = false;
 
@@ -169,13 +173,16 @@
     programs.fish.functions.vpn.body = ''
       switch "$argv[1]"
           case fix
-              sudo systemctl restart dnscrypt-proxy.service obscura.service
+              sudo rm -f /run/obscura-off
+              and sudo systemctl restart dnscrypt-proxy.service obscura.service
               and obscura connect
           case off
-              sudo systemctl stop obscura.service obscura-lockdown.service
+              sudo touch /run/obscura-off
+              and sudo systemctl stop obscura.service obscura-lockdown.service
               and sudo systemctl restart dnscrypt-proxy.service
           case on
-              sudo systemctl start obscura-lockdown.service obscura.service
+              sudo rm -f /run/obscura-off
+              and sudo systemctl start obscura-lockdown.service obscura.service
               and sudo systemctl restart dnscrypt-proxy.service
               and obscura connect
           case '*'
