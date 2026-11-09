@@ -8,8 +8,6 @@ let
   tunnel = builtins.fromJSON (builtins.readFile ./denver.json);
 in
 {
-  home-manager.users.uynx.shellHooks.rebPostSwitch = lib.mkForce "";
-
   sops.secrets.assistant-wireguard-key = {
     sopsFile = ../../../secrets/assistant-wireguard.yaml;
     key = "privateKey";
@@ -18,9 +16,10 @@ in
     dns: "nameserver ${dns}\n"
   ) tunnel.dns;
   systemd.services = {
-    obscura.enable = lib.mkForce false;
-    obscura-connect.enable = lib.mkForce false;
-    obscura-lockdown.enable = lib.mkForce false;
+    # Installed but never started at boot or by a switch: agent's VPN runs only after `vpn on`.
+    obscura.wantedBy = lib.mkForce [ ];
+    obscura-connect.wantedBy = lib.mkForce [ ];
+    obscura-lockdown.wantedBy = lib.mkForce [ ];
     assistant-browser-netns = {
       description = "Network namespace for the assistant browser";
       serviceConfig = {
