@@ -9,8 +9,8 @@ DEBUG = "/tmp/dictate-debug"
 
 
 class Segmenter:
-    def __init__(self, threshold=250, pause=0.6, lead=0.2, minimum=0.15, longest=15.0):
-        self.threshold = threshold
+    def __init__(self, level=60, ratio=3, pause=0.6, lead=0.2, minimum=0.15, longest=15.0):
+        self.level, self.ratio, self.floor = level, ratio, level / ratio
         self.pause, self.lead, self.minimum, self.longest = (round(s * 50) for s in (pause, lead, minimum, longest))
         self.tail = b""
         self.recent = deque(maxlen=self.lead)
@@ -28,7 +28,10 @@ class Segmenter:
 
     def _frame(self, frame):
         samples = array.array("h", frame)
-        loud = math.sqrt(sum(s * s for s in samples) / len(samples)) >= self.threshold
+        rms = math.sqrt(sum(s * s for s in samples) / len(samples))
+        # The floor drops to any quieter frame at once and creeps up slowly, so speech cannot drag it up.
+        self.floor = min(rms, self.floor * 1.002 + 0.01)
+        loud = rms >= max(self.level, self.ratio * self.floor)
         if not self.frames:
             if loud:
                 self.frames, self.voiced, self.quiet = [*self.recent, frame], 1, 0

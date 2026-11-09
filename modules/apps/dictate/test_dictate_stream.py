@@ -1,4 +1,4 @@
-import math, os, struct, tempfile, unittest
+import math, os, random, struct, tempfile, unittest
 import dictate_stream
 from dictate_stream import Segmenter, join_phrases
 
@@ -11,6 +11,11 @@ def tone(seconds, amp=4000):
 
 def quiet(seconds):
     return b"\0\0" * int(RATE * seconds)
+
+
+def hiss(seconds, amp=35):
+    rng = random.Random(1)
+    return b"".join(struct.pack("<h", rng.randint(-amp, amp)) for _ in range(int(RATE * seconds)))
 
 
 def feed_all(seg, audio, chunk=3200):
@@ -67,6 +72,16 @@ class Phrases(unittest.TestCase):
         out = feed_all(Segmenter(), tone(40))
         self.assertGreaterEqual(len(out), 2)
         self.assertTrue(all(seconds(p) <= 16 for p in out))
+
+    def test_quiet_speech_over_room_noise_is_kept(self):
+        out = feed_all(Segmenter(), hiss(2) + tone(3, amp=170) + hiss(2))
+        self.assertEqual(len(out), 1)
+        self.assertGreater(seconds(out[0]), 3.0)
+
+    def test_room_noise_alone_produces_nothing(self):
+        seg = Segmenter()
+        self.assertEqual(feed_all(seg, hiss(5)), [])
+        self.assertEqual(seg.flush(), None)
 
     def test_chunks_that_split_a_sample_are_handled(self):
         audio = tone(1) + quiet(1)
