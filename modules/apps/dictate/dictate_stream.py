@@ -76,12 +76,10 @@ def transcribe(pcm):
 
 
 def type_text(text):
+    # Not wtype: it gives the Nth new character evdev code N, so letters land on Tab or Backspace.
     socket = os.environ.get("YDOTOOL_SOCKET", "/run/ydotoold/socket")
-    # Without the lead-in sleep the letter after a chunk's leading space was dropped ("m," for "Um,").
-    typed = subprocess.run(["wtype", "-s", "30", "-d", "3", "--", text], stderr=subprocess.DEVNULL).returncode == 0
-    if not typed:
-        subprocess.run(["ydotool", "type", "--", text], env={**os.environ, "YDOTOOL_SOCKET": socket},
-                       stderr=subprocess.DEVNULL)
+    subprocess.run(["ydotool", "type", "--key-delay", "6", "--key-hold", "6", "--", text],
+                   env={**os.environ, "YDOTOOL_SOCKET": socket}, stderr=subprocess.DEVNULL)
 
 
 def notify(message):

@@ -19,10 +19,6 @@
           # Brave's key lives in gnome-keyring from niri; KWallet would mint a second key and strand every login.
           services.gnome.gnome-keyring.enable = true;
           security.pam.services.sddm.enableGnomeKeyring = true;
-
-          # KWin has no virtual-keyboard protocol, so dictate types through ydotool here.
-          programs.ydotool.enable = true;
-          users.users.${self.lib.user.name}.extraGroups = [ "ydotool" ];
         }
       ];
 

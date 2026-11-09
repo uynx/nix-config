@@ -89,7 +89,6 @@
           runtimeInputs = with pkgs; [
             curl
             wl-clipboard
-            wtype
             ydotool
             libnotify
             pipewire

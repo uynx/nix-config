@@ -111,7 +111,8 @@ class Runner(unittest.TestCase):
             "pw-cli": "true",
             "notify-send": f'echo "$2" >> "{home}/notes"',
             "curl": "cat >/dev/null; echo 'word'",
-            "wtype": f'for a; do :; done; printf "[%s]" "$a" >> "{home}/typed"',
+            "wtype": f'echo "$*" >> "{home}/wtyped"',
+            "ydotool": f'for a; do :; done; printf "[%s]" "$a" >> "{home}/typed"',
             "wl-copy": f'cat > "{home}/clip"',
         }
         for name, body in stubs.items():
@@ -127,6 +128,7 @@ class Runner(unittest.TestCase):
         finally:
             os.environ["PATH"], dictate_stream.PIDFILE, dictate_stream.DEBUG = old
         read = lambda n: open(os.path.join(home, n)).read() if os.path.exists(os.path.join(home, n)) else ""
+        self.assertEqual(read("wtyped"), "", "wtype maps letters onto Tab and Backspace keycodes")
         return read("typed"), read("clip"), read("notes")
 
     def test_every_phrase_in_the_stream_is_typed_in_order(self):
