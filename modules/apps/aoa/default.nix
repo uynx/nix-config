@@ -61,6 +61,7 @@
         aoa-ifsfresh = oneshot "save each newly public ECMWF run (all three field sets)" "/bin/sh -c 'ops/ifs_fresh.sh >> weather/ifs_fresh.log 2>&1'" { MemoryHigh = "3G"; };
         aoa-tests = oneshot "nightly unit tests, one status line in data/tests.log" "%h/always_on_agent/ops/tests.sh" { MemoryHigh = "4G"; };
         aoa-clifork = oneshot "daily CLI fork flag for the US temperature ladders, after the West Coast CLIs issue" "/bin/sh -c 'devenv shell -- python -m ops.cli_fork >> data/cli_fork.log 2>&1'" { MemoryHigh = "2G"; };
+        aoa-refit = oneshot "submit the monthly seasonal refit to x86 (row L2-30)" "/bin/sh %h/always_on_agent/ops/refit_month.sh submit" { MemoryHigh = "256M"; };
         aoa-lanesboot = {
           Unit = {
             Description = "Start the weather research agents";
@@ -102,6 +103,7 @@
         ];
         aoa-tests = timer "nightly unit tests at 03:30" "*-*-* 03:30:00";
         aoa-clifork = timer "daily CLI fork flag at 10:45Z" "*-*-* 10:45:00 UTC";
+        aoa-refit = timer "monthly seasonal refit on the 1st at 02:00" "*-*-01 02:00:00";
       };
       x86Services = {
         aoa-collector2 = recorder "collector" "secretspec run --provider sops://secrets.enc.yaml --reason collector -- engine/target/release/collector --poly-tag 103040 \"KXHIGH*\" \"KXLOW*\" 2>> data_collector.log" "1G";
