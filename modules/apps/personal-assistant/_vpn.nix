@@ -19,7 +19,13 @@ in
     # Installed but never started at boot or by a switch: agent's VPN runs only after `vpn on`.
     obscura.wantedBy = lib.mkForce [ ];
     obscura-connect.wantedBy = lib.mkForce [ ];
-    obscura-lockdown.wantedBy = lib.mkForce [ ];
+    obscura-lockdown = {
+      wantedBy = lib.mkForce [ ];
+      serviceConfig = {
+        ExecStartPost = "${pkgs.systemd}/bin/systemctl --no-block stop wireguard-wg-assistant.service";
+        ExecStopPost = "-${pkgs.systemd}/bin/systemctl --no-block start wireguard-wg-assistant.service";
+      };
+    };
     assistant-browser-netns = {
       description = "Network namespace for the assistant browser";
       serviceConfig = {
@@ -35,6 +41,8 @@ in
         "assistant-browser-netns.service"
         "sops-nix.service"
       ];
+      # The browser tunnel runs only while the host kill switch is down; a switch restarting multi-user.target must not start it.
+      serviceConfig.ExecCondition = "${pkgs.bash}/bin/sh -c '! ${pkgs.systemd}/bin/systemctl is-active -q obscura-lockdown.service'";
     };
   };
   networking.wireguard.interfaces.wg-assistant = {

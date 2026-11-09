@@ -11,7 +11,17 @@
       browserPython = pkgs.python3.withPackages (p: [ p.playwright ]);
       browser = pkgs.writeShellScriptBin "assistant-browser" ''
         export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
-        exec /run/wrappers/bin/sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ${browserPython}/bin/python3 "$HOME/dotfiles/assistant/browser/ab.py" "$@"
+        ab="$HOME/dotfiles/assistant/browser/ab.py"
+        hs=$(/run/wrappers/bin/sudo ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.wireguard-tools}/bin/wg show wg-assistant latest-handshakes 2>/dev/null | ${pkgs.coreutils}/bin/cut -f2)
+        # The browser tunnel is used only while the host VPN is down and the tunnel handshook in the last 3 minutes.
+        if ${pkgs.iproute2}/bin/ip link show obscuravpn >/dev/null 2>&1 || [ $(( $(${pkgs.coreutils}/bin/date +%s) - ''${hs:-0} )) -gt 180 ]; then
+          ${pkgs.systemd}/bin/systemctl --user stop personal-assistant-browser
+          ${pkgs.systemd}/bin/systemctl --user start personal-assistant-browser-direct
+          exec ${browserPython}/bin/python3 "$ab" "$@"
+        fi
+        ${pkgs.systemd}/bin/systemctl --user stop personal-assistant-browser-direct
+        ${pkgs.systemd}/bin/systemctl --user start personal-assistant-browser
+        exec /run/wrappers/bin/sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ${browserPython}/bin/python3 "$ab" "$@"
       '';
       browserDirect = pkgs.writeShellScriptBin "assistant-browser-direct" ''
         export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
