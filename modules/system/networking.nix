@@ -18,14 +18,22 @@
           ];
 
           wifi-rescan = {
-            description = "Scan for Wi-Fi when there is no default route";
+            description = "Toggle the Wi-Fi radio when there is no default route";
             path = [
               pkgs.iproute2
-              pkgs.iwd
+              pkgs.networkmanager
               pkgs.ripgrep
             ];
             serviceConfig.Type = "oneshot";
-            script = "ip route show default | rg -q . || iwctl station wlan0 scan";
+            # Only from disconnected (30): a toggle during connecting would abort it, and a radio the user switched off stays off.
+            script = ''
+              ip route show default | rg -q . && exit 0
+              [ "$(nmcli radio wifi)" = enabled ] || exit 0
+              nmcli -g GENERAL.STATE device show wlan0 | rg -q '^30 ' || exit 0
+              nmcli radio wifi off
+              sleep 5
+              nmcli radio wifi on
+            '';
           };
 
           iwd-randomize-known-networks = {
@@ -49,7 +57,7 @@
           };
         };
 
-        # DisablePeriodicScan leaves iwd idle in autoconnect_full after a drop (agent, 2026-11-05: 5.5 h offline); a scan restarts the search.
+        # Do not go back to a scan: 3,250 scans left agent off eduroam for 2.5 days (2026-11-06 to 09), and one radio toggle reconnected it in 1 s.
         timers.wifi-rescan = {
           wantedBy = [ "timers.target" ];
           timerConfig = {
