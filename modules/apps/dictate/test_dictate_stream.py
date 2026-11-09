@@ -111,7 +111,7 @@ class Runner(unittest.TestCase):
             "pw-cli": "true",
             "notify-send": f'echo "$2" >> "{home}/notes"',
             "curl": "cat >/dev/null; echo 'word'",
-            "wtype": f'shift; printf "[%s]" "$*" >> "{home}/typed"',
+            "wtype": f'for a; do :; done; printf "[%s]" "$a" >> "{home}/typed"',
             "wl-copy": f'cat > "{home}/clip"',
         }
         for name, body in stubs.items():
@@ -119,12 +119,13 @@ class Runner(unittest.TestCase):
             with open(path, "w") as f:
                 f.write("#!/bin/sh\n" + body + "\n")
             os.chmod(path, 0o755)
-        old = (os.environ["PATH"], dictate_stream.PIDFILE)
+        old = (os.environ["PATH"], dictate_stream.PIDFILE, dictate_stream.DEBUG)
         os.environ["PATH"], dictate_stream.PIDFILE = bin + ":" + old[0], os.path.join(home, "pid")
+        dictate_stream.DEBUG = os.path.join(home, "no-debug")
         try:
             dictate_stream.main()
         finally:
-            os.environ["PATH"], dictate_stream.PIDFILE = old
+            os.environ["PATH"], dictate_stream.PIDFILE, dictate_stream.DEBUG = old
         read = lambda n: open(os.path.join(home, n)).read() if os.path.exists(os.path.join(home, n)) else ""
         return read("typed"), read("clip"), read("notes")
 

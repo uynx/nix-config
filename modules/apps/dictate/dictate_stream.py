@@ -77,7 +77,8 @@ def transcribe(pcm):
 
 def type_text(text):
     socket = os.environ.get("YDOTOOL_SOCKET", "/run/ydotoold/socket")
-    typed = subprocess.run(["wtype", "--", text], stderr=subprocess.DEVNULL).returncode == 0
+    # Without the lead-in sleep the letter after a chunk's leading space was dropped ("m," for "Um,").
+    typed = subprocess.run(["wtype", "-s", "30", "-d", "3", "--", text], stderr=subprocess.DEVNULL).returncode == 0
     if not typed:
         subprocess.run(["ydotool", "type", "--", text], env={**os.environ, "YDOTOOL_SOCKET": socket},
                        stderr=subprocess.DEVNULL)
