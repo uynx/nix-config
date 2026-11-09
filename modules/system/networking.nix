@@ -27,9 +27,14 @@
             serviceConfig.Type = "oneshot";
             # Only from disconnected (30): a toggle during connecting would abort it, and a radio the user switched off stays off.
             script = ''
-              ip route show default | rg -q . && exit 0
-              [ "$(nmcli radio wifi)" = enabled ] || exit 0
-              nmcli -g GENERAL.STATE device show wlan0 | rg -q '^30 ' || exit 0
+              down() {
+                ! ip route show default | rg -q . &&
+                  [ "$(nmcli radio wifi)" = enabled ] &&
+                  nmcli -g GENERAL.STATE device show wlan0 | rg -q '^30 '
+              }
+              down || exit 0
+              sleep 30
+              down || exit 0
               nmcli radio wifi off
               sleep 5
               nmcli radio wifi on
@@ -62,7 +67,7 @@
           wantedBy = [ "timers.target" ];
           timerConfig = {
             OnBootSec = "2min";
-            OnUnitActiveSec = "1min";
+            OnUnitActiveSec = "30s";
           };
         };
 
