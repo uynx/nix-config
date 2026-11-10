@@ -40,7 +40,7 @@
         };
       };
 
-      # A new generation that gets no route in 4 minutes reboots; after its second failed try systemd-boot falls back to the previous generation.
+      # A new generation that gets no route in 10 minutes reboots; after its second failed try systemd-boot falls back to the previous generation.
       systemd.services.boot-health = {
         description = "Reboot when a freshly installed generation boots without network";
         requiredBy = [ "boot-complete.target" ];
@@ -58,7 +58,7 @@
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
-          TimeoutStartSec = 240;
+          TimeoutStartSec = 600;
         };
         script = "until ip -4 route show default | rg -q 'dev (wl|en)'; do sleep 3; done";
       };

@@ -66,7 +66,7 @@
         timers.wifi-rescan = {
           wantedBy = [ "timers.target" ];
           timerConfig = {
-            OnBootSec = "2min";
+            OnBootSec = "30s";
             OnUnitActiveSec = "30s";
           };
         };
