@@ -51,7 +51,7 @@ let
           DnsOverHttpsMode: "off",
           BuiltInDnsClientEnabled: false,
           BraveShieldsEnabledForUrls: ["*"],
-          BraveShieldsDisabledForUrls: []
+          BraveShieldsDisabledForUrls: ["https://docs.google.com/*", "https://drive.google.com/*"]
         }' > $out
       '';
     };
