@@ -60,3 +60,6 @@ center_password_text = true
 background_opacity = 0.0
 input_opacity = 0.55
 input_radius = 22.0
+
+[idle.behavior.lock]
+enabled = false
