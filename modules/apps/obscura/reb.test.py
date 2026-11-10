@@ -46,16 +46,29 @@ class RebuildVpnTest(unittest.TestCase):
 
     def test_vpn_off_flags_before_stopping(self):
         trace = self.vpn('off')
-        self.assertEqual(trace[0], 'sudo touch /run/obscura-off')
+        self.assertEqual(trace[0], 'sudo touch /var/lib/obscura-off')
         self.assertTrue(any(l.startswith('sudo systemctl stop obscura') for l in trace[1:]))
 
     def test_vpn_on_and_fix_clear_the_flag_first(self):
         for arg in ('on', 'fix'):
-            self.assertEqual(self.vpn(arg)[0], 'sudo rm -f /run/obscura-off')
+            self.assertEqual(self.vpn(arg)[0], 'sudo rm -f /var/lib/obscura-off')
 
     def test_units_skip_while_flagged(self):
         source = Path(__file__).with_name('default.nix').read_text()
-        self.assertEqual(source.count('ConditionPathExists = "!/run/obscura-off"'), 3)
+        self.assertEqual(source.count('ConditionPathExists = "!/var/lib/obscura-off"'), 3)
+
+    def test_activation_carries_old_run_flag(self):
+        source = Path(__file__).with_name('default.nix').read_text()
+        script = re.search(r"activationScripts\.obscuraOffFlag = ''(.*?)'';", source, re.S).group(1)
+        for old_flag, expected in ((True, True), (False, False)):
+            with tempfile.TemporaryDirectory() as folder:
+                run, lib = Path(folder, 'run'), Path(folder, 'lib')
+                run.mkdir(); lib.mkdir()
+                if old_flag:
+                    (run / 'obscura-off').touch()
+                body = script.replace('/run/', f'{run}/').replace('/var/lib/', f'{lib}/')
+                subprocess.run(['bash', '-euo', 'pipefail', '-c', body], check=True)
+                self.assertEqual((lib / 'obscura-off').exists(), expected)
 
     def test_off_stays_off(self):
         self.check_state('off', False)

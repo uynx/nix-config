@@ -58,6 +58,11 @@
     {
       environment.systemPackages = [ obscura ];
 
+      # Runs before the switch restarts units, so a VPN turned off under the old /run flag stays off.
+      system.activationScripts.obscuraOffFlag = ''
+        if [ -e /run/obscura-off ]; then touch /var/lib/obscura-off; fi
+      '';
+
       systemd.services = {
         obscura-lockdown = {
           description = "Obscura egress lockdown";
@@ -71,8 +76,8 @@
           unitConfig = {
             DefaultDependencies = false;
             ConditionCapability = "CAP_NET_ADMIN";
-            # vpn off writes this flag, so a switch restarting multi-user.target leaves the VPN off; /run clears at boot.
-            ConditionPathExists = "!/run/obscura-off";
+            # vpn off writes this flag, so a switch or a reboot leaves the VPN off until vpn on; keep it off tmpfs.
+            ConditionPathExists = "!/var/lib/obscura-off";
           };
           serviceConfig = {
             Type = "oneshot";
@@ -92,7 +97,7 @@
           ];
 
           startLimitIntervalSec = 0;
-          unitConfig.ConditionPathExists = "!/run/obscura-off";
+          unitConfig.ConditionPathExists = "!/var/lib/obscura-off";
 
           restartIfChanged = false;
 
@@ -120,7 +125,7 @@
           wantedBy = [ "multi-user.target" ];
           requires = [ "obscura.service" ];
           after = [ "obscura.service" ];
-          unitConfig.ConditionPathExists = "!/run/obscura-off";
+          unitConfig.ConditionPathExists = "!/var/lib/obscura-off";
 
           restartIfChanged = false;
 
@@ -173,21 +178,21 @@
     programs.fish.functions.vpn.body = ''
       switch "$argv[1]"
           case fix
-              sudo rm -f /run/obscura-off
+              sudo rm -f /var/lib/obscura-off
               and sudo systemctl restart dnscrypt-proxy.service obscura.service
               and obscura connect
           case off
-              sudo touch /run/obscura-off
+              sudo touch /var/lib/obscura-off
               and sudo systemctl stop obscura.service obscura-lockdown.service
               and sudo systemctl restart dnscrypt-proxy.service
           case on
-              sudo rm -f /run/obscura-off
+              sudo rm -f /var/lib/obscura-off
               and sudo systemctl start obscura-lockdown.service obscura.service
               and sudo systemctl restart dnscrypt-proxy.service
               and obscura connect
           case '*'
               echo "vpn fix  restart the daemon, kill switch stays on"
-              echo "vpn off  daemon and kill switch off — unprotected network"
+              echo "vpn off  daemon and kill switch off, survives reboot — unprotected network"
               echo "vpn on   both back"
               obscura status
       end
