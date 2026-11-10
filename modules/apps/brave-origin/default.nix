@@ -1,8 +1,21 @@
 { self, ... }:
 {
   flake.homeModules.braveOrigin =
-    { pkgs, lib, ... }:
+    {
+      config,
+      pkgs,
+      lib,
+      ...
+    }:
     let
+      bravePrefs = pkgs.writeShellApplication {
+        name = "brave-prefs";
+        runtimeInputs = [
+          pkgs.jq
+          pkgs.coreutils
+        ];
+        text = builtins.readFile ./prefs/apply.sh;
+      };
       update-brave-origin = self.lib.mkUpdater pkgs {
         name = "update-brave-origin";
         inputs = [ pkgs.ripgrep ];
@@ -37,6 +50,14 @@
       home.packages = [ update-brave-origin ];
 
       shellHooks.update = [ "update-brave-origin" ];
+
+      # Settings pages are blocked by policy, so these snapshots are the only way settings reach a machine.
+      home.activation.bravePrefs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        run ${bravePrefs}/bin/brave-prefs "${config.home.homeDirectory}/.config/BraveSoftware/Brave-Browser" \
+          "${./prefs/personal.json}:Default/Preferences" \
+          "${./prefs/school.json}:Profile 1/Preferences" \
+          "${./prefs/local-state.json}:Local State"
+      '';
 
       programs.chromium = {
         enable = true;

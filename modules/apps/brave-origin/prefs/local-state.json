@@ -1,0 +1,46 @@
+{
+  "brave": {
+    "ad_block": {
+      "checked_all_default_regions": true,
+      "regional_filters": {
+        "1ED1870B-997C-4BFE-AEBC-B67D679BAF3B": {
+          "enabled": true
+        },
+        "564C3B75-8731-404C-AD7C-5683258BA0B0": {
+          "enabled": true
+        },
+        "67E792D4-AE03-4D1A-9EDE-80E01C81F9B8": {
+          "enabled": true
+        },
+        "690FF3B4-8B6B-4709-8505-FEC6643D7BD9": {
+          "enabled": true
+        },
+        "78672887-A098-4D2C-B0CB-A3DEC4834DA7": {
+          "enabled": true
+        },
+        "7911A1CB-304E-4CDB-ABB3-E2A94A37E4DD": {
+          "enabled": true
+        },
+        "9E8EC586-4E17-4E5E-99D7-35172C4CEA74": {
+          "enabled": true
+        },
+        "9FCEECEC-52B4-4487-8E57-8781E82C91D0": {
+          "enabled": false
+        },
+        "E2FA7D98-0BD5-493E-8AF4-950604ADE9CB": {
+          "enabled": true
+        },
+        "F61D6B7B-4110-4EA4-9C81-38FB4CE90AEC": {
+          "enabled": true
+        }
+      }
+    },
+    "shields": {
+      "fb_embed_default": false,
+      "twitter_embed_default": false
+    },
+    "tabs": {
+      "compact_horizontal_tabs": true
+    }
+  }
+}
