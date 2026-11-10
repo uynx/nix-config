@@ -406,10 +406,7 @@
            }
            install -Dm444 \
              ${pkgs.mangohud}/share/vulkan/implicit_layer.d/MangoHud.aarch64.json \
-             /usr/share/vulkan/implicit_layer.d/MangoHud.aarch64.json
-           ldconfig -p | grep -q libgtk-x11-2.0.so.0 || ln -sfn \
-             ${pkgs.gtk2}/lib/libgtk-x11-2.0.so.0 \
-             ${pkgs.gtk2}/lib/libgdk-x11-2.0.so.0 /usr/lib/'
+             /usr/share/vulkan/implicit_layer.d/MangoHud.aarch64.json'
 
         STEAM_ROOT=${steam}
         STEAM_HOME=${guest}/.steam
