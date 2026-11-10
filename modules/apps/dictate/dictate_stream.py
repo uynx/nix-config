@@ -111,7 +111,7 @@ def main():
     header = rec.stdout.read(24)
     if len(header) == 24:
         rec.stdout.read(max(0, int.from_bytes(header[4:8], "little") - 24))
-    notify("Listening. Press Super+D again to stop.")
+    notify(f"Listening. Press {os.environ.get('DICTATE_KEY', 'Super+D')} again to stop.")
     phrases, said = queue.Queue(), []
     thread = threading.Thread(target=typist, args=(phrases, said))
     thread.start()
