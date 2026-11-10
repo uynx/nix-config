@@ -89,6 +89,8 @@ in
             restartIfChanged = false;
             serviceConfig.MemoryLow = "5G";
           };
+          # With turbo on the CPU sat at 95 to 97 C under the lanes' load, 3 C below its shutdown trip; off, it holds near 72 C.
+          systemd.tmpfiles.rules = [ "w /sys/devices/system/cpu/intel_pstate/no_turbo - - - - 1" ];
           systemd.sleep.settings.Sleep.AllowSuspend = false;
           services.logind.settings.Login.HandleLidSwitch = "ignore";
 
