@@ -141,7 +141,7 @@
 
             [Service]
             RestartSteps=5
-            RestartMaxDelaySec=5min
+            RestartMaxDelaySec=1min
           '';
           # The same units were hand-placed before this module existed; Home Manager refuses to link over a plain file.
           home.activation.aoaAdoptUnits = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''

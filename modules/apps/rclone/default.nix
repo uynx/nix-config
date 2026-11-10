@@ -23,7 +23,7 @@
           ExecStopPost = "-/run/wrappers/bin/fusermount3 -uz ${mountPoint}";
           RestartSec = "30s";
           RestartSteps = 5;
-          RestartMaxDelaySec = "5min";
+          RestartMaxDelaySec = "1min";
         };
       };
 
