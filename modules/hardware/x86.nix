@@ -3,17 +3,18 @@
     { config, pkgs, ... }:
     {
       boot = {
-        loader = {
-          systemd-boot = {
-            enable = true;
-            configurationLimit = 10;
-            bootCounting = {
-              enable = true;
-              tries = 2;
-            };
-          };
-          efi.canTouchEfiVariables = true;
+        loader.efi.canTouchEfiVariables = true;
+        # Keys enroll on the first boot with the firmware in Secure Boot setup mode.
+        lanzaboote = {
+          enable = true;
+          pkiBundle = "/var/lib/sbctl";
+          configurationLimit = 10;
+          autoGenerateKeys.enable = true;
+          autoEnrollKeys.enable = true;
+          bootCounting.initialTries = 2;
         };
+        # TPM slot is enrolled by hand against PCR 7 once Secure Boot is on; the passphrase stays as fallback.
+        initrd.luks.devices.cryptroot.crypttabExtraOpts = [ "tpm2-device=auto" ];
         kernelPackages = pkgs.linuxPackages_latest;
 
         kernelParams = [
@@ -31,6 +32,8 @@
         ];
 
         kernel.sysctl = {
+          "kernel.panic" = 10;
+          "kernel.panic_on_oops" = 1;
           "vm.swappiness" = 180;
           "vm.page-cluster" = 0;
           "vm.vfs_cache_pressure" = 50;
@@ -74,8 +77,14 @@
 
       powerManagement.cpuFreqGovernor = "powersave";
 
+      systemd.settings.Manager = {
+        RuntimeWatchdogSec = "2min";
+        RebootWatchdogSec = "2min";
+      };
+
       environment.systemPackages = with pkgs; [
         lm_sensors
+        sbctl
         stress-ng
       ];
 

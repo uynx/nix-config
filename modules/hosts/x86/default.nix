@@ -13,9 +13,17 @@
       (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
       (self.lib.gaming "native")
 
+      inputs.lanzaboote.nixosModules.lanzaboote
       ./_hardware-configuration.nix
 
       { networking.hostName = "x86"; }
+      # The login keyring's password is blank, or autologin leaves it locked and Brave prompts.
+      {
+        services.displayManager.autoLogin = {
+          enable = true;
+          user = self.lib.user.name;
+        };
+      }
       {
         home-manager.users.${self.lib.user.name} =
           { config, ... }:
