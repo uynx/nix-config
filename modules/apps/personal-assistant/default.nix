@@ -103,6 +103,16 @@
               ExecStart = "${bridge} heartbeat";
             };
           };
+          personal-assistant-mailclean = {
+            Unit.Description = "Move mail with no remaining use to Trash";
+            Service = {
+              Type = "oneshot";
+              WorkingDirectory = "%h/dotfiles/assistant";
+              Environment = environment;
+              EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-mailclean.lock ${pkgs.dash}/bin/dash -c 'mkdir -p %h/applications && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/mail-cleanup.md)\" >> %h/applications/mailclean.log 2>&1'";
+            };
+          };
           personal-assistant-rotate = {
             Unit.Description = "Request a fresh personal assistant session and handoff";
             Service = {
@@ -117,6 +127,14 @@
             Timer = {
               OnBootSec = "5min";
               OnUnitActiveSec = "20min";
+            };
+            Install.WantedBy = [ "timers.target" ];
+          };
+          personal-assistant-mailclean = {
+            Unit.Description = "Daily mail cleanup at 6 AM Eastern";
+            Timer = {
+              OnCalendar = "*-*-* 06:00:00 America/New_York";
+              Persistent = true;
             };
             Install.WantedBy = [ "timers.target" ];
           };
