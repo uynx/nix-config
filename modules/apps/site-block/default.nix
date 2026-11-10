@@ -1,4 +1,4 @@
-{ self, ... }:
+{ self, inputs, ... }:
 let
   # Settings is one page app whose menu clicks never reload, so blocking only its Shields subpage left content filters editable.
   settingsPages = [
@@ -37,25 +37,90 @@ let
     "mullvad-browser"
   ];
 
-  build = pkgs: {
+  build = pkgs: rec {
     porn = pkgs.runCommand "porn-names" { } ''
       awk '$1 == "0.0.0.0" && $2 != "0.0.0.0" { print $2 }' ${pkgs.stevenblack-blocklist.porn}/hosts | sort -u > $out
       [ "$(wc -l < $out)" -gt 10000 ]
     '';
-    # URLBlocklist reads only its first 1000 entries, so the porn list stays in DNS.
-    policy = pkgs.writeText "site-block-policy.json" (builtins.toJSON {
-      URLBlocklist = social ++ settingsPages;
-      IncognitoModeAvailability = 1;
-      TorDisabled = true;
-      DnsOverHttpsMode = "off";
-      BuiltInDnsClientEnabled = false;
-      BraveShieldsEnabledForUrls = [ "*" ];
-      BraveShieldsDisabledForUrls = [
-        "https://docs.google.com/*"
-        "https://drive.google.com/*"
-      ];
-    });
+    # URLBlocklist reads only its first 1000 entries, so it gets the most-visited porn domains and DNS keeps the full list.
+    pornTop = pkgs.runCommand "porn-top" { } ''
+      tr -d '\r' < ${
+        pkgs.fetchurl {
+          url = "https://tranco-list.eu/download/947N2/1000000";
+          hash = "sha256-87PxyBszP0NtFuG+KtG/cvlfoRoneG9fAELyWLjzgt8=";
+        }
+      } | awk -F, 'NR == FNR { p[$1] = 1; next } ($2 in p) { print $2 }' ${porn} - \
+        | head -n ${toString (1000 - builtins.length (social ++ settingsPages))} > $out
+    '';
+    policy = pkgs.runCommand "site-block-policy.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
+      jq --rawfile top ${pornTop} '.URLBlocklist += ($top | split("\n") | map(select(. != "")))' ${
+        pkgs.writeText "policy.json" (builtins.toJSON {
+          URLBlocklist = social ++ settingsPages;
+          IncognitoModeAvailability = 1;
+          TorDisabled = true;
+          DnsOverHttpsMode = "off";
+          BuiltInDnsClientEnabled = false;
+          BraveShieldsEnabledForUrls = [ "*" ];
+          BraveShieldsDisabledForUrls = [
+            "https://docs.google.com/*"
+            "https://drive.google.com/*"
+          ];
+        })
+      } > $out
+      jq -e '.URLBlocklist | length <= 1000 and ([.[] | select(. == "pornhub.com" or . == "xvideos.com" or . == "youtube.com")] | length == 3) and all(. != "wikipedia.org")' $out
+    '';
+    phonePolicy = pkgs.runCommand "site-block-phone.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
+      jq '{
+        privateDns: "dns.quad9.net",
+        userRestrictions: ["disallow_config_private_dns", "no_safe_boot", "no_add_user", "no_factory_reset"],
+        hidden: ["app.vanadium.browser"],
+        appRestrictions: { "com.brave.browser": . }
+      }' ${policy} > $out
+    '';
   };
+
+  phoneSync =
+    pkgs:
+    let
+      b = build pkgs;
+      apk =
+        pkgs.runCommand "site-block-phone.apk"
+          {
+            nativeBuildInputs = [
+              inputs.nixpkgs.legacyPackages.x86_64-linux.aapt
+              pkgs.jdk_headless
+              pkgs.zip
+            ];
+            ANDROID_JAR = pkgs.runCommand "android-36.jar" { nativeBuildInputs = [ pkgs.unzip ]; } ''
+              unzip -p ${
+                pkgs.fetchurl {
+                  url = "https://dl.google.com/android/repository/platform-36_r02.zip";
+                  hash = "sha256-N2BzaaKMW2QLOnmYho1FiY68t3dWWg6F+azzbyljHS4=";
+                }
+              } '*/android.jar' > $out
+            '';
+            R8_JAR = pkgs.fetchurl {
+              url = "https://dl.google.com/android/maven2/com/android/tools/r8/8.13.25/r8-8.13.25.jar";
+              hash = "sha256-DU8vaMT8vJQ07/Ei9B/rb7HZjv0vqlMM7Bq6yrHOoD0=";
+            };
+          }
+          "bash ${./phone/build-apk.sh} ${./phone} ${b.phonePolicy} $out";
+    in
+    pkgs.writeShellApplication {
+      name = "phone-sync";
+      runtimeInputs = with pkgs; [
+        android-tools
+        apksigner
+        jq
+        ripgrep
+        gawk
+        coreutils
+      ];
+      text = ''
+        export PHONE_SYNC_APK=${apk} PHONE_SYNC_POLICY=${b.phonePolicy}
+        ${builtins.readFile ./phone/phone-sync.sh}
+      '';
+    };
 
   dns = porn: {
     services.dnscrypt-proxy.settings.blocked_names.blocked_names_file = porn;
@@ -79,6 +144,10 @@ in
           message = "Brandon banned Tor Browser and Mullvad Browser on 2026-11-05 and asked that they never come back. Do not remove this check or the site block.";
         }
       ];
+
+      environment.systemPackages = [ (phoneSync pkgs) ];
+      home-manager.users.${self.lib.user.name}.sops.secrets.site-block-keystore.path =
+        "${self.lib.user.home}/.config/site-block/keystore.p12.b64";
 
       environment.etc = {
         "brave/policies/managed/site-block.json".source = b.policy;
