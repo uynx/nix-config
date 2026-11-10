@@ -19,7 +19,7 @@
       };
       # Wi-Fi can take minutes after boot; the default 90 s start timeout marks the unit failed before Tailscale comes up.
       systemd.services.tailscaled-autoconnect.serviceConfig.TimeoutStartSec = "infinity";
-      networking.hosts =lib.mapAttrs' (name: ip: lib.nameValuePair ip [ name ]) (
+      networking.hosts = lib.mapAttrs' (name: ip: lib.nameValuePair ip [ name ]) (
         lib.filterAttrs (name: _: name != config.networking.hostName) peers
       );
       networking.firewall.trustedInterfaces = [ "tailscale0" ];
