@@ -9,6 +9,7 @@ in
     modules = with self.nixosModules; [
       standard
       aoa
+      unattended
       personalAssistant
       # `reb switch` flips ./desktop between niri and kde; kde because RustDesk needs KWin's RemoteDesktop portal.
       (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
@@ -40,17 +41,8 @@ in
             kernelPackages = pkgs.linuxPackages_latest;
             # MSI's DSDT throws harmless ACPI errors that print over the passphrase prompt.
             consoleLogLevel = 3;
-            kernel.sysctl = {
-              "kernel.panic" = 10;
-              "kernel.panic_on_oops" = 1;
-            };
           };
           environment.systemPackages = [ pkgs.sbctl ];
-          systemd.settings.Manager = {
-            RuntimeWatchdogSec = "2min";
-            # A remote reboot once froze after shutdown with a black screen; the watchdog power-cycles it.
-            RebootWatchdogSec = "2min";
-          };
           security.sudo.wheelNeedsPassword = false;
           environment.variables.AGENT_OWNS_MACHINE = "1";
 
