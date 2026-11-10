@@ -43,14 +43,16 @@ let
       [ "$(wc -l < $out)" -gt 10000 ]
     '';
     # URLBlocklist reads only its first 1000 entries, so it gets the most-visited porn domains and DNS keeps the full list.
+    # awk stops itself; a `| head` here dies of SIGPIPE under the builder's pipefail.
     pornTop = pkgs.runCommand "porn-top" { } ''
-      tr -d '\r' < ${
-        pkgs.fetchurl {
-          url = "https://tranco-list.eu/download/947N2/1000000";
-          hash = "sha256-87PxyBszP0NtFuG+KtG/cvlfoRoneG9fAELyWLjzgt8=";
-        }
-      } | awk -F, 'NR == FNR { p[$1] = 1; next } ($2 in p) { print $2 }' ${porn} - \
-        | head -n ${toString (1000 - builtins.length (social ++ settingsPages))} > $out
+      awk -F, -v n=${toString (1000 - builtins.length (social ++ settingsPages))} \
+        'NR == FNR { p[$1] = 1; next } { sub(/\r$/, "", $2) } ($2 in p) { print $2; if (++c == n) exit }' \
+        ${porn} ${
+          pkgs.fetchurl {
+            url = "https://tranco-list.eu/download/947N2/1000000";
+            hash = "sha256-87PxyBszP0NtFuG+KtG/cvlfoRoneG9fAELyWLjzgt8=";
+          }
+        } > $out
     '';
     policy = pkgs.runCommand "site-block-policy.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
       jq --rawfile top ${pornTop} '.URLBlocklist += ($top | split("\n") | map(select(. != "")))' ${
