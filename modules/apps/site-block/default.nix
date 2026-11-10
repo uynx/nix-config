@@ -3,6 +3,8 @@ let
   settingsPages = [
     "brave://settings/shields"
     "chrome://settings/shields"
+    "brave://adblock"
+    "chrome://adblock"
   ];
 
   social = [
@@ -34,27 +36,25 @@ let
     "mullvad-browser"
   ];
 
-  build =
-    pkgs:
-    let
-      porn = pkgs.runCommand "porn-names" { } ''
-        awk '$1 == "0.0.0.0" && $2 != "0.0.0.0" { print $2 }' ${pkgs.stevenblack-blocklist.porn} | sort -u > $out
-      '';
-    in
-    {
-      inherit porn;
-      policy = pkgs.runCommand "site-block-policy.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
-        jq -n --rawfile porn ${porn} --argjson social '${builtins.toJSON (social ++ settingsPages)}' '{
-          URLBlocklist: (($porn | split("\n") | map(select(. != ""))) + $social),
-          IncognitoModeAvailability: 1,
-          TorDisabled: true,
-          DnsOverHttpsMode: "off",
-          BuiltInDnsClientEnabled: false,
-          BraveShieldsEnabledForUrls: ["*"],
-          BraveShieldsDisabledForUrls: ["https://docs.google.com/*", "https://drive.google.com/*"]
-        }' > $out
-      '';
-    };
+  build = pkgs: {
+    porn = pkgs.runCommand "porn-names" { } ''
+      awk '$1 == "0.0.0.0" && $2 != "0.0.0.0" { print $2 }' ${pkgs.stevenblack-blocklist.porn}/hosts | sort -u > $out
+      [ "$(wc -l < $out)" -gt 10000 ]
+    '';
+    # URLBlocklist reads only its first 1000 entries, so the porn list stays in DNS.
+    policy = pkgs.writeText "site-block-policy.json" (builtins.toJSON {
+      URLBlocklist = social ++ settingsPages;
+      IncognitoModeAvailability = 1;
+      TorDisabled = true;
+      DnsOverHttpsMode = "off";
+      BuiltInDnsClientEnabled = false;
+      BraveShieldsEnabledForUrls = [ "*" ];
+      BraveShieldsDisabledForUrls = [
+        "https://docs.google.com/*"
+        "https://drive.google.com/*"
+      ];
+    });
+  };
 
   dns = porn: {
     services.dnscrypt-proxy.settings.blocked_names.blocked_names_file = porn;
@@ -68,6 +68,9 @@ in
     in
     {
       imports = [ (dns b.porn) ];
+
+      # /etc/hosts holds while the VPN's resolver replaces dnscrypt.
+      networking.hostFiles = [ "${pkgs.stevenblack-blocklist.porn}/hosts" ];
 
       assertions = [
         {
