@@ -17,7 +17,10 @@
       inputs.lanzaboote.nixosModules.lanzaboote
       ./_hardware-configuration.nix
 
-      { networking.hostName = "x86"; }
+      {
+        networking.hostName = "x86";
+        security.sudo.wheelNeedsPassword = false;
+      }
       # The login keyring's password is blank, or autologin leaves it locked and Brave prompts.
       {
         services.displayManager.autoLogin = {
