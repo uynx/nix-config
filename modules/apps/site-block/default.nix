@@ -1,8 +1,9 @@
 { self, ... }:
 let
+  # Settings is one page app whose menu clicks never reload, so blocking only its Shields subpage left content filters editable.
   settingsPages = [
-    "brave://settings/shields"
-    "chrome://settings/shields"
+    "brave://settings"
+    "chrome://settings"
     "brave://adblock"
     "chrome://adblock"
   ];
