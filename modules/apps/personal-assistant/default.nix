@@ -115,6 +115,17 @@
               ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-mailclean.lock ${pkgs.dash}/bin/dash -c 'mkdir -p %h/applications && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/mail-cleanup.md)\" >> %h/applications/mailclean.log 2>&1'";
             };
           };
+          personal-assistant-skillscout = {
+            Unit.Description = "Test newly praised agent skills and read how others run always-on agents";
+            Service = {
+              Type = "oneshot";
+              WorkingDirectory = "%h/dotfiles/assistant";
+              Environment = environment;
+              EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
+              TimeoutStartSec = "75min";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-skillscout.lock ${pkgs.dash}/bin/dash -c 'mkdir -p %h/aoa_tmp/skillscout && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/skill-scout.md)\" >> %h/aoa_tmp/skillscout/run.log 2>&1'";
+            };
+          };
           personal-assistant-rotate = {
             Unit.Description = "Request a fresh personal assistant session and handoff";
             Service = {
@@ -136,6 +147,14 @@
             Unit.Description = "Daily mail cleanup at 6 AM Eastern";
             Timer = {
               OnCalendar = "*-*-* 06:00:00 America/New_York";
+              Persistent = true;
+            };
+            Install.WantedBy = [ "timers.target" ];
+          };
+          personal-assistant-skillscout = {
+            Unit.Description = "Daily skill and agent scout at 5 AM Eastern";
+            Timer = {
+              OnCalendar = "*-*-* 05:00:00 America/New_York";
               Persistent = true;
             };
             Install.WantedBy = [ "timers.target" ];
