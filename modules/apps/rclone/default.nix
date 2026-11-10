@@ -14,9 +14,17 @@
       imports = [ self.homeModules.sops ];
 
       systemd.user.services."rclone-mount:@gcrypt" = {
-        Unit.X-SwitchMethod = "keep-old";
+        Unit = {
+          X-SwitchMethod = "keep-old";
+          StartLimitIntervalSec = 0;
+        };
 
-        Service.ExecStopPost = "-/run/wrappers/bin/fusermount3 -uz ${mountPoint}";
+        Service = {
+          ExecStopPost = "-/run/wrappers/bin/fusermount3 -uz ${mountPoint}";
+          RestartSec = "30s";
+          RestartSteps = 5;
+          RestartMaxDelaySec = "5min";
+        };
       };
 
       home.activation.restartRcloneMount = lib.mkIf pkgs.stdenv.hostPlatform.isLinux (

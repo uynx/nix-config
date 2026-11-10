@@ -134,6 +134,15 @@
           systemd.user.servicesStartTimeoutMs = 600000;
           systemd.user.services = common // (if host == "agent" then agentServices else { }) // (if host == "x86" then x86Services else { });
           systemd.user.timers = if host == "agent" then agentTimers else { };
+          # Never set Restart= here: one-pass scheduler jobs (aoa-job-*) share the prefix and must not rerun.
+          xdg.configFile."systemd/user/aoa-.service.d/backoff.conf".text = ''
+            [Unit]
+            StartLimitIntervalSec=0
+
+            [Service]
+            RestartSteps=5
+            RestartMaxDelaySec=5min
+          '';
           # The same units were hand-placed before this module existed; Home Manager refuses to link over a plain file.
           home.activation.aoaAdoptUnits = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
             for f in $HOME/.config/systemd/user/aoa-*.service $HOME/.config/systemd/user/aoa-*.timer $HOME/.config/systemd/user/*.wants/aoa-*; do
