@@ -1,8 +1,10 @@
 {
   flake.nixosModules.personalAssistant =
-    { pkgs, ... }:
+    { pkgs, lib, ... }:
     let
       simplex = pkgs.callPackage ./_simplex-cli.nix { };
+      # Sites flag the HeadlessChrome token with harder challenges, so the browser reports a stock desktop Chrome.
+      userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${lib.versions.major pkgs.ungoogled-chromium.version}.0.0.0 Safari/537.36";
       environment = [
         "AGENT_OWNS_MACHINE=1"
         "PATH=/run/wrappers/bin:/etc/profiles/per-user/uynx/bin:/run/current-system/sw/bin"
@@ -28,10 +30,10 @@
         exec ${browserPython}/bin/python3 "$HOME/dotfiles/assistant/browser/ab.py" "$@"
       '';
       browserService = prefix: {
-        Unit.Description = "Dedicated assistant Chromium browser";
+        Unit.Description = "Dedicated assistant Chromium browser, headless";
         Service = {
           ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %h/.local/state %h/.local/share/agent-browser/profile";
-          ExecStart = "${prefix}${pkgs.util-linux}/bin/flock -n -E 0 %h/.local/state/agent-browser.lock ${pkgs.ungoogled-chromium}/bin/chromium --user-data-dir=%h/.local/share/agent-browser/profile --remote-debugging-port=9333 --no-first-run --no-default-browser-check --password-store=basic --disable-features=DisableLoadExtensionCommandLineSwitch --load-extension=%h/.local/share/assistant-extensions/fkgkibajhfbepljeaefdnfnegdcjomkh/1.75.0_0,%h/.local/share/assistant-extensions/bkdgflcldnnnapblkhphbgpggdiikppg/2026.10.6_0";
+          ExecStart = "${prefix}${pkgs.util-linux}/bin/flock -n -E 0 %h/.local/state/agent-browser.lock ${pkgs.ungoogled-chromium}/bin/chromium --user-data-dir=%h/.local/share/agent-browser/profile --remote-debugging-port=9333 --headless=new --window-size=1280,900 --user-agent='${userAgent}' --no-first-run --no-default-browser-check --password-store=basic --disable-features=DisableLoadExtensionCommandLineSwitch --load-extension=%h/.local/share/assistant-extensions/fkgkibajhfbepljeaefdnfnegdcjomkh/1.75.0_0,%h/.local/share/assistant-extensions/bkdgflcldnnnapblkhphbgpggdiikppg/2026.10.6_0";
           Environment = environment;
           UMask = "0077";
           Restart = "on-failure";
