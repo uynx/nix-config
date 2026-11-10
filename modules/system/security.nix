@@ -12,9 +12,44 @@
     programs.ssh.extraConfig = ''
       Host 192.168.8.1
         HostKeyAlgorithms +ssh-rsa
+
+      # A key mismatch fails instead of prompting, which on KDE pops ksshaskpass over the screen.
+      Host asahi agent x86 asahi.lan agent.lan x86.lan 100.125.81.50 100.84.155.23 100.75.113.17
+        StrictHostKeyChecking yes
+        UpdateHostKeys no
+      Host asahi asahi.lan
+        HostName 100.125.81.50
+      Host agent agent.lan
+        HostName 100.84.155.23
+      Host x86 x86.lan
+        HostName 100.75.113.17
     '';
 
     programs.ssh.knownHosts = {
+      asahi = {
+        hostNames = [
+          "asahi"
+          "asahi.lan"
+          "100.125.81.50"
+        ];
+        publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAqd86kS4UHf+riQoCRP7vAEYUbkt3tJZUitUl8QvCa9";
+      };
+      agent = {
+        hostNames = [
+          "agent"
+          "agent.lan"
+          "100.84.155.23"
+        ];
+        publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILQokbgErm0FjfL5uKy+lNv5VOwKo+gnYsTcVzNRIOuH";
+      };
+      x86 = {
+        hostNames = [
+          "x86"
+          "x86.lan"
+          "100.75.113.17"
+        ];
+        publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILSTjBu7vJ3GsYw2sqIlC5yaBLVSWCRLSuuFB3r8xdV2";
+      };
       "github.com-ed25519" = {
         hostNames = [ "github.com" ];
         publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
@@ -69,7 +104,8 @@
 
         "iommu.passthrough=0"
         # asahi's U-Boot has no PCI I/O handles, so this only prints an EFI stub error there
-      ] ++ lib.optional (!pkgs.stdenv.hostPlatform.isAarch64) "efi=disable_early_pci_dma";
+      ]
+      ++ lib.optional (!pkgs.stdenv.hostPlatform.isAarch64) "efi=disable_early_pci_dma";
 
       blacklistedKernelModules = [
         "rds"

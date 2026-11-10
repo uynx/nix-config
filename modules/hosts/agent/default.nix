@@ -126,8 +126,8 @@ in
             openFirewall = false;
             settings.PasswordAuthentication = false;
             settings.KbdInteractiveAuthentication = false;
+            settings.PermitRootLogin = "no";
           };
-          users.users.root.openssh.authorizedKeys.keys = [ key ];
           users.users.${user} = {
             openssh.authorizedKeys.keys = [ key ];
             linger = true;
