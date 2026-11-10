@@ -108,7 +108,7 @@
       x86Services = {
         aoa-collector2 = recorder "collector" "secretspec run --provider sops://secrets.enc.yaml --reason collector -- engine/target/release/collector --poly-tag 103040 \"KXHIGH*\" \"KXLOW*\" 2>> data_collector.log" "1G";
         # Phase 45 against agent's 0: the two hosts' 90 s polls then sit 45 s apart, a 45 s cadence for the earliest-of-two feed (row L7-27).
-        aoa-live2 = recorder "live2" "AOA_POLL_PHASE=45 secretspec run --provider sops://secrets.enc.yaml --reason live-weather -- python3 -u -m weather.live >> weather/live.log 2>&1" "512M";
+        aoa-live2 = recorder "live2" "env AOA_POLL_PHASE=45 secretspec run --provider sops://secrets.enc.yaml --reason live-weather -- python3 -u -m weather.live >> weather/live.log 2>&1" "512M";
         aoa-enslog2 =
           let
             base = recorder "enslog2" "python3 -u -m weather.ens_log >> weather/ens_log.err 2>&1" "512M";
