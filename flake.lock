@@ -508,11 +508,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793938215,
-        "narHash": "sha256-K0dITNFmVQ8JpS7oY0DwQhq8irfjQ3HZGOAX1IWSXE4=",
+        "lastModified": 1794313216,
+        "narHash": "sha256-vMLsA5eX6qMsrXAPuHhvo4K3z4NW09V+DP78L2G4HbQ=",
         "owner": "nix-community",
         "repo": "nixos-apple-silicon",
-        "rev": "e170ed766d8e80a600dde4bd119624a475d275ff",
+        "rev": "32b53b2408522ca8895c5baaad16fa7ac3714c93",
         "type": "github"
       },
       "original": {
@@ -961,11 +961,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794330682,
-        "narHash": "sha256-HFAl1nXml6XaVUPw0POR26dj3H65Vhp0oAZrrZ/xZg8=",
+        "lastModified": 1794344362,
+        "narHash": "sha256-UZB0RUCb35IzpsXWn1VN4509aY5wJfZ5/UdW0Mi6EDU=",
         "owner": "BirdeeHub",
         "repo": "nix-wrapper-modules",
-        "rev": "fb330fcf0a55a8afd6908d0587d95efab81b6863",
+        "rev": "de1a7d3c71624460ab418198611c49970defbcc7",
         "type": "github"
       },
       "original": {
