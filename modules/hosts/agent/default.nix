@@ -73,6 +73,22 @@ in
           services.udev.extraRules = ''
             ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1969", ATTR{device}=="0xe0b1", ATTR{remove}="1"
           '';
+          # memory_recursiveprot caps aoa-live.slice's MemoryLow (always_on_agent ops/run.sh) at every ancestor's.
+          systemd.slices = {
+            user = {
+              overrideStrategy = "asDropin";
+              sliceConfig.MemoryLow = "5G";
+            };
+            "user-1000" = {
+              overrideStrategy = "asDropin";
+              sliceConfig.MemoryLow = "5G";
+            };
+          };
+          systemd.services."user@1000" = {
+            overrideStrategy = "asDropin";
+            restartIfChanged = false;
+            serviceConfig.MemoryLow = "5G";
+          };
           systemd.sleep.settings.Sleep.AllowSuspend = false;
           services.logind.settings.Login.HandleLidSwitch = "ignore";
 
