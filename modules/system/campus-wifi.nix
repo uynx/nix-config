@@ -43,7 +43,6 @@
             id = "uynx";
             uuid = "550e7a8e-c569-4b8f-a6f2-fee8c2a1cc1f";
             type = "wifi";
-            autoconnect-priority = 100;
           };
           wifi = {
             mode = "infrastructure";
