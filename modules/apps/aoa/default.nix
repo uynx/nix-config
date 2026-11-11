@@ -16,6 +16,7 @@
         Service = {
           WorkingDirectory = "%h/aoa_collector";
           Environment = [ path ];
+          ExecStartPre = "%h/always_on_agent/ops/pull.sh %h/aoa_collector";
           ExecStart = "/bin/sh -c 'exec ${cmd}'";
           Restart = "always";
           RestartSec = 30;
@@ -29,6 +30,7 @@
           Type = "oneshot";
           Environment = [ path ];
           WorkingDirectory = "%h/always_on_agent";
+          ExecStartPre = "%h/always_on_agent/ops/pull.sh %h/always_on_agent";
           ExecStart = cmd;
         } // extra;
       };
