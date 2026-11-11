@@ -113,9 +113,10 @@
 
           get_ver() {
             case "$1" in
-              agy) agy --version 2>/dev/null | head -1 ;;
-              opencode) opencode --version 2>/dev/null | head -1 ;;
-              t3) t3 --version 2>/dev/null | head -1 | sed 's/t3 //' ;;
+              agy) timeout 10 agy --version 2>/dev/null | head -1 ;;
+              opencode) timeout 10 opencode --version 2>/dev/null | head -1 ;;
+              # t3 --version downloads the whole runtime first; never call it here.
+              t3) jq -r .version "${home}/.local/lib/node_modules/t3/package.json" 2>/dev/null ;;
             esac
           }
 
@@ -192,7 +193,9 @@
             latest=$(fetch https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r '.tag_name' || true)
             [ -n "$latest" ] || return 1
             tmp=$(mktemp -d)
-            fetch "https://github.com/anomalyco/opencode/releases/download/$latest/opencode-linux-$short.tar.gz" | tar -xz -C "$tmp"
+            fetch --max-time 0 --speed-limit 1024 --speed-time 60 -o "$tmp/o.tgz" \
+              "https://github.com/anomalyco/opencode/releases/download/$latest/opencode-linux-$short.tar.gz"
+            tar -xzf "$tmp/o.tgz" -C "$tmp"
             install -Dm755 "$tmp/opencode" "${home}/.local/bin/opencode"
             rm -rf "$tmp"
           }
