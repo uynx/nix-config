@@ -47,6 +47,8 @@ in
               "zswap.compressor=zstd"
               "zswap.max_pool_percent=25"
               "zswap.shrinker_enabled=1"
+              # The default ACPI reset hangs this MSI after systemd-shutdown (2026-11-04, 11-11); next to try is reboot=efi.
+              "reboot=pci"
             ];
           };
           environment.systemPackages = [ pkgs.sbctl ];
