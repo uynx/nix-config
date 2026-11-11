@@ -17,7 +17,7 @@
           WorkingDirectory = "%h/aoa_collector";
           Environment = [ path ];
           ExecStartPre = "%h/always_on_agent/ops/pull.sh %h/aoa_collector";
-          ExecStart = "/bin/sh -c 'exec ${cmd}'";
+          ExecStart = "/bin/sh -c '. %h/always_on_agent/ops/oom.sh -500; exec ${cmd}'";
           Restart = "always";
           RestartSec = 30;
           MemoryMax = mem;
