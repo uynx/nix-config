@@ -41,6 +41,13 @@ in
             kernelPackages = pkgs.linuxPackages_latest;
             # MSI's DSDT throws harmless ACPI errors that print over the passphrase prompt.
             consoleLogLevel = 3;
+            # zram in front of a lower-priority swapfile fills with cold pages and spills hot ones to disk (LRU inversion).
+            kernelParams = [
+              "zswap.enabled=1"
+              "zswap.compressor=zstd"
+              "zswap.max_pool_percent=25"
+              "zswap.shrinker_enabled=1"
+            ];
           };
           environment.systemPackages = [ pkgs.sbctl ];
           security.sudo.wheelNeedsPassword = false;
@@ -145,12 +152,6 @@ in
           users.users.${user} = {
             openssh.authorizedKeys.keys = [ key ];
             linger = true;
-          };
-
-          zramSwap = {
-            enable = true;
-            algorithm = "zstd";
-            memoryPercent = 50;
           };
 
           swapDevices = [
