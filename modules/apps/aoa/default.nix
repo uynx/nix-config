@@ -89,7 +89,8 @@
             Type = "oneshot";
             RemainAfterExit = true;
             TimeoutStartSec = "5min";
-            ExecStart = "/run/current-system/sw/bin/systemctl --user start aoa-lanesboot.service";
+            # --no-block: a blocking start holds default.target, and the desktop session waits behind it for the whole lane start.
+            ExecStart = "/run/current-system/sw/bin/systemctl --user start --no-block aoa-lanesboot.service";
           };
           Install.WantedBy = [ "default.target" ];
         };
