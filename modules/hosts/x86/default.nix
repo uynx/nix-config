@@ -45,6 +45,24 @@
         systemd.tmpfiles.rules = [ "w /sys/devices/system/cpu/intel_pstate/no_turbo - - - - 1" ];
       }
       {
+        # memory_recursiveprot caps aoa-live.slice's MemoryLow (always_on_agent ops/run.sh, 30% of RAM) at every ancestor's; with none here the live arms got no protection from the jobs.
+        systemd.slices = {
+          user = {
+            overrideStrategy = "asDropin";
+            sliceConfig.MemoryLow = "12G";
+          };
+          "user-1000" = {
+            overrideStrategy = "asDropin";
+            sliceConfig.MemoryLow = "12G";
+          };
+        };
+        systemd.services."user@1000" = {
+          overrideStrategy = "asDropin";
+          restartIfChanged = false;
+          serviceConfig.MemoryLow = "12G";
+        };
+      }
+      {
         services.udev.extraRules = ''
           SUBSYSTEM=="leds", KERNEL=="phy0-led", ATTR{trigger}="none", ATTR{brightness}="0"
         '';
