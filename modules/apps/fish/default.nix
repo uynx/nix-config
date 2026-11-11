@@ -70,6 +70,14 @@ in
                 into the repo. `$hostname` names this machine's file.
               '';
             };
+            rebPreBoot = lib.mkOption {
+              type = lib.types.lines;
+              default = "";
+              description = ''
+                Fish run by `reb restart` and `reb switch` after the rebuild and
+                push, right before the reboot. A failure does not stop the reboot.
+              '';
+            };
             rebPostSwitch = lib.mkOption {
               type = lib.types.lines;
               default = "";
@@ -190,6 +198,9 @@ in
                         echo "Committed as "(git -C $repo rev-parse --short HEAD)
                     end
                     ${rebSync}/bin/reb-sync push $repo $target 0
+                    test $verb = boot; and begin
+                        ${config.shellHooks.rebPreBoot}
+                    end
                     test $verb = boot; and systemctl reboot
                 else
                     set -q flip[1]; and echo $oldDesktop > $desktopFile

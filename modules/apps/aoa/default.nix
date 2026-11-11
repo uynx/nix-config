@@ -134,6 +134,10 @@
         { lib, ... }:
         {
           systemd.user.servicesStartTimeoutMs = 600000;
+          shellHooks.rebPreBoot = lib.mkIf (host == "agent" || host == "x86") ''
+            ${pkgs.python3}/bin/python3 ~/always_on_agent/ops/unitsnap.py save
+            or echo "unit snapshot failed; reboot continues"
+          '';
           systemd.user.services = common // (if host == "agent" then agentServices else { }) // (if host == "x86" then x86Services else { });
           systemd.user.timers = if host == "agent" then agentTimers else { };
           # Never set Restart= here: one-pass scheduler jobs (aoa-job-*) share the prefix and must not rerun.
