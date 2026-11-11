@@ -41,6 +41,10 @@
         boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
       }
       {
+        # Turbo held the i7-8700K at 95-98°C (crit 100) under load and x86 reset unclean twice; off, it runs 59-62°C.
+        systemd.tmpfiles.rules = [ "w /sys/devices/system/cpu/intel_pstate/no_turbo - - - - 1" ];
+      }
+      {
         services.udev.extraRules = ''
           SUBSYSTEM=="leds", KERNEL=="phy0-led", ATTR{trigger}="none", ATTR{brightness}="0"
         '';
