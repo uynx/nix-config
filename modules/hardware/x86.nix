@@ -20,6 +20,11 @@
           # nct6775 owns I/O ports ACPI also claims; without lax it refuses to bind and VRM/fan sensors vanish.
           "acpi_enforce_resources=lax"
           "nosgx"
+          # zram in front of a lower-priority swapfile fills with cold pages and spills hot ones to disk (LRU inversion).
+          "zswap.enabled=1"
+          "zswap.compressor=zstd"
+          "zswap.max_pool_percent=25"
+          "zswap.shrinker_enabled=1"
         ];
         kernelModules = [ "nct6775" ];
 
@@ -56,13 +61,6 @@
         sbctl
         stress-ng
       ];
-
-      zramSwap = {
-        enable = true;
-        algorithm = "zstd";
-        memoryPercent = 50;
-        priority = 100;
-      };
 
       swapDevices = [
         {
