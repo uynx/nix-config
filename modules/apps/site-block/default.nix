@@ -32,6 +32,99 @@ let
     "4chan.org"
   ];
 
+  proxies = [
+    "croxyproxy.com"
+    "croxyproxy.rocks"
+    "croxy.network"
+    "croxy.org"
+    "blockaway.net"
+    "proxyium.com"
+    "proxysite.com"
+    "proxysite.cloud"
+    "proxysite.site"
+    "kproxy.com"
+    "4everproxy.com"
+    "filterbypass.me"
+    "plainproxies.com"
+    "hidemyass.com"
+    "hide.me"
+    "whoer.net"
+    "megaproxy.com"
+    "zend2.com"
+    "zalmos.com"
+    "webproxy.net"
+    "blewpass.com"
+    "anonymouse.org"
+    "freeproxy.win"
+    "proxfree.com"
+    "my-proxy.com"
+    "vpnbook.com"
+    "dontfilter.us"
+    "hidester.com"
+    "wombatproxy.com"
+    "turbohide.org"
+    "newipnow.com"
+    "site2unblock.com"
+    "unblockproxy.me"
+    "unblock-web.site"
+    "free-proxy.cz"
+    "spys.one"
+    "proxyserver.com"
+    "filterbreak.com"
+    "bypasslocal.com"
+    "unblocksite.id"
+    "freeopenproxy.com"
+    "webproxy.to"
+    "genmirror.com"
+    "proxydocker.com"
+    "sitenable.com"
+    "sitenable.ch"
+    "sitenable.co"
+    "sitenable.info"
+    "sitenable.pw"
+    "sitenable.top"
+    "free-proxy-list.net"
+    "zalmos.net"
+    "hidester.org"
+    "vpnbrowse.com"
+    "browserling.com"
+    "hyperbeam.com"
+    "neverinstall.com"
+    "now.gg"
+    "kasmweb.com"
+    "browsergap.xyz"
+    "browserstack.com"
+    "lambdatest.com"
+    "saucelabs.com"
+    "rammerhead.org"
+    "titaniumnetwork.org"
+    "incog.works"
+    "holyubofficial.net"
+    "surfdoge.pro"
+    "tomp.app"
+    "interstellar-network.github.io"
+    "sz-games.github.io"
+    "luphoria.com"
+    "wisp.host"
+    "archive.today"
+    "archive.ph"
+    "archive.is"
+    "archive.li"
+    "archive.vn"
+    "archive.md"
+    "12ft.io"
+    "removepaywall.com"
+    "printfriendly.com"
+    "txtify.it"
+    "smry.ai"
+    "archivebox.io"
+    "translate.googleusercontent.com"
+    "webcache.googleusercontent.com"
+    "nodeunblocker.com"
+    "ccproxy.com"
+    "geoproxy.net"
+  ];
+
   banned = [
     "tor-browser"
     "mullvad-browser"
@@ -45,7 +138,7 @@ let
     # URLBlocklist reads only its first 1000 entries, so it gets the most-visited porn domains and DNS keeps the full list.
     # awk stops itself; a `| head` here dies of SIGPIPE under the builder's pipefail.
     pornTop = pkgs.runCommand "porn-top" { } ''
-      awk -F, -v n=${toString (1000 - builtins.length (social ++ settingsPages))} \
+      awk -F, -v n=${toString (1000 - builtins.length (social ++ proxies ++ settingsPages))} \
         'NR == FNR { p[$1] = 1; next } { sub(/\r$/, "", $2) } ($2 in p) { print $2; if (++c == n) exit }' \
         ${porn} ${
           pkgs.fetchurl {
@@ -57,7 +150,7 @@ let
     policy = pkgs.runCommand "site-block-policy.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
       jq --rawfile top ${pornTop} '.URLBlocklist += ($top | split("\n") | map(select(. != "")))' ${
         pkgs.writeText "policy.json" (builtins.toJSON {
-          URLBlocklist = social ++ settingsPages;
+          URLBlocklist = social ++ proxies ++ settingsPages;
           IncognitoModeAvailability = 1;
           TorDisabled = true;
           DnsOverHttpsMode = "off";
@@ -139,6 +232,7 @@ in
 
       # /etc/hosts holds while the VPN's resolver replaces dnscrypt.
       networking.hostFiles = [ "${pkgs.stevenblack-blocklist.porn}/hosts" ];
+      networking.extraHosts = lib.concatMapStringsSep "\n" (d: "0.0.0.0 ${d} www.${d}") proxies;
 
       assertions = [
         {
@@ -155,7 +249,7 @@ in
         "brave/policies/managed/site-block.json".source = b.policy;
         "chromium/policies/managed/site-block.json".source = b.policy;
         "firefox/policies/policies.json".text = builtins.toJSON {
-          policies.WebsiteFilter.Block = map (d: "*://*.${d}/*") social;
+          policies.WebsiteFilter.Block = map (d: "*://*.${d}/*") (social ++ proxies);
         };
       };
     };
