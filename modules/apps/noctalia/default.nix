@@ -98,6 +98,11 @@
               end
               printf '%s\n' $out >$state
           end
+          # reb over ssh has no NIRI_SOCKET, so niri looked absent and noctalia never restarted.
+          set -l socks /run/user/(id -u)/niri.*.sock
+          if not set -q NIRI_SOCKET; and set -q socks[1]
+              set -x NIRI_SOCKET $socks[1]
+          end
           if type -q niri; and niri msg version >/dev/null 2>&1
               # comm is truncated (".noctalia-wrapp", v4's noctalia-qs ".quickshell-wra"), so judge each by its exe.
               for p in (pgrep -x .noctalia-wrapp) (pgrep -x .quickshell-wra)
