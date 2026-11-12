@@ -30,6 +30,11 @@
         export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
         exec ${browserPython}/bin/python3 "$HOME/dotfiles/assistant/browser/ab.py" "$@"
       '';
+      chatSearch = pkgs.writeShellScriptBin "chat-search" ''
+        export CHAT_INDEX_DIR="$HOME/.local/state/chat-index"
+        export PATH="${lib.makeBinPath [ pkgs.rsync pkgs.openssh ]}:$PATH"
+        exec ${pkgs.python3}/bin/python3 "$HOME/dotfiles/assistant/chatsearch.py" "$@"
+      '';
       browserService = prefix: {
         Unit.Description = "Dedicated assistant Chromium browser, headless";
         Service = {
@@ -51,6 +56,7 @@
         pkgs.protonmail-bridge
         browser
         browserDirect
+        chatSearch
       ];
       home-manager.users.uynx = {
         systemd.user.services = {
@@ -127,6 +133,16 @@
               ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-skillscout.lock ${pkgs.dash}/bin/dash -c 'mkdir -p ${self.lib.pm.root}/state/tmp/skillscout && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/skill-scout.md)\" >> ${self.lib.pm.root}/state/tmp/skillscout/run.log 2>&1'";
             };
           };
+          personal-assistant-chatindex = {
+            Unit.Description = "Copy agent chat transcripts from asahi and x86 and index new messages for chat-search";
+            Service = {
+              Type = "oneshot";
+              Environment = environment;
+              Nice = 10;
+              TimeoutStartSec = "50min";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-chatindex.lock ${chatSearch}/bin/chat-search refresh asahi.lan x86.lan";
+            };
+          };
           personal-assistant-rotate = {
             Unit.Description = "Request a fresh personal assistant session and handoff";
             Service = {
@@ -156,6 +172,14 @@
             Unit.Description = "Daily skill and agent scout at 5 AM Eastern";
             Timer = {
               OnCalendar = "*-*-* 05:00:00 America/New_York";
+              Persistent = true;
+            };
+            Install.WantedBy = [ "timers.target" ];
+          };
+          personal-assistant-chatindex = {
+            Unit.Description = "Refresh the chat-search index hourly";
+            Timer = {
+              OnCalendar = "hourly";
               Persistent = true;
             };
             Install.WantedBy = [ "timers.target" ];
