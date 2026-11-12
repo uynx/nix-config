@@ -508,11 +508,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793938215,
-        "narHash": "sha256-K0dITNFmVQ8JpS7oY0DwQhq8irfjQ3HZGOAX1IWSXE4=",
+        "lastModified": 1794382742,
+        "narHash": "sha256-dCttiJMmGw71BAHvH9GObiNkumz+Q0FUe/XRNCq1M4M=",
         "owner": "nix-community",
         "repo": "nixos-apple-silicon",
-        "rev": "e170ed766d8e80a600dde4bd119624a475d275ff",
+        "rev": "5de1c7ae865d645a3ebcc7d2ba5a13b9b50c0c16",
         "type": "github"
       },
       "original": {
@@ -713,11 +713,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794268150,
-        "narHash": "sha256-IjBiWJHKiuhMQ/xsdHYGbxK6AXac4TIWYM1DODRnkEk=",
+        "lastModified": 1794492056,
+        "narHash": "sha256-KTihP+mF+Gr0GdGU6SoN4LDe8d72fD9MNaGUqX1kR/8=",
         "owner": "NotAShelf",
         "repo": "nvf",
-        "rev": "dd06c9b6aac414bf7cd7594b27108439f5caa95b",
+        "rev": "08451b91e6a030f12e736c51c28dfde3371a8428",
         "type": "github"
       },
       "original": {
@@ -736,11 +736,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1794293650,
-        "narHash": "sha256-2CXIPKOO3gHjk1r0Qr51cYcji5naaeZRVpWldjqTLgk=",
+        "lastModified": 1794489901,
+        "narHash": "sha256-8AXz2X5wIsZ5JrW3uIyXSHAhouNFNzIUT6jkBT61eUE=",
         "owner": "Sovereign-Engineering",
         "repo": "obscuravpn-client",
-        "rev": "40ef3c120fc4e603bbb30f1bda6385871f17c8f5",
+        "rev": "25207027a39845726697a7b6a34a3ebc18e0db1a",
         "type": "github"
       },
       "original": {
