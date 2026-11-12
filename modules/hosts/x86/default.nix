@@ -41,10 +41,10 @@
         boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
       }
       {
-        # Uncapped turbo hit 93°C within 3 min at full load (reset unclean twice at 95-98°C); 89% held 84°C (L7-54, 2026-11-11).
+        # Uncapped turbo hit 93°C within 3 min at full load (reset unclean twice at 95-98°C); 89% held 84°C in the test but spiked to 92°C under jobs; 84% (L7-54, 2026-11-11).
         systemd.tmpfiles.rules = [
           "w /sys/devices/system/cpu/intel_pstate/no_turbo - - - - 0"
-          "w /sys/devices/system/cpu/intel_pstate/max_perf_pct - - - - 89"
+          "w /sys/devices/system/cpu/intel_pstate/max_perf_pct - - - - 84"
         ];
       }
       {
