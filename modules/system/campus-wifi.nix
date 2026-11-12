@@ -8,12 +8,18 @@
         after = [ "iwd.service" ];
         path = [ config.networking.networkmanager.package ];
         environment.CAMPUS_WIFI_ROOT = "/";
+        serviceConfig.StateDirectory = "campus-wifi";
         preStart = ''
           # iwd keeps the old password unless NM deletes and re-adds the profile.
-          nmcli connection delete uuid ${config.networking.networkmanager.ensureProfiles.profiles.eduroam.connection.uuid} || true
+          if ! sha256sum ${config.sops.secrets.eduroam-env.path} | cmp -s - "$STATE_DIRECTORY/eduroam-env.sha256"; then
+            nmcli connection delete uuid ${config.networking.networkmanager.ensureProfiles.profiles.eduroam.connection.uuid} || true
+          fi
           rm -f "$CAMPUS_WIFI_ROOT"/etc/NetworkManager/system-connections/{eduroam,uynx}.nmconnection \
             "$CAMPUS_WIFI_ROOT"/run/NetworkManager/system-connections/uynx.nmconnection \
             "$CAMPUS_WIFI_ROOT"/var/lib/iwd/uynx.psk
+        '';
+        postStart = ''
+          sha256sum ${config.sops.secrets.eduroam-env.path} > "$STATE_DIRECTORY/eduroam-env.sha256"
         '';
       };
       sops.secrets.eduroam-env.restartUnits = [ "NetworkManager-ensure-profiles.service" ];
