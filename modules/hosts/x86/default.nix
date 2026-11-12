@@ -6,12 +6,17 @@
     modules = with self.nixosModules; [
       standard
       siteBlock
-      aoa
+      predictionMarkets
       hardwareX86
       unattended
 
       # `reb switch` flips ./desktop between niri and kde, then rebuilds and reboots.
-      (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
+      (
+        if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then
+          desktopKde
+        else
+          desktopNiri
+      )
       (self.lib.gaming "native")
 
       inputs.lanzaboote.nixosModules.lanzaboote
@@ -48,7 +53,7 @@
         ];
       }
       {
-        # memory_recursiveprot caps aoa-live.slice's MemoryLow (always_on_agent ops/run.sh, 30% of RAM) at every ancestor's; with none here the live arms got no protection from the jobs.
+        # memory_recursiveprot caps pm-live.slice's MemoryLow (prediction_markets ops/run.sh, 30% of RAM) at every ancestor's; with none here the live arms got no protection from the jobs.
         systemd.slices = {
           user = {
             overrideStrategy = "asDropin";

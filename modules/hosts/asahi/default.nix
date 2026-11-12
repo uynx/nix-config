@@ -9,7 +9,7 @@
       assistantSsh
       hardwareAsahi
       cpuBatteryCap
-      aoa
+      predictionMarkets
 
       # `reb switch` flips ./desktop between niri and kde, then rebuilds and reboots.
       (

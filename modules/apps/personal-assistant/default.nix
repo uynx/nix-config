@@ -1,3 +1,4 @@
+{ self, ... }:
 {
   flake.nixosModules.personalAssistant =
     { pkgs, lib, ... }:
@@ -123,7 +124,7 @@
               Environment = environment;
               EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
               TimeoutStartSec = "75min";
-              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-skillscout.lock ${pkgs.dash}/bin/dash -c 'mkdir -p %h/aoa_tmp/skillscout && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/skill-scout.md)\" >> %h/aoa_tmp/skillscout/run.log 2>&1'";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-skillscout.lock ${pkgs.dash}/bin/dash -c 'mkdir -p ${self.lib.pm.root}/state/tmp/skillscout && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/skill-scout.md)\" >> ${self.lib.pm.root}/state/tmp/skillscout/run.log 2>&1'";
             };
           };
           personal-assistant-rotate = {

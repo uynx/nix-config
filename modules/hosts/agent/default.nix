@@ -8,11 +8,16 @@ in
     specialArgs = { inherit inputs; };
     modules = with self.nixosModules; [
       standard
-      aoa
+      predictionMarkets
       unattended
       personalAssistant
       # `reb switch` flips ./desktop between niri and kde; kde because RustDesk needs KWin's RemoteDesktop portal.
-      (if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then desktopKde else desktopNiri)
+      (
+        if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then
+          desktopKde
+        else
+          desktopNiri
+      )
       (self.lib.gaming "native")
 
       inputs.disko.nixosModules.disko
@@ -82,7 +87,7 @@ in
           services.udev.extraRules = ''
             ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1969", ATTR{device}=="0xe0b1", ATTR{remove}="1"
           '';
-          # memory_recursiveprot caps aoa-live.slice's MemoryLow (always_on_agent ops/run.sh) at every ancestor's.
+          # memory_recursiveprot caps pm-live.slice's MemoryLow (prediction_markets ops/run.sh) at every ancestor's.
           systemd.slices = {
             user = {
               overrideStrategy = "asDropin";
@@ -120,7 +125,7 @@ in
                     "AGENT_OWNS_MACHINE=1"
                     "PATH=/run/wrappers/bin:/etc/profiles/per-user/${user}/bin:/run/current-system/sw/bin"
                   ];
-                  ExecStart = "/etc/profiles/per-user/${user}/bin/tmux new-session -d -s agent -c %h/always_on_agent 'claude --continue; exec fish'";
+                  ExecStart = "/etc/profiles/per-user/${user}/bin/tmux new-session -d -s agent -c ${self.lib.pm.root} 'claude --continue; exec fish'";
                   ExecStop = "/etc/profiles/per-user/${user}/bin/tmux kill-session -t agent";
                 };
                 Install.WantedBy = [ "default.target" ];
