@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Recover agent Ethernet
+Terminal=true
+Icon=network-wired
+Exec=sh -c "sudo env RECOVERY_ROOT=/ bash \"\\$(dirname \"\\$1\")/recover-ethernet.sh\"; printf \"Press Enter to close.\"; read -r answer" recovery %k
