@@ -143,6 +143,17 @@
               ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-chatindex.lock ${chatSearch}/bin/chat-search refresh asahi.lan x86.lan";
             };
           };
+          personal-assistant-weeklyreview = {
+            Unit.Description = "Find requests Brandon repeated this week and text him at most three automations to approve";
+            Service = {
+              Type = "oneshot";
+              WorkingDirectory = "%h/dotfiles/assistant";
+              Environment = environment;
+              EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
+              TimeoutStartSec = "60min";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-weeklyreview.lock ${pkgs.dash}/bin/dash -c 'exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/weekly-review.md)\" >> %h/.local/state/personal-assistant/weekly-review.log 2>&1'";
+            };
+          };
           personal-assistant-rotate = {
             Unit.Description = "Request a fresh personal assistant session and handoff";
             Service = {
@@ -180,6 +191,14 @@
             Unit.Description = "Refresh the chat-search index hourly";
             Timer = {
               OnCalendar = "hourly";
+              Persistent = true;
+            };
+            Install.WantedBy = [ "timers.target" ];
+          };
+          personal-assistant-weeklyreview = {
+            Unit.Description = "Weekly repeated-request review, Sunday 6 PM Eastern";
+            Timer = {
+              OnCalendar = "Sun *-*-* 18:00:00 America/New_York";
               Persistent = true;
             };
             Install.WantedBy = [ "timers.target" ];
