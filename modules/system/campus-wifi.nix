@@ -1,24 +1,19 @@
 {
   flake.nixosModules.campus-wifi =
-    { config, lib, ... }:
+    { config, ... }:
     {
       sops.secrets.eduroam-env = { };
-      sops.secrets.uynx-env = { };
 
       systemd.services.NetworkManager-ensure-profiles.after = [ "iwd.service" ];
 
       networking.networkmanager.ensureProfiles = {
-        environmentFiles = [
-          config.sops.secrets.eduroam-env.path
-          config.sops.secrets.uynx-env.path
-        ];
+        environmentFiles = [ config.sops.secrets.eduroam-env.path ];
 
         profiles.eduroam = {
           connection = {
             id = "eduroam";
             uuid = "d5dc12a7-ddc7-4911-9f19-64c7cfb208e1";
             type = "wifi";
-            autoconnect-priority = if config.networking.hostName == "asahi" then 50 else 0;
           };
           wifi = {
             mode = "infrastructure";
@@ -33,24 +28,6 @@
             ca-cert = "${./umass-eduroam-ca.pem}";
             domain-suffix-match = "it.umass.edu";
             password = "$EDUROAM_PASSWORD";
-          };
-          ipv4.method = "auto";
-          ipv6.method = "auto";
-        };
-
-        profiles.uynx = lib.mkIf (config.networking.hostName != "agent") {
-          connection = {
-            id = "uynx";
-            uuid = "550e7a8e-c569-4b8f-a6f2-fee8c2a1cc1f";
-            type = "wifi";
-          };
-          wifi = {
-            mode = "infrastructure";
-            ssid = "uynx";
-          };
-          wifi-security = {
-            key-mgmt = "wpa-psk";
-            psk = "$UYNX_PSK";
           };
           ipv4.method = "auto";
           ipv6.method = "auto";
