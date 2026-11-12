@@ -30,6 +30,9 @@
           })
         ];
 
+        # Scoped by prgname: a FONTCONFIG_FILE on noctalia leaks to every app it launches and turns Ghostty's Hack into Noto Sans.
+        fonts.fontconfig.localConf = builtins.readFile ./fonts.conf;
+
         systemd = {
           packages = [ pkgs.systemd-lock-handler ];
           user.services = {
@@ -108,7 +111,7 @@
                   sleep 1
               end
               if not pgrep -x .noctalia-wrapp >/dev/null
-                  niri msg action spawn -- env FONTCONFIG_FILE=$HOME/nix-config/modules/apps/noctalia/fonts.conf noctalia
+                  niri msg action spawn -- noctalia
                   echo $palette >$stamp
               end
           end

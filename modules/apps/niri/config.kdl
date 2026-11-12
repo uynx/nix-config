@@ -74,7 +74,7 @@ layout {
 xwayland-satellite {
     path "@xwaylandSatellite@"
 }
-spawn-at-startup "env" "FONTCONFIG_FILE=/home/uynx/nix-config/modules/apps/noctalia/fonts.conf" "noctalia"
+spawn-at-startup "noctalia"
 spawn-at-startup "wayscriber" "--daemon" "--no-tray"
 
 switch-events {
