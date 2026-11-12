@@ -1,6 +1,6 @@
 {
   flake.nixosModules.campus-wifi =
-    { config, ... }:
+    { config, lib, ... }:
     {
       sops.secrets.eduroam-env = { };
       sops.secrets.uynx-env = { };
@@ -38,7 +38,7 @@
           ipv6.method = "auto";
         };
 
-        profiles.uynx = {
+        profiles.uynx = lib.mkIf (config.networking.hostName != "agent") {
           connection = {
             id = "uynx";
             uuid = "550e7a8e-c569-4b8f-a6f2-fee8c2a1cc1f";
