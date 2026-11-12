@@ -157,11 +157,17 @@
       };
     in
     {
-      environment.sessionVariables.PM_ROOT = root;
+      environment.sessionVariables = {
+        PM_ROOT = root;
+        ASSISTANT_DIR = self.lib.pm.assistant;
+      };
       home-manager.users.${user} =
         { lib, ... }:
         {
-          systemd.user.sessionVariables.PM_ROOT = root;
+          systemd.user.sessionVariables = {
+            PM_ROOT = root;
+            ASSISTANT_DIR = self.lib.pm.assistant;
+          };
           systemd.user.servicesStartTimeoutMs = 600000;
           shellHooks.rebPreBoot = lib.mkIf (host == "agent" || host == "x86") ''
             ${pkgs.python3}/bin/python3 ${root}/ops/unitsnap.py save
