@@ -9,14 +9,11 @@
         path = [ config.networking.networkmanager.package ];
         environment.CAMPUS_WIFI_ROOT = "/";
         preStart = ''
+          # iwd keeps the old password unless NM deletes and re-adds the profile.
+          nmcli connection delete uuid ${config.networking.networkmanager.ensureProfiles.profiles.eduroam.connection.uuid} || true
           rm -f "$CAMPUS_WIFI_ROOT"/etc/NetworkManager/system-connections/{eduroam,uynx}.nmconnection \
             "$CAMPUS_WIFI_ROOT"/run/NetworkManager/system-connections/uynx.nmconnection \
             "$CAMPUS_WIFI_ROOT"/var/lib/iwd/uynx.psk
-        '';
-        postStart = ''
-          # A secret-only reload does not refresh iwd's provisioning file.
-          nmcli connection modify --temporary uuid ${config.networking.networkmanager.ensureProfiles.profiles.eduroam.connection.uuid} connection.autoconnect no
-          nmcli connection modify --temporary uuid ${config.networking.networkmanager.ensureProfiles.profiles.eduroam.connection.uuid} connection.autoconnect yes
         '';
       };
       sops.secrets.eduroam-env.restartUnits = [ "NetworkManager-ensure-profiles.service" ];
