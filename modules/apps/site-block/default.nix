@@ -317,12 +317,9 @@ in
         wants = [ "tailscaled.service" "ipad-dns.service" ];
         after = [ "tailscaled.service" "ipad-dns.service" ];
         serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = "${pkgs.tailscale}/bin/tailscale funnel --bg https+insecure://127.0.0.1:3443";
-          # Without Funnel enabled on the tailnet the command waits forever and blocks every activation.
-          TimeoutStartSec = 30;
-          Restart = "on-failure";
+          # Long-running, not oneshot: until Funnel is enabled on the tailnet a oneshot fails every rebuild.
+          ExecStart = "${pkgs.tailscale}/bin/tailscale funnel https+insecure://127.0.0.1:3443";
+          Restart = "always";
           RestartSec = 60;
         };
       };
