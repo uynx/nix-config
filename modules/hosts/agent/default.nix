@@ -83,10 +83,6 @@ in
             enable = true;
             inherit user;
           };
-          # The wired card has no cable and its PCIe link logged a correctable error every 30 s; plugging one in needs this rule gone.
-          services.udev.extraRules = ''
-            ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1969", ATTR{device}=="0xe0b1", ATTR{remove}="1"
-          '';
           # memory_recursiveprot caps pm-live.slice's MemoryLow (prediction_markets ops/run.sh) at every ancestor's.
           systemd.slices = {
             user = {
