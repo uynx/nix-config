@@ -91,7 +91,7 @@
           Service = {
             Type = "oneshot";
             RemainAfterExit = true;
-            TimeoutStartSec = "5min";
+            TimeoutStartSec = "20min";
             Environment = env;
             ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${root}/state/run/lanes";
             ExecStart = "${root}/ops/lanes.sh boot";
