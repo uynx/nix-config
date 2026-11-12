@@ -320,6 +320,8 @@ in
           Type = "oneshot";
           RemainAfterExit = true;
           ExecStart = "${pkgs.tailscale}/bin/tailscale funnel --bg https+insecure://127.0.0.1:3443";
+          # Without Funnel enabled on the tailnet the command waits forever and blocks every activation.
+          TimeoutStartSec = 30;
           Restart = "on-failure";
           RestartSec = 60;
         };
