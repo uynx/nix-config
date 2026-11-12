@@ -119,7 +119,7 @@
               WorkingDirectory = "%h/dotfiles/assistant";
               Environment = environment;
               EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
-              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-mailclean.lock ${pkgs.dash}/bin/dash -c 'mkdir -p %h/applications && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/mail-cleanup.md)\" >> %h/applications/mailclean.log 2>&1'";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-mailclean.lock ${pkgs.dash}/bin/dash -c 'mkdir -p %h/applications && exec ${pkgs.bun}/bin/bun %h/dotfiles/assistant/once.ts --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/mail-cleanup.md)\" >> %h/applications/mailclean.log 2>&1'";
             };
           };
           personal-assistant-skillscout = {
@@ -130,7 +130,7 @@
               Environment = environment;
               EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
               TimeoutStartSec = "135min";
-              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-skillscout.lock ${pkgs.dash}/bin/dash -c 'mkdir -p ${self.lib.pm.root}/state/tmp/skillscout && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/skill-scout.md)\" >> ${self.lib.pm.root}/state/tmp/skillscout/run.log 2>&1'";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-skillscout.lock ${pkgs.dash}/bin/dash -c 'mkdir -p ${self.lib.pm.root}/state/tmp/skillscout && exec ${pkgs.bun}/bin/bun %h/dotfiles/assistant/once.ts --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/skill-scout.md)\" >> ${self.lib.pm.root}/state/tmp/skillscout/run.log 2>&1'";
             };
           };
           personal-assistant-chatindex = {
@@ -151,7 +151,7 @@
               Environment = environment;
               EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
               TimeoutStartSec = "60min";
-              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-weeklyreview.lock ${pkgs.dash}/bin/dash -c 'exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/weekly-review.md)\" >> %h/.local/state/personal-assistant/weekly-review.log 2>&1'";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-weeklyreview.lock ${pkgs.dash}/bin/dash -c 'exec ${pkgs.bun}/bin/bun %h/dotfiles/assistant/once.ts --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/weekly-review.md)\" >> %h/.local/state/personal-assistant/weekly-review.log 2>&1'";
             };
           };
           personal-assistant-rotate = {
