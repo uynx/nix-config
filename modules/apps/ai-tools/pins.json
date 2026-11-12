@@ -7,10 +7,10 @@
     }
   },
   "codex": {
-    "version": "0.167.1",
+    "version": "0.167.2",
     "hash": {
-      "aarch64-linux": "sha256-Brj1wo1NR34ZB1zdwAYuGZ9hDDhqrGA54iHlBvOb0Jw=",
-      "x86_64-linux": "sha256-lEy6vliixZmjAUG8AiDDGWMgXDPmm0O0FN1dpq2vlX8="
+      "aarch64-linux": "sha256-zygnGX7e5qQwSFtol5+yuPJ8+X4w9xpjNP4CsObnPhE=",
+      "x86_64-linux": "sha256-Y3vxfnowgrYvjL0R7Rk2YBAUr03trHznj442FMbkrfY="
     }
   },
   "grok": {
