@@ -123,6 +123,22 @@ let
     "nodeunblocker.com"
     "ccproxy.com"
     "geoproxy.net"
+    "translate.goog"
+    "web.archive.org"
+    "yewtu.be"
+    "invidious.io"
+    "inv.nadeko.net"
+    "piped.video"
+    "poketube.fun"
+    "nitter.net"
+    "nitter.poast.org"
+    "xcancel.com"
+    "safereddit.com"
+    "imginn.com"
+    "picuki.com"
+    "croxyproxy.net"
+    "proxyorb.com"
+    "hidemy.name"
   ];
 
   banned = [
