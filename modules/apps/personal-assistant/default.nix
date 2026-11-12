@@ -123,7 +123,7 @@
               WorkingDirectory = "%h/dotfiles/assistant";
               Environment = environment;
               EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
-              TimeoutStartSec = "75min";
+              TimeoutStartSec = "135min";
               ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-skillscout.lock ${pkgs.dash}/bin/dash -c 'mkdir -p ${self.lib.pm.root}/state/tmp/skillscout && exec claude -p --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/skill-scout.md)\" >> ${self.lib.pm.root}/state/tmp/skillscout/run.log 2>&1'";
             };
           };
