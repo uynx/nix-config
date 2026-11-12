@@ -83,7 +83,8 @@
         config.shellHooks.rebPostSwitch = ''
           set -l exe (path dirname (path resolve (command -v noctalia)))/.noctalia-wrapped
           set -l palette (path resolve ~/.config/noctalia/palettes/Flexoki.json)
-          set -l stamp ~/.local/state/noctalia-palette
+          set -l sig (begin; echo $exe $palette; cat ~/nix-config/modules/apps/noctalia/* 2>/dev/null; end | sha256sum | string split -f1 ' ')
+          set -l stamp ~/.local/state/noctalia-stamp
           # noctalia saves its computed lock layout to settings.toml, which then overrides config.toml's lock widgets.
           set -l state ~/.local/state/noctalia/settings.toml
           if test -f $state
@@ -106,13 +107,13 @@
                   end
               end
               sleep 1
-              if test "$palette" != "$(cat $stamp 2>/dev/null)"
+              if test "$sig" != "$(cat $stamp 2>/dev/null)"
                   pkill -x .noctalia-wrapp
                   sleep 1
               end
               if not pgrep -x .noctalia-wrapp >/dev/null
                   niri msg action spawn -- noctalia
-                  echo $palette >$stamp
+                  echo $sig >$stamp
               end
           end
         '';
