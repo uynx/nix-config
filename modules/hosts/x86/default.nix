@@ -41,8 +41,11 @@
         boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
       }
       {
-        # Turbo held the i7-8700K at 95-98°C (crit 100) under load and x86 reset unclean twice; off, it runs 59-62°C.
-        systemd.tmpfiles.rules = [ "w /sys/devices/system/cpu/intel_pstate/no_turbo - - - - 1" ];
+        # Uncapped turbo hit 93°C within 3 min at full load (reset unclean twice at 95-98°C); 89% held 84°C (L7-54, 2026-11-11).
+        systemd.tmpfiles.rules = [
+          "w /sys/devices/system/cpu/intel_pstate/no_turbo - - - - 0"
+          "w /sys/devices/system/cpu/intel_pstate/max_perf_pct - - - - 89"
+        ];
       }
       {
         # memory_recursiveprot caps aoa-live.slice's MemoryLow (always_on_agent ops/run.sh, 30% of RAM) at every ancestor's; with none here the live arms got no protection from the jobs.
