@@ -23,7 +23,7 @@ _: {
       ];
       kernelParams = [
         "zswap.enabled=1"
-        "zswap.compressor=lz4"
+        "zswap.compressor=zstd"
         "zswap.max_pool_percent=25"
         "zswap.shrinker_enabled=1"
       ];
@@ -39,6 +39,8 @@ _: {
     };
 
     systemd = {
+      tmpfiles.rules = [ "w /sys/module/zswap/parameters/compressor - - - - zstd" ];
+
       services.display-manager = {
         preStart = "until [ -e /dev/dri/by-path/platform-soc:display-subsystem-card ]; do sleep 0.2; done";
         serviceConfig.TimeoutStartSec = "60s";
