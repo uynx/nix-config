@@ -4,7 +4,22 @@
     {
       sops.secrets.eduroam-env = { };
 
-      systemd.services.NetworkManager-ensure-profiles.after = [ "iwd.service" ];
+      systemd.services.NetworkManager-ensure-profiles = {
+        after = [ "iwd.service" ];
+        path = [ config.networking.networkmanager.package ];
+        environment.CAMPUS_WIFI_ROOT = "/";
+        preStart = ''
+          rm -f "$CAMPUS_WIFI_ROOT"/etc/NetworkManager/system-connections/{eduroam,uynx}.nmconnection \
+            "$CAMPUS_WIFI_ROOT"/run/NetworkManager/system-connections/uynx.nmconnection \
+            "$CAMPUS_WIFI_ROOT"/var/lib/iwd/uynx.psk
+        '';
+        postStart = ''
+          # A secret-only reload does not refresh iwd's provisioning file.
+          nmcli connection modify --temporary uuid ${config.networking.networkmanager.ensureProfiles.profiles.eduroam.connection.uuid} connection.autoconnect no
+          nmcli connection modify --temporary uuid ${config.networking.networkmanager.ensureProfiles.profiles.eduroam.connection.uuid} connection.autoconnect yes
+        '';
+      };
+      sops.secrets.eduroam-env.restartUnits = [ "NetworkManager-ensure-profiles.service" ];
 
       networking.networkmanager.ensureProfiles = {
         environmentFiles = [ config.sops.secrets.eduroam-env.path ];
