@@ -270,6 +270,62 @@ in
       };
     };
 
+  # The iPad cannot take a browser policy, so its DNS profile points here: the same lists, served over Tailscale Funnel.
+  flake.nixosModules.ipadDns =
+    { lib, pkgs, ... }:
+    let
+      b = build pkgs;
+      stamps = lib.importJSON ../../system/dns-stamps.json;
+      state = "/var/lib/ipad-dns";
+      names = pkgs.runCommand "ipad-blocked-names" { } ''
+        sort -u ${b.porn} ${pkgs.writeText "social-proxies" (lib.concatLines (social ++ proxies))} > $out
+      '';
+      settings = (pkgs.formats.toml { }).generate "ipad-dns.toml" {
+        listen_addresses = [ "127.0.0.1:5354" ];
+        server_names = lib.attrNames stamps;
+        static = lib.mapAttrs (_: stamp: { inherit stamp; }) stamps;
+        doh_servers = true;
+        require_dnssec = false;
+        blocked_names.blocked_names_file = "${names}";
+        local_doh = {
+          listen_addresses = [ "127.0.0.1:3443" ];
+          path = "/482d82a678197e27cad729ab9b1005ee";
+          cert_file = "${state}/cert.pem";
+          cert_key_file = "${state}/key.pem";
+        };
+      };
+      cert = pkgs.writeShellScript "ipad-dns-cert" ''
+        [ -s ${state}/key.pem ] || ${pkgs.openssl}/bin/openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 3650 -subj /CN=localhost -keyout ${state}/key.pem -out ${state}/cert.pem
+      '';
+    in
+    {
+      systemd.services.ipad-dns = {
+        wantedBy = [ "multi-user.target" ];
+        wants = [ "network-online.target" ];
+        after = [ "network-online.target" ];
+        serviceConfig = {
+          DynamicUser = true;
+          StateDirectory = "ipad-dns";
+          ExecStartPre = cert;
+          ExecStart = "${pkgs.dnscrypt-proxy}/bin/dnscrypt-proxy -config ${settings}";
+          Restart = "always";
+          RestartSec = 5;
+        };
+      };
+      systemd.services.ipad-dns-funnel = {
+        wantedBy = [ "multi-user.target" ];
+        wants = [ "tailscaled.service" "ipad-dns.service" ];
+        after = [ "tailscaled.service" "ipad-dns.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.tailscale}/bin/tailscale funnel --bg https+insecure://127.0.0.1:3443";
+          Restart = "on-failure";
+          RestartSec = 60;
+        };
+      };
+    };
+
   flake.darwinModules.siteBlock =
     { config, lib, pkgs, ... }:
     let

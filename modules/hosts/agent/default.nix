@@ -11,6 +11,7 @@ in
       predictionMarkets
       unattended
       personalAssistant
+      ipadDns
       # `reb switch` flips ./desktop between niri and kde; kde because RustDesk needs KWin's RemoteDesktop portal.
       (
         if builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./desktop) == "kde" then
