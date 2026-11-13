@@ -181,6 +181,7 @@
         };
         systemd.user.timers = {
           personal-assistant-heartbeat = {
+            Unit.ConditionPathExists = "!${stateRoot}/AUTOMATIONS_PAUSED";
             Unit.Description = "Personal assistant heartbeat every twenty minutes";
             Timer = {
               OnBootSec = "5min";
@@ -189,6 +190,7 @@
             Install.WantedBy = [ "timers.target" ];
           };
           personal-assistant-mailclean = {
+            Unit.ConditionPathExists = "!${stateRoot}/AUTOMATIONS_PAUSED";
             Unit.Description = "Daily mail cleanup at 6 AM Eastern";
             Timer = {
               OnCalendar = "*-*-* 06:00:00 America/New_York";
@@ -197,6 +199,7 @@
             Install.WantedBy = [ "timers.target" ];
           };
           personal-assistant-skillscout = {
+            Unit.ConditionPathExists = "!${stateRoot}/AUTOMATIONS_PAUSED";
             Unit.Description = "Daily skill and agent scout at 5 AM Eastern";
             Timer = {
               OnCalendar = "*-*-* 05:00:00 America/New_York";
@@ -213,6 +216,7 @@
             Install.WantedBy = [ "timers.target" ];
           };
           personal-assistant-weeklyreview = {
+            Unit.ConditionPathExists = "!${stateRoot}/AUTOMATIONS_PAUSED";
             Unit.Description = "Weekly repeated-request review, Sunday 6 PM Eastern";
             Timer = {
               OnCalendar = "Sun *-*-* 18:00:00 America/New_York";
@@ -221,6 +225,7 @@
             Install.WantedBy = [ "timers.target" ];
           };
           personal-assistant-rotate = {
+            Unit.ConditionPathExists = "!${stateRoot}/AUTOMATIONS_PAUSED";
             Unit.Description = "Fresh personal assistant session at 4 AM Eastern";
             Timer = {
               OnCalendar = "*-*-* 04:00:00 America/New_York";
