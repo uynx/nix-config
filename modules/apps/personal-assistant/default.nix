@@ -3,11 +3,16 @@
   flake.nixosModules.personalAssistant =
     { pkgs, lib, ... }:
     let
+      assistantRoot = self.lib.pm.assistant;
+      stateRoot = "${self.lib.user.home}/.local/state/personal-assistant";
+      engine = import ./_engine.nix { root = assistantRoot; };
       simplex = pkgs.callPackage ./_simplex-cli.nix { };
       # Sites flag the HeadlessChrome token with harder challenges, so the browser reports a stock desktop Chrome.
       userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${lib.versions.major pkgs.ungoogled-chromium.version}.0.0.0 Safari/537.36";
       environment = [
         "AGENT_OWNS_MACHINE=1"
+        "ASSISTANT_ROOT=${assistantRoot}"
+        "ASSISTANT_STATE=${stateRoot}"
         "PATH=/run/wrappers/bin:/etc/profiles/per-user/uynx/bin:/run/current-system/sw/bin"
       ];
       bridge = "${pkgs.bun}/bin/bun %h/dotfiles/assistant/bridge.ts";
@@ -32,7 +37,12 @@
       '';
       chatSearch = pkgs.writeShellScriptBin "chat-search" ''
         export CHAT_INDEX_DIR="$HOME/.local/state/chat-index"
-        export PATH="${lib.makeBinPath [ pkgs.rsync pkgs.openssh ]}:$PATH"
+        export PATH="${
+          lib.makeBinPath [
+            pkgs.rsync
+            pkgs.openssh
+          ]
+        }:$PATH"
         exec ${pkgs.python3}/bin/python3 "$HOME/dotfiles/assistant/chatsearch.py" "$@"
       '';
       browserService = prefix: {
@@ -59,6 +69,12 @@
         chatSearch
       ];
       home-manager.users.uynx = {
+        shellHooks.rebSnapshot = ''
+          if test -f ${assistantRoot}/bun.lock
+            ${pkgs.bun}/bin/bun install --cwd ${assistantRoot} --frozen-lockfile --omit=optional; or return
+          end
+        '';
+        home.file."${lib.removePrefix "${self.lib.user.home}/" stateRoot}/engine".source = engine;
         systemd.user.services = {
           personal-assistant-browser = browserService "/run/wrappers/bin/sudo -E ${pkgs.iproute2}/bin/ip netns exec assistant-browser ${pkgs.util-linux}/bin/runuser --preserve-environment -u uynx -- ";
           personal-assistant-browser-direct = browserService "";
@@ -92,11 +108,12 @@
           personal-assistant-session = {
             Unit = {
               Description = "Personal assistant Claude session in its own tmux server";
+              X-SwitchMethod = "keep-old";
               After = [ "personal-assistant-bridge.service" ];
               Wants = [ "personal-assistant-bridge.service" ];
             };
             Service = {
-              ExecStart = "${pkgs.dash}/bin/dash %h/dotfiles/assistant/session.sh";
+              ExecStart = "${pkgs.dash}/bin/dash ${engine}/engine-session.sh";
               ExecStop = "${pkgs.tmux}/bin/tmux -L personal-assistant kill-server";
               Environment = environment;
               Restart = "always";
