@@ -12,7 +12,7 @@
       environment = [
         "AGENT_OWNS_MACHINE=1"
         "ASSISTANT_ROOT=${assistantRoot}"
-        "ASSISTANT_STATE=${stateRoot}"
+        "ASSISTANT_RUN_STATE=${stateRoot}"
         "PATH=/run/wrappers/bin:/etc/profiles/per-user/uynx/bin:/run/current-system/sw/bin"
       ];
       bridge = "${pkgs.bun}/bin/bun %h/dotfiles/assistant/bridge.ts";
