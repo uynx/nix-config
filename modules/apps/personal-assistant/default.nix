@@ -15,7 +15,7 @@
         "ASSISTANT_RUN_STATE=${stateRoot}"
         "PATH=/run/wrappers/bin:/etc/profiles/per-user/uynx/bin:/run/current-system/sw/bin"
       ];
-      bridge = "${pkgs.bun}/bin/bun %h/dotfiles/assistant/bridge.ts";
+      bridge = "${pkgs.bun}/bin/bun ${engine}/bridge.ts";
       browserPython = pkgs.python3.withPackages (p: [ p.playwright ]);
       browser = pkgs.writeShellScriptBin "assistant-browser" ''
         export ASSISTANT_EXTENSIONS_DIR="$HOME/.local/share/assistant-extensions"
