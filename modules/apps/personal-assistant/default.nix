@@ -13,6 +13,7 @@
         "AGENT_OWNS_MACHINE=1"
         "ASSISTANT_ROOT=${assistantRoot}"
         "ASSISTANT_RUN_STATE=${stateRoot}"
+        "ASSISTANT_ENABLE_IMAGES=1"
         "PATH=/run/wrappers/bin:/etc/profiles/per-user/uynx/bin:/run/current-system/sw/bin"
       ];
       bridge = "${pkgs.bun}/bin/bun ${engine}/bridge.ts";
