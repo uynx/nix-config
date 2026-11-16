@@ -1,4 +1,9 @@
-{ self, moduleWithSystem, ... }:
+{
+  self,
+  lib,
+  moduleWithSystem,
+  ...
+}:
 let
   c = self.lib.flexoki;
   surface = "#252320";
@@ -20,7 +25,7 @@ in
       prefix = "C-a";
       clock24 = false;
       disableConfirmationPrompt = false;
-      allowPassthrough = false;
+      allowPassthrough = true;
 
       configAfter = ''
         set -g prefix C-a
@@ -55,49 +60,91 @@ in
         set -g set-clipboard on
         set -s extended-keys on
         set -as terminal-features 'xterm*:extkeys'
+        set -ga update-environment "TERM TERM_PROGRAM"
 
         run-shell ${plugin "sensible"}
         run-shell ${plugin "vim-tmux-navigator"}
         set -g @resurrect-strategy-nvim 'session'
         set -g @resurrect-capture-pane-contents 'on'
         set -g @resurrect-processes ':all:'
-        run-shell ${plugin "resurrect"}
         set -g @continuum-save-interval '10'
+        %if "#{==:#{b:socket_path},term}"
+        set -g status off
+        set -g destroy-unattached on
+        %else
+        run-shell ${plugin "resurrect"}
         run-shell ${plugin "continuum"}
+        %endif
       '';
+    };
+
+  perSystem =
+    { pkgs, self', ... }:
+    {
+      packages.terms =
+        pkgs.runCommand "terms"
+          {
+            nativeBuildInputs = [
+              pkgs.makeWrapper
+              pkgs.python3
+              pkgs.tmux
+            ];
+          }
+          ''
+            cp ${./terms.py} terms.py
+            cp ${./terms_test.py} terms_test.py
+            ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux "HOME=$TMPDIR python3 terms_test.py"}
+            makeWrapper ${pkgs.python3}/bin/python3 $out/bin/terms \
+              --add-flags ${./terms.py} \
+              --prefix PATH : ${pkgs.tmux}/bin \
+              --set-default TERMS_HOSTS "asahi.lan agent.lan x86.lan"
+          '';
+
+      packages.tmux-sessionizer = pkgs.writeShellApplication {
+        name = "tmux-sessionizer";
+        runtimeInputs = [
+          self'.packages.tmux
+          pkgs.fzf
+          pkgs.zoxide
+        ];
+        text = ''
+          dir=$(zoxide query -l | fzf --reverse --height 40%) || exit 0
+          name=$(basename "$dir" | tr '.:' '__')
+
+          term=
+          case ''${TMUX:-} in
+            */term,*)
+              term=$TMUX
+              unset TMUX
+              ;;
+          esac
+
+          if ! tmux has-session 2>/dev/null; then
+            tmux new-session -d -s resurrect-boot
+            tmux run-shell "$(tmux show -gv @resurrect-restore-script-path)"
+            tmux kill-session -t resurrect-boot
+          fi
+
+          tmux new-session -d -A -s "$name" -c "$dir"
+          if [ -n "$term" ]; then
+            TMUX=$term exec tmux detach-client -E "exec ${self'.packages.tmux}/bin/tmux attach -t $(printf %q "=$name")"
+          fi
+          if [ -n "''${TMUX:-}" ]; then
+            exec tmux switch-client -t "$name"
+          fi
+          exec tmux attach -t "$name"
+        '';
+      };
     };
 
   flake.homeModules.tmux = moduleWithSystem (
     { self', ... }:
-    { pkgs, ... }:
+    { ... }:
     {
       home.packages = [
         self'.packages.tmux
-
-        (pkgs.writeShellApplication {
-          name = "tmux-sessionizer";
-          runtimeInputs = [
-            self'.packages.tmux
-            pkgs.fzf
-            pkgs.zoxide
-          ];
-          text = ''
-            dir=$(zoxide query -l | fzf --reverse --height 40%) || exit 0
-            name=$(basename "$dir" | tr '.:' '__')
-
-            if ! tmux has-session 2>/dev/null; then
-              tmux new-session -d -s resurrect-boot
-              tmux run-shell "$(tmux show -gv @resurrect-restore-script-path)"
-              tmux kill-session -t resurrect-boot
-            fi
-
-            tmux new-session -d -A -s "$name" -c "$dir"
-            if [ -n "''${TMUX:-}" ]; then
-              exec tmux switch-client -t "$name"
-            fi
-            exec tmux attach -t "$name"
-          '';
-        })
+        self'.packages.terms
+        self'.packages.tmux-sessionizer
       ];
     }
   );

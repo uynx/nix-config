@@ -1,4 +1,7 @@
-{ moduleWithSystem, ... }:
+{ self, moduleWithSystem, ... }:
+let
+  config = tmux: builtins.readFile ./config + "command = ${tmux}/bin/tmux -L term new-session\n";
+in
 {
   flake.wrappers.ghostty =
     { pkgs, wlib, ... }:
@@ -7,7 +10,9 @@
 
       package = pkgs.ghostty;
       flagSeparator = "=";
-      flags."--config-file" = ./config;
+      flags."--config-file" = pkgs.writeText "ghostty-config" (
+        config self.packages.${pkgs.stdenv.hostPlatform.system}.tmux
+      );
 
       filesToPatch = [
         "share/applications/*.desktop"
@@ -31,10 +36,7 @@
       };
 
       home.file.".config/ghostty/config" = lib.mkIf isDarwin {
-        text = builtins.readFile ./config + ''
-
-          font-size = 16
-        '';
+        text = config self'.packages.tmux + "font-size = 16\n";
       };
     }
   );
