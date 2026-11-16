@@ -58,7 +58,8 @@ in
         setw -g pane-base-index 1
         set -g renumber-windows on
         set -g set-clipboard on
-        set -s extended-keys on
+        set -s extended-keys always
+        set -s extended-keys-format csi-u
         set -as terminal-features 'xterm*:extkeys'
         set -ga update-environment "TERM TERM_PROGRAM"
 
