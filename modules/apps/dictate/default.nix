@@ -50,6 +50,20 @@
         mkdir -p $out/model_phonon2_c4c_int6
         tar --zstd -xf ${phononArchive} -C $out/model_phonon2_c4c_int6
       '';
+      imtype = pkgs.stdenv.mkDerivation {
+        name = "imtype";
+        src = ./imtype.c;
+        dontUnpack = true;
+        nativeBuildInputs = [ pkgs.wayland-scanner ];
+        buildInputs = [ pkgs.wayland ];
+        buildPhase = ''
+          xml=${pkgs.wlroots.src}/protocol/input-method-unstable-v2.xml
+          wayland-scanner client-header $xml im.h
+          wayland-scanner private-code $xml im.c
+          $CC -std=c17 -O2 -Wall -Werror -I. -o imtype $src im.c -lwayland-client
+        '';
+        installPhase = "install -Dm755 imtype $out/bin/imtype";
+      };
       port = "8765";
       desktopItem = pkgs.makeDesktopItem {
         name = "dictate";
@@ -89,6 +103,7 @@
           runtimeInputs = with pkgs; [
             curl
             wl-clipboard
+            imtype
             ydotool
             libnotify
             pipewire
