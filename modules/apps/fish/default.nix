@@ -201,7 +201,9 @@ in
                     test $verb = boot; and begin
                         ${config.shellHooks.rebPreBoot}
                     end
-                    test $verb = boot; and systemctl reboot
+                    if test $verb = boot
+                        systemctl reboot
+                    end
                 else
                     set -q flip[1]; and echo $oldDesktop > $desktopFile
                     echo "Rebuild failed. Nothing was pushed."
