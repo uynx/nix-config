@@ -16,6 +16,12 @@
         "ASSISTANT_ENABLE_IMAGES=1"
         "PATH=/run/wrappers/bin:/etc/profiles/per-user/uynx/bin:/run/current-system/sw/bin"
       ];
+      scriptEnvironment = environment ++ [
+        "PM_ROOT=${self.lib.pm.root}"
+        "AI_MEMORY=${self.lib.pm.memory}"
+        "ASSISTANT_DIR=${assistantRoot}"
+      ];
+      paused = "!${stateRoot}/AUTOMATIONS_PAUSED";
       bridge = "${pkgs.bun}/bin/bun ${engine}/bridge.ts";
       browserPython = pkgs.python3.withPackages (p: [ p.playwright ]);
       browser = pkgs.writeShellScriptBin "assistant-browser" ''
@@ -172,6 +178,43 @@
               ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-weeklyreview.lock ${pkgs.dash}/bin/dash -c 'exec ${pkgs.bun}/bin/bun %h/dotfiles/assistant/once.ts --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/weekly-review.md)\" >> %h/.local/state/personal-assistant/weekly-review.log 2>&1'";
             };
           };
+          personal-assistant-rundown = {
+            Unit.Description = "Text Brandon the morning rundown: money, overnight queue, Rust port, downloads, what is due";
+            Service = {
+              Type = "oneshot";
+              Environment = scriptEnvironment;
+              EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
+              TimeoutStartSec = "5min";
+              ExecStart = "${pkgs.bun}/bin/bun ${assistantRoot}/rundown.ts";
+            };
+          };
+          personal-assistant-finishwatch = {
+            Unit = {
+              Description = "Text Brandon when a hist, training or fit job or a reb on any host ends";
+              ConditionPathExists = paused;
+              After = [ "personal-assistant-simplex.service" ];
+            };
+            Service = {
+              Environment = scriptEnvironment;
+              EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
+              ExecStart = "${pkgs.bun}/bin/bun ${assistantRoot}/watch.ts";
+              Restart = "always";
+              RestartSec = 30;
+              UMask = "0077";
+            };
+            Install.WantedBy = [ "default.target" ];
+          };
+          personal-assistant-idle = {
+            Unit.Description = "Alarm the assistant when a host idles beside queued work";
+            Service = {
+              Type = "oneshot";
+              Environment = scriptEnvironment;
+              EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
+              WorkingDirectory = self.lib.pm.root;
+              TimeoutStartSec = "2min";
+              ExecStart = "${pkgs.python3}/bin/python3 ${self.lib.pm.root}/ops/idlealarm.py";
+            };
+          };
           personal-assistant-rotate = {
             Unit.Description = "Request a fresh personal assistant session and handoff";
             Service = {
@@ -222,6 +265,24 @@
             Timer = {
               OnCalendar = "Sun *-*-* 18:00:00 America/New_York";
               Persistent = true;
+            };
+            Install.WantedBy = [ "timers.target" ];
+          };
+          personal-assistant-rundown = {
+            Unit.ConditionPathExists = paused;
+            Unit.Description = "Morning rundown at 8 AM Eastern";
+            Timer = {
+              OnCalendar = "*-*-* 08:00:00 America/New_York";
+              Persistent = true;
+            };
+            Install.WantedBy = [ "timers.target" ];
+          };
+          personal-assistant-idle = {
+            Unit.ConditionPathExists = paused;
+            Unit.Description = "Idle-host check every minute";
+            Timer = {
+              OnCalendar = "minutely";
+              AccuracySec = "10s";
             };
             Install.WantedBy = [ "timers.target" ];
           };
