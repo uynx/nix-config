@@ -76,6 +76,9 @@ def transcribe(pcm):
 
 
 def type_text(text):
+    # Key events combine with whatever modifier is held (Super for the stop key) and fire shortcuts.
+    if subprocess.run(["imtype", text], stderr=subprocess.DEVNULL).returncode == 0:
+        return
     # Not wtype: it gives the Nth new character evdev code N, so letters land on Tab or Backspace.
     socket = os.environ.get("YDOTOOL_SOCKET", "/run/ydotoold/socket")
     subprocess.run(["ydotool", "type", "--key-delay", "6", "--key-hold", "6", "--", text],

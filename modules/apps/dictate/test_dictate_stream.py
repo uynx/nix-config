@@ -99,7 +99,7 @@ class Joining(unittest.TestCase):
 
 
 class Runner(unittest.TestCase):
-    def run_main(self, audio):
+    def run_main(self, audio, imtype="exit 2"):
         home = tempfile.mkdtemp()
         bin = os.path.join(home, "bin")
         os.mkdir(bin)
@@ -114,6 +114,7 @@ class Runner(unittest.TestCase):
             "wtype": f'echo "$*" >> "{home}/wtyped"',
             "ydotool": f'for a; do :; done; printf "[%s]" "$a" >> "{home}/typed"',
             "wl-copy": f'cat > "{home}/clip"',
+            "imtype": f'printf "[%s]" "$1" >> "{home}/committed"; {imtype}',
         }
         for name, body in stubs.items():
             path = os.path.join(bin, name)
@@ -129,12 +130,22 @@ class Runner(unittest.TestCase):
             os.environ["PATH"], dictate_stream.PIDFILE, dictate_stream.DEBUG = old
         read = lambda n: open(os.path.join(home, n)).read() if os.path.exists(os.path.join(home, n)) else ""
         self.assertEqual(read("wtyped"), "", "wtype maps letters onto Tab and Backspace keycodes")
+        self.committed = read("committed")
         return read("typed"), read("clip"), read("notes")
 
     def test_every_phrase_in_the_stream_is_typed_in_order(self):
         typed, clip, _ = self.run_main(quiet(1) + tone(1) + quiet(1) + tone(1) + quiet(1))
         self.assertEqual(typed, "[word][ word]")
         self.assertEqual(clip, "word word")
+
+    def test_text_goes_to_the_input_method_so_held_keys_cannot_turn_it_into_shortcuts(self):
+        typed, clip, _ = self.run_main(quiet(1) + tone(1) + quiet(1) + tone(1) + quiet(1), imtype="exit 0")
+        self.assertEqual((self.committed, typed), ("[word][ word]", ""))
+        self.assertEqual(clip, "word word")
+
+    def test_ydotool_types_when_no_text_box_takes_input_method_text(self):
+        typed, _, _ = self.run_main(quiet(1) + tone(1) + quiet(1), imtype="exit 2")
+        self.assertEqual((self.committed, typed), ("[word]", "[word]"))
 
     def test_a_stream_with_no_speech_says_so_and_types_nothing(self):
         typed, clip, notes = self.run_main(quiet(3))
