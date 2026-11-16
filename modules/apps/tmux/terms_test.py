@@ -220,6 +220,13 @@ class Cli(Rig):
         self.assertIn("otherbox-pm-claude", lines[1])
         self.assertEqual(lines[2], "down: unreachable")
 
+    def test_reading_another_host_leaves_our_stdin_alone(self):
+        self.fake_ssh(f'cat > {self.tmp}/stdin\necho SCREEN\n')
+        self.env["TERMS_HOSTS"] = f"{HOST}.lan otherbox.lan"
+        r = self.terms("show", "otherbox-pm-claude", text="the caller's")
+        self.assertEqual(r.stdout, "SCREEN\n")
+        self.assertEqual((self.tmp / "stdin").read_text(), "")
+
     def test_send_to_another_host_goes_over_ssh_with_text_on_stdin(self):
         self.fake_ssh(
             f'echo "$@" > {self.tmp}/argv\ncat > {self.tmp}/stdin\n')

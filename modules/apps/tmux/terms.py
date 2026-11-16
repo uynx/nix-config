@@ -117,11 +117,11 @@ def local(args):
         sys.exit(__doc__)
 
 
-def ssh(host, args, text=None):
+def ssh(host, args, text=""):
     return subprocess.run(
         ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", host,
          "terms", "--local", *args],
-        input=text, capture_output=True, text=True,
+        input=text or "", capture_output=True, text=True,
         env={**os.environ, "SSH_ASKPASS_REQUIRE": "never"})
 
 
