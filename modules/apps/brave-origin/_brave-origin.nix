@@ -183,7 +183,7 @@ stdenv.mkDerivation {
         ]
       }
       --set CHROME_WRAPPER brave-origin
-      --add-flags "--ozone-platform-hint=auto"
+      --add-flags "--ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3"
     )
   '';
 
