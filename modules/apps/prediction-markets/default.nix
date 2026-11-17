@@ -19,7 +19,7 @@
         };
         Service = {
           WorkingDirectory = "${root}/state/collector";
-          Environment = env;
+          Environment = env ++ [ "MALLOC_ARENA_MAX=2" ];
           ExecStartPre = "${root}/ops/pull.sh ${root}/state/collector";
           ExecStart = "/bin/sh -c '. ${root}/ops/oom.sh -500; exec ${cmd}'";
           Restart = "always";
@@ -146,7 +146,7 @@
           base
           // {
             Service = base.Service // {
-              Environment = env ++ [ "PM_ENS_HOURS=1,7,13,19" ];
+              Environment = base.Service.Environment ++ [ "PM_ENS_HOURS=1,7,13,19" ];
             };
           };
         pm-fcruns2 = recorder "fcruns2" "python3 -u -m pm.data.weather.fc_runs >> weather/fc_runs.err 2>&1" "512M";
