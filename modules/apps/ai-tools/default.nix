@@ -235,7 +235,7 @@
             ".agents/AGENTS.md"
             ".claude/CLAUDE.md"
             ".codex/AGENTS.md"
-            ".gemini/AGENTS.md"
+            # ".gemini/AGENTS.md"
             ".grok/AGENTS.md"
             ".config/opencode/AGENTS.md"
           ] (_: link "AGENTS.md")
