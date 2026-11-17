@@ -77,7 +77,7 @@
         };
         pm-clifork =
           oneshot "daily CLI fork flag for the US temperature ladders, after the West Coast CLIs issue"
-            "/bin/sh -c 'devenv shell -- python -m ops.cli_fork >> data/cli_fork.log 2>&1'"
+            "/bin/sh -c 'devenv shell -- python -m pm.ops.cli_fork >> data/cli_fork.log 2>&1'"
             { MemoryHigh = "2G"; };
         pm-refit =
           oneshot "submit the monthly seasonal refit to x86 (row L2-30)"
@@ -137,11 +137,11 @@
         # Phase 45 against agent's 0: the two hosts' 90 s polls then sit 45 s apart, a 45 s cadence for the earliest-of-two feed (row L7-27).
         pm-live2 =
           recorder "live2"
-            "env PM_POLL_PHASE=45 secretspec run --provider sops://secrets.enc.yaml --reason live-weather -- python3 -u -m weather.live >> weather/live.log 2>&1"
+            "env PM_POLL_PHASE=45 secretspec run --provider sops://secrets.enc.yaml --reason live-weather -- python3 -u -m pm.data.weather.live >> weather/live.log 2>&1"
             "512M";
         pm-enslog2 =
           let
-            base = recorder "enslog2" "python3 -u -m weather.ens_log >> weather/ens_log.err 2>&1" "512M";
+            base = recorder "enslog2" "python3 -u -m pm.data.weather.ens_log >> weather/ens_log.err 2>&1" "512M";
           in
           base
           // {
@@ -149,10 +149,10 @@
               Environment = env ++ [ "PM_ENS_HOURS=1,7,13,19" ];
             };
           };
-        pm-fcruns2 = recorder "fcruns2" "python3 -u -m weather.fc_runs >> weather/fc_runs.err 2>&1" "512M";
-        pm-aprs2 = recorder "aprs2" "python3 -u -m weather.aprs >> weather/aprs.log 2>&1" "256M";
+        pm-fcruns2 = recorder "fcruns2" "python3 -u -m pm.data.weather.fc_runs >> weather/fc_runs.err 2>&1" "512M";
+        pm-aprs2 = recorder "aprs2" "python3 -u -m pm.data.weather.aprs >> weather/aprs.log 2>&1" "256M";
         pm-wis22 =
-          recorder "wis22" "devenv shell -- python3 -u -m weather.wis2 >> weather/wis2.log 2>&1"
+          recorder "wis22" "devenv shell -- python3 -u -m pm.data.weather.wis2 >> weather/wis2.log 2>&1"
             "1G";
       };
     in
