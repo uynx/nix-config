@@ -38,8 +38,14 @@ public class Admin extends DeviceAdminReceiver {
       }
       JSONArray r = p.getJSONArray("userRestrictions");
       for (int n = 0; n < r.length(); n++) dpm.addUserRestriction(a, r.getString(n));
-      JSONArray h = p.getJSONArray("hidden");
-      for (int n = 0; n < h.length(); n++) dpm.setApplicationHidden(a, h.getString(n), true);
+      JSONArray h = p.optJSONArray("hidden");
+      if (h != null) {
+        for (int n = 0; n < h.length(); n++) dpm.setApplicationHidden(a, h.getString(n), true);
+      }
+      JSONArray u = p.optJSONArray("unhide");
+      if (u != null) {
+        for (int n = 0; n < u.length(); n++) dpm.setApplicationHidden(a, u.getString(n), false);
+      }
       int dns = dpm.setGlobalPrivateDnsModeSpecifiedHost(a, p.getString("privateDns"));
       Log.i("siteblock", "applied, private DNS result " + dns);
     } catch (Exception e) {

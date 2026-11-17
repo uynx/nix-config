@@ -23,8 +23,11 @@ check() {
   for p in $(jq -r '.userRestrictions[]' "$policy"); do
     t "restriction $p" has "$eff" "$p"
   done
-  for p in $(jq -r '.hidden[]' "$policy"); do
+  for p in $(jq -r '.hidden[]? // empty' "$policy"); do
     t "$p hidden" has "$(adb shell dumpsys package "$p" | rg -m1 'User 0:')" hidden=true
+  done
+  for p in $(jq -r '.unhide[]? // empty' "$policy"); do
+    t "$p unhidden" has "$(adb shell dumpsys package "$p" | rg -m1 'User 0:')" hidden=false
   done
 
   # Without the policy this would open a blocked site on the phone.
