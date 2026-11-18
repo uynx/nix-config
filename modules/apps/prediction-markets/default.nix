@@ -159,6 +159,7 @@
     {
       environment.sessionVariables = {
         PM_ROOT = root;
+        AI_MEMORY = self.lib.pm.memory;
         ASSISTANT_DIR = self.lib.pm.assistant;
       };
       home-manager.users.${user} =
@@ -166,6 +167,7 @@
         {
           systemd.user.sessionVariables = {
             PM_ROOT = root;
+            AI_MEMORY = self.lib.pm.memory;
             ASSISTANT_DIR = self.lib.pm.assistant;
           };
           systemd.user.servicesStartTimeoutMs = 600000;
