@@ -1,5 +1,5 @@
 {
-  flake.homeModules.dev = { pkgs, ... }: {
+  flake.homeModules.dev = { pkgs, lib, ... }: {
     home.packages = with pkgs; [
       nodejs
       rustc
@@ -26,8 +26,10 @@
       statix
     ];
 
-    xdg.dataFile."icons/hicolor/scalable/apps/julia.svg".source =
-      "${pkgs.papirus-icon-theme}/share/icons/Papirus/64x64/apps/julia.svg";
+    xdg.dataFile = lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
+      "icons/hicolor/scalable/apps/julia.svg".source =
+        "${pkgs.papirus-icon-theme}/share/icons/Papirus/64x64/apps/julia.svg";
+    };
 
     programs = {
       go.enable = true;
