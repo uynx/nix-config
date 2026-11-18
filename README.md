@@ -67,6 +67,7 @@ Adding or removing a component is one line in `modules/hosts/<host>/default.nix`
 | `privacy` | obscura VPN + egress lockdown + `vpn`, tor and mullvad browsers | three casks, no `vpn` |
 | `ai` | every AI CLI, shared skills/AGENTS.md, dictation | Homebrew CLIs + desktop apps |
 | `prismlauncher` | Prism Launcher (Minecraft) | cask prismlauncher |
+| `roblox` | Roblox client | cask roblox |
 | `android` | Waydroid launcher and image updater; the VM itself is `apps/waydroid/vm.nix` (aarch64 only, gated inside the module) | no |
 
 Four host lines are single modules instead of bundles, because a bundle around one name would only restate it: `virt` (`apps/virt/`), `campus-wifi` (`system/campus-wifi.nix`, the UMass eduroam profile), `tailscale` (`apps/tailscale/`, joins the tailnet with the sops auth key; in `standard`) and `cpuBatteryCap` (`hardware/cpu-battery-cap.nix`).

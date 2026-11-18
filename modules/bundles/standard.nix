@@ -19,6 +19,7 @@
       latex
       virt
       prismlauncher
+      roblox
       campus-wifi
       tailscale
     ];

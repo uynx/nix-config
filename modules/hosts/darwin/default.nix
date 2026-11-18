@@ -18,6 +18,7 @@
       office
       latex
       prismlauncher
+      roblox
 
       secrets
       cloud
