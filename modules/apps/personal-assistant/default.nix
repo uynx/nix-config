@@ -13,12 +13,12 @@
         "AGENT_OWNS_MACHINE=1"
         "ASSISTANT_ROOT=${assistantRoot}"
         "ASSISTANT_RUN_STATE=${stateRoot}"
+        "AI_MEMORY=${self.lib.pm.memory}"
         "ASSISTANT_ENABLE_IMAGES=1"
         "PATH=/run/wrappers/bin:/etc/profiles/per-user/uynx/bin:/run/current-system/sw/bin"
       ];
       scriptEnvironment = environment ++ [
         "PM_ROOT=${self.lib.pm.root}"
-        "AI_MEMORY=${self.lib.pm.memory}"
         "ASSISTANT_DIR=${assistantRoot}"
       ];
       paused = "!${stateRoot}/AUTOMATIONS_PAUSED";
