@@ -235,14 +235,14 @@
             ".agents/AGENTS.md"
             ".claude/CLAUDE.md"
             ".codex/AGENTS.md"
-            # ".gemini/AGENTS.md"
+            ".gemini/AGENTS.md"
             ".grok/AGENTS.md"
             ".config/opencode/AGENTS.md"
           ] (_: link "AGENTS.md")
           // lib.genAttrs [
             ".agents/skills"
             ".claude/skills"
-            # ".gemini/skills"
+            ".gemini/skills"
             ".grok/skills"
           ] (_: link "skills")
           // lib.listToAttrs (
@@ -285,8 +285,8 @@
                   ".claude/settings.json" = "claude-settings.json";
                   ".codex/config.toml" = "codex-config.toml";
                   ".codex/hooks.json" = "codex-hooks.json";
-                # ".gemini/antigravity-cli/settings.json" = "antigravity-cli-settings.json";
-                # ".gemini/config/hooks.json" = "agy-hooks.json";
+                ".gemini/antigravity-cli/settings.json" = "antigravity-cli-settings.json";
+                ".gemini/config/hooks.json" = "agy-hooks.json";
                 }
             )
           );
