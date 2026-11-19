@@ -184,8 +184,7 @@ let
       jq '{
         privateDns: "dns.quad9.net",
         userRestrictions: ["disallow_config_private_dns", "no_safe_boot", "no_add_user", "no_factory_reset"],
-        hidden: [],
-        unhide: ["app.vanadium.browser"],
+        hidden: ["app.vanadium.browser", "org.mozilla.firefox"],
         appRestrictions: { "com.brave.browser": . }
       }' ${policy} > $out
     '';

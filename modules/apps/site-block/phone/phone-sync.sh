@@ -24,7 +24,7 @@ check() {
     t "restriction $p" has "$eff" "$p"
   done
   for p in $(jq -r '.hidden[]? // empty' "$policy"); do
-    t "$p hidden" has "$(adb shell dumpsys package "$p" | rg -m1 'User 0:')" hidden=true
+    t "$p unavailable" rg -q '^(Unable to find package:| +User 0: .*(installed=false|hidden=true))' <<<"$(adb shell dumpsys package "$p")"
   done
   for p in $(jq -r '.unhide[]? // empty' "$policy"); do
     t "$p unhidden" has "$(adb shell dumpsys package "$p" | rg -m1 'User 0:')" hidden=false
