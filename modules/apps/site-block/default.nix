@@ -183,6 +183,7 @@ let
     phonePolicy = pkgs.runCommand "site-block-phone.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
       jq '{
         privateDns: "dns.quad9.net",
+        updateProfile: "App Updates",
         userRestrictions: ["disallow_config_private_dns", "no_safe_boot", "no_add_user", "no_factory_reset"],
         hidden: ["app.vanadium.browser", "org.mozilla.firefox"],
         appRestrictions: { "com.brave.browser": . }

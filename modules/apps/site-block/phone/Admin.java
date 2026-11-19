@@ -6,8 +6,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.UserHandle;
 import android.util.Log;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -25,19 +27,19 @@ public class Admin extends DeviceAdminReceiver {
     }).start();
   }
 
-  static void apply(Context c) {
+  static synchronized void apply(Context c) {
     DevicePolicyManager dpm = c.getSystemService(DevicePolicyManager.class);
-    if (!dpm.isDeviceOwnerApp(c.getPackageName())) return;
+    boolean owner = dpm.isDeviceOwnerApp(c.getPackageName());
+    if (!owner && !dpm.isProfileOwnerApp(c.getPackageName())) return;
     try (InputStream in = c.getAssets().open("policy.json")) {
       JSONObject p = new JSONObject(new String(in.readAllBytes(), "UTF-8"));
       ComponentName a = new ComponentName(c, Admin.class);
+      dpm.setAffiliationIds(a, Collections.singleton(c.getPackageName()));
       JSONObject apps = p.getJSONObject("appRestrictions");
       for (Iterator<String> k = apps.keys(); k.hasNext(); ) {
         String pkg = k.next();
         dpm.setApplicationRestrictions(a, pkg, bundle(apps.getJSONObject(pkg)));
       }
-      JSONArray r = p.getJSONArray("userRestrictions");
-      for (int n = 0; n < r.length(); n++) dpm.addUserRestriction(a, r.getString(n));
       JSONArray h = p.optJSONArray("hidden");
       if (h != null) {
         for (int n = 0; n < h.length(); n++) dpm.setApplicationHidden(a, h.getString(n), true);
@@ -46,6 +48,14 @@ public class Admin extends DeviceAdminReceiver {
       if (u != null) {
         for (int n = 0; n < u.length(); n++) dpm.setApplicationHidden(a, u.getString(n), false);
       }
+      if (!owner) return;
+      if (p.has("updateProfile") && dpm.getSecondaryUsers(a).isEmpty()) {
+        UserHandle updater = dpm.createAndManageUser(a, p.getString("updateProfile"), a, null,
+            DevicePolicyManager.SKIP_SETUP_WIZARD | DevicePolicyManager.LEAVE_ALL_SYSTEM_APPS_ENABLED);
+        dpm.startUserInBackground(a, updater);
+      }
+      JSONArray r = p.getJSONArray("userRestrictions");
+      for (int n = 0; n < r.length(); n++) dpm.addUserRestriction(a, r.getString(n));
       int dns = dpm.setGlobalPrivateDnsModeSpecifiedHost(a, p.getString("privateDns"));
       Log.i("siteblock", "applied, private DNS result " + dns);
     } catch (Exception e) {
