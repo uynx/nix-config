@@ -42,10 +42,14 @@ check() {
 
 if [ "${1:-}" != --check ]; then
   tmp=$(mktemp -d)
+  profile=$(jq -r '.updateProfile // empty' "$policy")
+  updater=$(adb shell pm list users | awk -F '[:{]' -v name="$profile" '$3 == name { print $2 }')
+  install_args=(-r)
+  if [ -n "$updater" ]; then install_args+=(--user "$updater"); fi
   trap 'rm -rf "$tmp"' EXIT
   base64 -d "${PHONE_SYNC_KEYSTORE:-$HOME/.config/site-block/keystore.p12.b64}" >"$tmp/ks.p12"
   apksigner sign --ks "$tmp/ks.p12" --ks-pass pass:siteblock --key-pass pass:siteblock --out "$tmp/a.apk" "$apk"
-  adb install -r "$tmp/a.apk"
+  adb install "${install_args[@]}" "$tmp/a.apk"
   # GrapheneOS can leave the Network permission off, and the Private DNS probe runs in this app.
   adb shell pm grant "$pkg" android.permission.INTERNET
   # Android refuses a device owner while any account exists on the phone.

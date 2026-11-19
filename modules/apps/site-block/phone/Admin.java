@@ -14,7 +14,6 @@ import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-// Applies assets/policy.json on becoming device owner and on every reinstall; the system keeps each policy across reboots.
 // Ceiling: entries dropped from policy.json stay applied on the phone until cleared by hand.
 public class Admin extends DeviceAdminReceiver {
   @Override
@@ -49,15 +48,15 @@ public class Admin extends DeviceAdminReceiver {
         for (int n = 0; n < u.length(); n++) dpm.setApplicationHidden(a, u.getString(n), false);
       }
       if (!owner) return;
+      JSONArray r = p.getJSONArray("userRestrictions");
+      for (int n = 0; n < r.length(); n++) dpm.addUserRestriction(a, r.getString(n));
+      int dns = dpm.setGlobalPrivateDnsModeSpecifiedHost(a, p.getString("privateDns"));
+      Log.i("siteblock", "applied, private DNS result " + dns);
       if (p.has("updateProfile") && dpm.getSecondaryUsers(a).isEmpty()) {
         UserHandle updater = dpm.createAndManageUser(a, p.getString("updateProfile"), a, null,
             DevicePolicyManager.SKIP_SETUP_WIZARD | DevicePolicyManager.LEAVE_ALL_SYSTEM_APPS_ENABLED);
         dpm.startUserInBackground(a, updater);
       }
-      JSONArray r = p.getJSONArray("userRestrictions");
-      for (int n = 0; n < r.length(); n++) dpm.addUserRestriction(a, r.getString(n));
-      int dns = dpm.setGlobalPrivateDnsModeSpecifiedHost(a, p.getString("privateDns"));
-      Log.i("siteblock", "applied, private DNS result " + dns);
     } catch (Exception e) {
       Log.e("siteblock", "apply failed", e);
     }
