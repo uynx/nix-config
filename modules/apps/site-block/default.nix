@@ -184,7 +184,14 @@ let
       jq '{
         privateDns: "dns.quad9.net",
         updateProfile: "App Updates",
-        userRestrictions: ["disallow_config_private_dns", "no_safe_boot", "no_add_user", "no_factory_reset"],
+        userRestrictions: [
+          "disallow_config_private_dns",
+          "no_safe_boot",
+          "no_add_user",
+          "no_factory_reset",
+          "no_install_apps",
+          "no_remove_user"
+        ],
         hidden: ["app.vanadium.browser", "org.mozilla.firefox"],
         appRestrictions: { "com.brave.browser": . }
       }' ${policy} > $out
