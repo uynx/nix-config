@@ -215,6 +215,26 @@
               ExecStart = "${pkgs.python3}/bin/python3 ${self.lib.pm.root}/ops/idlealarm.py";
             };
           };
+          personal-assistant-calsync = {
+            Unit.Description = "Import Proton calendar events and set each one's color from its answer";
+            Service = {
+              Type = "oneshot";
+              Environment = scriptEnvironment;
+              EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
+              TimeoutStartSec = "20min";
+              ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-calsync.lock ${pkgs.python3}/bin/python3 ${assistantRoot}/calsync.py";
+            };
+          };
+          personal-assistant-nag = {
+            Unit.Description = "Wake the assistant for calendar entries Brandon has not answered";
+            Service = {
+              Type = "oneshot";
+              Environment = scriptEnvironment ++ [ "ASSISTANT_PORT=5226" ];
+              EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
+              TimeoutStartSec = "1min";
+              ExecStart = "${pkgs.python3}/bin/python3 ${assistantRoot}/nag.py";
+            };
+          };
           personal-assistant-rotate = {
             Unit.Description = "Request a fresh personal assistant session and handoff";
             Service = {
@@ -282,6 +302,24 @@
             Unit.Description = "Idle-host check every minute";
             Timer = {
               OnCalendar = "minutely";
+              AccuracySec = "10s";
+            };
+            Install.WantedBy = [ "timers.target" ];
+          };
+          personal-assistant-calsync = {
+            Unit.ConditionPathExists = paused;
+            Unit.Description = "Calendar color sync every ten minutes, clear of the heartbeat scans";
+            Timer = {
+              OnCalendar = "*:08/10";
+              AccuracySec = "10s";
+            };
+            Install.WantedBy = [ "timers.target" ];
+          };
+          personal-assistant-nag = {
+            Unit.ConditionPathExists = paused;
+            Unit.Description = "Unanswered calendar entry check every five minutes";
+            Timer = {
+              OnCalendar = "*:0/5";
               AccuracySec = "10s";
             };
             Install.WantedBy = [ "timers.target" ];
