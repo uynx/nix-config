@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-minimal@sha256:00f85ce08db5fbfcf4afd91a78fce7b67e1ecd880b005849af5908eabf62947c
+FROM quay.io/fedora/fedora-minimal@sha256:c9d62886d182f36b886344949a88f694881797c99bff6a75d4922644044c65b1
 
 RUN --mount=type=cache,target=/var/cache/libdnf5 \
     dnf install -y --setopt=keepcache=True --setopt=max_parallel_downloads=20 "dnf5-command(copr)" && \
@@ -37,7 +37,7 @@ RUN --mount=type=cache,target=/var/cache/libdnf5 \
       mesa-libGL-devel-26.2.7-1.fc44.aarch64 \
       vulkan-loader-1.4.341.0-1.fc44.aarch64 \
       vulkan-loader-devel-1.4.341.0-1.fc44.aarch64 \
-      xorg-x11-server-Xwayland-24.1.14-2.fc44.aarch64 && \
+      xorg-x11-server-Xwayland-24.1.15-1.fc44.aarch64 && \
     rm -rf /tmp/* /var/tmp/*
 
 RUN curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
