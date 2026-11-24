@@ -131,6 +131,7 @@
           };
           personal-assistant-heartbeat = {
             Unit.Description = "Wake the personal assistant for inbox and calendar checks";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               ExecStart = "${bridge} heartbeat";
@@ -138,6 +139,7 @@
           };
           personal-assistant-mailclean = {
             Unit.Description = "Move mail with no remaining use to Trash";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               WorkingDirectory = "%h/dotfiles/assistant";
@@ -148,6 +150,7 @@
           };
           personal-assistant-skillscout = {
             Unit.Description = "Test newly praised agent skills and read how others run always-on agents";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               WorkingDirectory = "%h/dotfiles/assistant";
@@ -159,6 +162,7 @@
           };
           personal-assistant-chatindex = {
             Unit.Description = "Copy agent chat transcripts from asahi and x86 and index new messages for chat-search";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               Environment = environment;
@@ -169,6 +173,7 @@
           };
           personal-assistant-weeklyreview = {
             Unit.Description = "Find requests Brandon repeated this week and text him at most three automations to approve";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               WorkingDirectory = "%h/dotfiles/assistant";
@@ -180,6 +185,7 @@
           };
           personal-assistant-rundown = {
             Unit.Description = "Text Brandon the morning rundown: money, overnight queue, Rust port, downloads, what is due";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               Environment = scriptEnvironment;
@@ -206,6 +212,7 @@
           };
           personal-assistant-idle = {
             Unit.Description = "Alarm the assistant when a host idles beside queued work";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               Environment = scriptEnvironment;
@@ -217,6 +224,7 @@
           };
           personal-assistant-calsync = {
             Unit.Description = "Import Proton calendar events and set each one's color from its answer";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               Environment = scriptEnvironment;
@@ -227,6 +235,7 @@
           };
           personal-assistant-nag = {
             Unit.Description = "Wake the assistant for calendar entries Brandon has not answered";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               Environment = scriptEnvironment ++ [ "ASSISTANT_PORT=5226" ];
@@ -237,6 +246,7 @@
           };
           personal-assistant-rotate = {
             Unit.Description = "Request a fresh personal assistant session and handoff";
+            Unit.X-SwitchMethod = "keep-old";
             Service = {
               Type = "oneshot";
               ExecStart = "${bridge} rotate";
