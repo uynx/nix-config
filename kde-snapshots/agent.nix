@@ -279,6 +279,7 @@
       "services/brave-personal.desktop"._launch = "Meta+N";
       "services/brave-school.desktop"._launch = "Meta+M";
       "services/com.mitchellh.ghostty.desktop"._launch = ["Ctrl+Alt+T" "Meta+P"];
+      "services/dictate.desktop"._launch = "Meta+D";
       "services/org.kde.kscreen.desktop".ShowOSD = "Display";
       "services/org.kde.spectacle.desktop".RectangularRegionScreenShot = "Meta+Shift+S";
       "services/org.kde.spectacle.desktop"._launch = "Print";
@@ -340,6 +341,7 @@
       kwinrc.Xwayland.Scale = 1.7;
       plasma-localerc.Formats.LANG = "en_US.UTF-8";
       plasmanotifyrc."Applications/com.mitchellh.ghostty".Seen = true;
+      spectaclerc.ImageSave.lastImageSaveLocation = "file:///tmp/claude-1000/-home-uynx-dotfiles-assistant/5716dbe2-dd60-411d-b58f-3f371913a5f2/scratchpad/d1.png";
       spectaclerc.ImageSave.translatedScreenshotsFolder = "Screenshots";
       spectaclerc.VideoSave.translatedScreencastsFolder = "Screencasts";
     };
