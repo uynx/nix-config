@@ -107,11 +107,49 @@ in
 
           # Autologin types no password, so an encrypted login keyring would prompt on every boot.
           home-manager.users.${user} =
-            { config, lib, ... }:
+            {
+              config,
+              lib,
+              pkgs,
+              ...
+            }:
             {
               programs.plasma.kscreenlocker = {
                 autoLock = false;
                 lockOnResume = false;
+              };
+
+              # RustDesk raises KDE's "Remote Control Requested" box on every connect and nobody sits at this machine; the key is sent only once the box is the active window.
+              programs.plasma.configFile.kwinrc.Plugins.rdallowEnabled = true;
+              xdg.dataFile."kwin/scripts/rdallow/metadata.json".text = builtins.toJSON {
+                KPackageStructure = "KWin/Script";
+                KPlugin = {
+                  Id = "rdallow";
+                  Name = "rdallow";
+                };
+              };
+              xdg.dataFile."kwin/scripts/rdallow/contents/code/main.js".text = ''
+                function allow(w) {
+                  if (w.rdDone || w.resourceClass !== "org.freedesktop.impl.portal.desktop.kde" || w.caption !== "Remote Control Requested") return;
+                  workspace.activeWindow = w;
+                  if (workspace.activeWindow !== w) return;
+                  w.rdDone = true;
+                  callDBus("org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "StartUnit", "rdallow.service", "replace");
+                }
+                function watch(w) {
+                  allow(w);
+                  w.captionChanged.connect(function () { allow(w); });
+                }
+                workspace.windowAdded.connect(watch);
+                workspace.windowList().forEach(watch);
+              '';
+              systemd.user.services.rdallow = {
+                Unit.Description = "Press Enter on the focused RustDesk remote-control box";
+                Service = {
+                  Type = "oneshot";
+                  Environment = "YDOTOOL_SOCKET=/run/ydotoold/socket";
+                  ExecStart = "${pkgs.runtimeShell} -c 'sleep 0.7; exec ${pkgs.ydotool}/bin/ydotool key 28:1 28:0'";
+                };
               };
 
               systemd.user.services.claude-agent = {
