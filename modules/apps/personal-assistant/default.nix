@@ -143,7 +143,7 @@
             Service = {
               Type = "oneshot";
               WorkingDirectory = "%h/dotfiles/assistant";
-              Environment = environment;
+              Environment = environment ++ [ "ONCE_WAIT_HOURS=7" ];
               EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
               ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-mailclean.lock ${pkgs.dash}/bin/dash -c 'mkdir -p %h/applications && exec ${pkgs.bun}/bin/bun %h/dotfiles/assistant/once.ts --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/mail-cleanup.md)\" >> %h/applications/mailclean.log 2>&1'";
             };
@@ -154,9 +154,9 @@
             Service = {
               Type = "oneshot";
               WorkingDirectory = "%h/dotfiles/assistant";
-              Environment = environment;
+              Environment = environment ++ [ "ONCE_WAIT_HOURS=7" ];
               EnvironmentFile = "-%h/.config/personal-assistant/runtime.env";
-              TimeoutStartSec = "135min";
+              TimeoutStartSec = "10h";
               ExecStart = "${pkgs.util-linux}/bin/flock -n -E 0 %t/assistant-skillscout.lock ${pkgs.dash}/bin/dash -c 'mkdir -p ${self.lib.pm.root}/state/tmp/skillscout && exec ${pkgs.bun}/bin/bun %h/dotfiles/assistant/once.ts --dangerously-skip-permissions --model opus \"$(cat %h/dotfiles/assistant/skill-scout.md)\" >> ${self.lib.pm.root}/state/tmp/skillscout/run.log 2>&1'";
             };
           };
