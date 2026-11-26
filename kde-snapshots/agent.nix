@@ -15,7 +15,7 @@
       kmix.mute = "Volume Mute";
       kmix.push_to_talk = [ ];
       ksmserver."Halt Without Confirmation" = [ ];
-      ksmserver."Lock Session" = ["Screensaver" "Meta+Ctrl+Q"];
+      ksmserver."Lock Session" = ["Meta+Ctrl+Q" "Screensaver"];
       ksmserver."Log Out" = "Ctrl+Alt+Del";
       ksmserver."Log Out Without Confirmation" = [ ];
       ksmserver.LogOut = [ ];
@@ -106,7 +106,7 @@
       kwin."Walk Through Windows of Current Application Alternative (Reverse)" = [ ];
       kwin."Window Above Other Windows" = [ ];
       kwin."Window Below Other Windows" = [ ];
-      kwin."Window Close" = ["Alt+F4" "Meta+Q"];
+      kwin."Window Close" = ["Meta+Q" "Alt+F4"];
       kwin."Window Custom Quick Tile Bottom" = [ ];
       kwin."Window Custom Quick Tile Left" = [ ];
       kwin."Window Custom Quick Tile Right" = [ ];
@@ -278,7 +278,7 @@
       plasmashell."toggle do not disturb" = [ ];
       "services/brave-personal.desktop"._launch = "Meta+N";
       "services/brave-school.desktop"._launch = "Meta+M";
-      "services/com.mitchellh.ghostty.desktop"._launch = ["Ctrl+Alt+T" "Meta+P"];
+      "services/com.mitchellh.ghostty.desktop"._launch = ["Meta+P" "Ctrl+Alt+T"];
       "services/dictate.desktop"._launch = "Meta+D";
       "services/org.kde.kscreen.desktop".ShowOSD = "Display";
       "services/org.kde.spectacle.desktop".RectangularRegionScreenShot = "Meta+Shift+S";
@@ -333,15 +333,16 @@
       kwinrc.Desktops.Id_1 = "b598a674-5ff1-428d-af0a-a8ab76a596ae";
       kwinrc.Desktops.Number = 1;
       kwinrc.Desktops.Rows = 1;
-      kwinrc.Desktops."[Tiling][b598a674-5ff1-428d-af0a-a8ab76a596ae][]" = "";
-      kwinrc.Desktops.padding = 4;
-      kwinrc.Desktops.tiles = "{\"layoutDirection\":\"horizontal\",\"tiles\":[{\"width\":0.25},{\"width\":0.5},{\"width\":0.25}]}";
+      kwinrc.Plugins."[Tiling][b598a674-5ff1-428d-af0a-a8ab76a596ae][]" = "";
+      kwinrc.Plugins.padding = 4;
+      kwinrc.Plugins.rdallowEnabled = true;
+      kwinrc.Plugins.tiles = "{\"layoutDirection\":\"horizontal\",\"tiles\":[{\"width\":0.25},{\"width\":0.5},{\"width\":0.25}]}";
       kwinrc."Tiling/b598a674-5ff1-428d-af0a-a8ab76a596ae/beefdba0-7238-4ae5-8036-11454af28197".padding = 4;
       kwinrc."Tiling/b598a674-5ff1-428d-af0a-a8ab76a596ae/beefdba0-7238-4ae5-8036-11454af28197".tiles = "{\"layoutDirection\":\"horizontal\",\"tiles\":[{\"width\":0.25},{\"width\":0.5},{\"width\":0.25}]}";
       kwinrc.Xwayland.Scale = 1.7;
       plasma-localerc.Formats.LANG = "en_US.UTF-8";
       plasmanotifyrc."Applications/com.mitchellh.ghostty".Seen = true;
-      spectaclerc.ImageSave.lastImageSaveLocation = "file:///tmp/claude-1000/-home-uynx-dotfiles-assistant/5716dbe2-dd60-411d-b58f-3f371913a5f2/scratchpad/d1.png";
+      spectaclerc.ImageSave.lastImageSaveLocation = "file:///tmp/claude-1000/-home-uynx-dotfiles-assistant/8e1d592a-9db3-4382-94db-f339da27e61a/scratchpad/s2.png";
       spectaclerc.ImageSave.translatedScreenshotsFolder = "Screenshots";
       spectaclerc.VideoSave.translatedScreencastsFolder = "Screencasts";
     };
