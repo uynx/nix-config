@@ -7,7 +7,8 @@ terms send NAME TEXT          type TEXT and press Enter ("-" reads stdin)
 terms keys NAME KEY...        press tmux keys: Enter Escape C-c Up 1 ...
 terms --local [...]           this machine only
 
-A name is host-folder-program. Twins also carry their pane number.
+A name is host-label when the pane has a tmux @label (tmux set -p @label X),
+else host-folder-program, which also stays valid. Twins carry their pane number.
 """
 import os
 import re
@@ -21,7 +22,7 @@ from pathlib import Path
 
 HOST = os.uname().nodename.split(".")[0]
 FIELDS = ("pane_id", "pane_current_command", "pane_current_path",
-          "window_activity", "pane_title")
+          "window_activity", "pane_title", "@label")
 FMT = "\t".join("#{%s}" % f for f in FIELDS)
 
 
@@ -45,9 +46,9 @@ def panes():
     found = []
     for sock in sorted(p.name for p in root.glob("*") if alive(p)):
         for line in tmux(sock, "list-panes", "-a", "-F", FMT).stdout.splitlines():
-            pid, cmd, cwd, active, title = line.split("\t", 4)
+            pid, cmd, cwd, active, title, label = line.split("\t", 5)
             found.append({"sock": sock, "id": pid, "cmd": cmd, "cwd": cwd,
-                          "active": int(active), "title": title})
+                          "active": int(active), "title": title, "label": label})
     name_all(found, HOST, os.environ["HOME"])
     return found
 
@@ -56,7 +57,9 @@ def name_all(found, host, home):
     for p in found:
         folder = "home" if p["cwd"] == home else Path(p["cwd"]).name or "root"
         prog = p["cmd"].lstrip(".").removesuffix("-wrapped")
-        p["name"] = re.sub(r"[^\w.-]+", "_", f"{host}-{folder}-{prog}")
+        slug = lambda s: re.sub(r"[^\w.-]+", "_", f"{host}-{s}")
+        p["legacy"] = slug(f"{folder}-{prog}")
+        p["name"] = slug(p["label"]) if p.get("label") else p["legacy"]
     twins = Counter(p["name"] for p in found)
     for p in found:
         if twins[p["name"]] > 1:
@@ -88,7 +91,7 @@ def listing():
 def find(name):
     found = panes()
     for p in found:
-        if p["name"] == name:
+        if name in (p["name"], p["legacy"]):
             return p
     sys.exit(f"no terminal named {name}; here: "
              + (" ".join(p["name"] for p in found) or "none"))

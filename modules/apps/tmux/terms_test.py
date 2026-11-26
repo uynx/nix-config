@@ -75,6 +75,25 @@ class Names(unittest.TestCase):
         )
 
 
+class Labels(unittest.TestCase):
+    def named(self, panes):
+        terms.name_all(panes, "asahi", "/home/u")
+        return panes
+
+    def test_label_replaces_folder_and_program(self):
+        p = self.named([{**pane("term", "%0", "fish", "/home/u/x"),
+                         "label": "Weather Loop!"}])[0]
+        self.assertEqual(p["name"], "asahi-Weather_Loop_")
+        self.assertEqual(p["legacy"], "asahi-x-fish")
+
+    def test_same_label_twins_take_their_pane_number(self):
+        names = [p["name"] for p in self.named([
+            {**pane("term", "%3", "fish", "/a"), "label": "trader"},
+            {**pane("term", "%7", "fish", "/b"), "label": "trader"},
+        ])]
+        self.assertEqual(names, ["asahi-trader-3", "asahi-trader-7"])
+
+
 class Rig(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="terms"))
@@ -157,6 +176,16 @@ class Cli(Rig):
         self.assertIn(f"{HOST}-home-sleep", out)
         self.assertIn(str(work), out)
         self.assertEqual(len(out.splitlines()), 2)
+
+    def test_pane_label_names_the_terminal_and_the_old_name_still_works(self):
+        self.session("term", "work", "sh -c 'echo MARKER-7; sleep 600'")
+        old = self.only()
+        subprocess.run(["tmux", "-L", "term", "set-option", "-p", "@label", "trader"],
+                       env=self.env, check=True)
+        self.assertEqual(self.only(), f"{HOST}-trader")
+        for name in (f"{HOST}-trader", old):
+            r = self.terms("--local", "show", name)
+            self.assertEqual(r.stdout.strip(), "MARKER-7", name)
 
     def test_dead_sockets_are_passed_over(self):
         self.session("term", "work", "sleep 600")
